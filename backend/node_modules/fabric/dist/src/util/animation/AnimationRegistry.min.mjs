@@ -1,0 +1,2 @@
+const e=new class extends Array{remove(e){let t=this.indexOf(e);t>-1&&this.splice(t,1)}cancelAll(){let e=this.splice(0);return e.forEach(e=>e.abort()),e}cancelByCanvas(e){if(!e)return[];let t=this.filter(t=>{var n;return t.target===e||typeof t.target==`object`&&((n=t.target)==null?void 0:n.canvas)===e});return t.forEach(e=>e.abort()),t}cancelByTarget(e){if(!e)return[];let t=this.filter(t=>t.target===e);return t.forEach(e=>e.abort()),t}};export{e as runningAnimations};
+//# sourceMappingURL=AnimationRegistry.min.mjs.map

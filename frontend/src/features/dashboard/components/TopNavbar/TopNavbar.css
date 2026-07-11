@@ -1,0 +1,27 @@
+.navbar-container {
+  @apply h-16 bg-transparent flex items-center justify-between px-12 w-full pt-3;
+}
+
+.navbar-title {
+  @apply text-2xl font-bold text-gray-900 ;
+}
+
+.navbar-profile-section {
+  @apply flex items-center space-x-6;
+}
+
+.navbar-notification-btn {
+  @apply p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative;
+}
+
+.navbar-user-card {
+  @apply flex items-center space-x-3;
+}
+
+.navbar-avatar {
+  @apply w-8 h-8 rounded-full object-cover;
+}
+
+.navbar-username {
+  @apply text-sm font-semibold text-gray-700;
+}

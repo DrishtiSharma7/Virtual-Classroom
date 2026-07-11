@@ -1,0 +1,2 @@
+import{AnimationBase as e}from"./AnimationBase.min.mjs";var t=class extends e{constructor({startValue:e=0,endValue:t=100,...n}){super({...n,startValue:e,byValue:t-e})}calculate(e){let t=this.easing(e,this.startValue,this.byValue,this.duration);return{value:t,valueProgress:Math.abs((t-this.startValue)/this.byValue)}}};export{t as ValueAnimation};
+//# sourceMappingURL=ValueAnimation.min.mjs.map

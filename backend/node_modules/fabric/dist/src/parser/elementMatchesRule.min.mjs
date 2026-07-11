@@ -1,0 +1,2 @@
+import{selectorMatches as e}from"./selectorMatches.min.mjs";import{doesSomeParentMatch as t}from"./doesSomeParentMatch.min.mjs";function n(n,r){let i=!0,a=e(n,r.pop());return a&&r.length&&(i=t(n,r)),a&&i&&r.length===0}export{n as elementMatchesRule};
+//# sourceMappingURL=elementMatchesRule.min.mjs.map

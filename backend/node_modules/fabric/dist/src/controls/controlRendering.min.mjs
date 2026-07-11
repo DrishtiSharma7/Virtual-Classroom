@@ -1,0 +1,2 @@
+import{twoMathPi as e}from"../constants.min.mjs";function t(t,n,r,i,a){t.save();let{stroke:o,xSize:s,ySize:c,opName:l}=this.commonRenderProps(t,n,r,a,i),u=s;s>c?t.scale(1,c/s):c>s&&(u=c,t.scale(s/c,1)),t.beginPath(),t.arc(0,0,u/2,0,e,!1),t[l](),o&&t.stroke(),t.restore()}function n(e,t,n,r,i){e.save();let{stroke:a,xSize:o,ySize:s,opName:c}=this.commonRenderProps(e,t,n,i,r),l=o/2,u=s/2;e[`${c}Rect`](-l,-u,o,s),a&&e.strokeRect(-l,-u,o,s),e.restore()}export{t as renderCircleControl,n as renderSquareControl};
+//# sourceMappingURL=controlRendering.min.mjs.map

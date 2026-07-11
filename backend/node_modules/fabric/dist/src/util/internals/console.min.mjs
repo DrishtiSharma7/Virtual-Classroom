@@ -1,0 +1,2 @@
+const e=(e,...t)=>console[e](`fabric`,...t);var t=class extends Error{constructor(e,t){super(`fabric: ${e}`,t)}},n=class extends t{constructor(e){super(`${e} 'options.signal' is in 'aborted' state`)}};export{t as FabricError,n as SignalAbortedError,e as log};
+//# sourceMappingURL=console.min.mjs.map

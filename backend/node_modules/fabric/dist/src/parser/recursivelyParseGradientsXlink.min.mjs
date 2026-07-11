@@ -1,0 +1,2 @@
+const e=[`gradientTransform`,`x1`,`x2`,`y1`,`y2`,`gradientUnits`,`cx`,`cy`,`r`,`fx`,`fy`],t=`xlink:href`;function n(r,i){var a;let o=((a=i.getAttribute(t))==null?void 0:a.slice(1))||``,s=r.getElementById(o);if(s&&s.getAttribute(t)&&n(r,s),s&&(e.forEach(e=>{let t=s.getAttribute(e);!i.hasAttribute(e)&&t&&i.setAttribute(e,t)}),!i.children.length)){let e=s.cloneNode(!0);for(;e.firstChild;)i.appendChild(e.firstChild)}i.removeAttribute(t)}export{n as recursivelyParseGradientsXlink};
+//# sourceMappingURL=recursivelyParseGradientsXlink.min.mjs.map

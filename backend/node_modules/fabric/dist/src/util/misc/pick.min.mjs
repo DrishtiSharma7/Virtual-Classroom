@@ -1,0 +1,2 @@
+const e=(e,t=[])=>t.reduce((t,n)=>(n in e&&(t[n]=e[n]),t),{}),t=(e,t)=>Object.keys(e).reduce((n,r)=>(t(e[r],r,e)&&(n[r]=e[r]),n),{});export{e as pick,t as pickBy};
+//# sourceMappingURL=pick.min.mjs.map

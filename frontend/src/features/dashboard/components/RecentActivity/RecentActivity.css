@@ -1,0 +1,23 @@
+.recent-activity {
+  @apply bg-white rounded-2xl border border-slate-100 p-8 py-6 shadow-lg flex-1;
+}
+
+.recent-activity-title {
+  @apply text-base font-bold text-slate-800 mb-4;
+}
+
+.recent-activity-list {
+  @apply space-y-4;
+}
+
+.recent-activity-empty {
+  @apply text-sm text-slate-400 text-center py-4;
+}
+
+.recent-activity-item {
+  @apply flex items-start gap-3 text-sm text-slate-600;
+}
+
+.recent-activity-dot {
+  @apply w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0;
+}

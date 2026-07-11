@@ -1,0 +1,2 @@
+import{halfPI as e}from"../../constants.min.mjs";const t=t=>{if(t===0)return 1;switch(Math.abs(t)/e){case 1:case 3:return 0;case 2:return-1}return Math.cos(t)};export{t as cos};
+//# sourceMappingURL=cos.min.mjs.map

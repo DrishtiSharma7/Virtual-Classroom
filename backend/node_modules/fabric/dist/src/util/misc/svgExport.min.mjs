@@ -1,0 +1,2 @@
+import{config as e}from"../../config.min.mjs";import{toFixed as t}from"./toFixed.min.mjs";const n=n=>`matrix(`+n.map(n=>t(n,e.NUM_FRACTION_DIGITS)).join(` `)+`)`;export{n as matrixToSVG};
+//# sourceMappingURL=svgExport.min.mjs.map

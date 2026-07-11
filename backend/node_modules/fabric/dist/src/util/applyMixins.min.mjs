@@ -1,0 +1,2 @@
+function e(e,t){return t.forEach(t=>{Object.getOwnPropertyNames(t.prototype).forEach(n=>{n!==`constructor`&&Object.defineProperty(e.prototype,n,Object.getOwnPropertyDescriptor(t.prototype,n)||Object.create(null))})}),e}export{e as applyMixins};
+//# sourceMappingURL=applyMixins.min.mjs.map

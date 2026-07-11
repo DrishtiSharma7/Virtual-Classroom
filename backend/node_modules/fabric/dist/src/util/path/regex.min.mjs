@@ -1,0 +1,2 @@
+import{reNum as e}from"../../parser/constants.min.mjs";const t=`\\s*,?\\s*`,n=`${t}(${e})`,r=`${n}${n}${n}${t}([01])${t}([01])${n}${n}`,i=`[mzlhvcsqta][^mzlhvcsqta]*`;export{r as reArcCommandPoints,i as rePathCommand};
+//# sourceMappingURL=regex.min.mjs.map

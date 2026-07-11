@@ -1,0 +1,2 @@
+import{sendObjectToPlane as e}from"./planeChange.min.mjs";import{Group as t}from"../../shapes/Group.min.mjs";const n=(n,r)=>{var i;let a=n,o=r;a.inverted&&!o.inverted&&(a=r,o=n),e(o,(i=o.group)==null?void 0:i.calcTransformMatrix(),a.calcTransformMatrix());let s=a.inverted&&o.inverted;return s&&(a.inverted=o.inverted=!1),new t([a],{clipPath:o,inverted:s})};export{n as mergeClipPaths};
+//# sourceMappingURL=mergeClipPaths.min.mjs.map

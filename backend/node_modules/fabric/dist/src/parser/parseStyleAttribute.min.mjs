@@ -1,0 +1,2 @@
+import{parseStyleObject as e}from"./parseStyleObject.min.mjs";import{parseStyleString as t}from"./parseStyleString.min.mjs";function n(n){let r={},i=n.getAttribute(`style`);return i&&(typeof i==`string`?t(i,r):e(i,r)),r}export{n as parseStyleAttribute};
+//# sourceMappingURL=parseStyleAttribute.min.mjs.map

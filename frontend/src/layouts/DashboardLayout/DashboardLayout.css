@@ -1,0 +1,12 @@
+.dashboard-layout {
+  @apply min-h-screen bg-[#f8fafc] flex w-full;
+}
+
+.dashboard-main {
+  /* Sidebar ki fixed width (w-64 = 16rem) ke barabar left padding de rahe hain taaki content chhipe na */
+  @apply flex-1 pl-64 flex flex-col min-w-0;
+}
+
+.dashboard-content {
+  @apply flex-1 w-full;
+}

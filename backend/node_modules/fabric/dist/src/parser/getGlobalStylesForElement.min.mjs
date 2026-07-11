@@ -1,0 +1,2 @@
+import{elementMatchesRule as e}from"./elementMatchesRule.min.mjs";function t(t,n={}){let r={};for(let i in n)e(t,i.split(` `))&&(r={...r,...n[i]});return r}export{t as getGlobalStylesForElement};
+//# sourceMappingURL=getGlobalStylesForElement.min.mjs.map

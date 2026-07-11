@@ -1,0 +1,2 @@
+import{halfPI as e}from"../../constants.min.mjs";const t=t=>{if(t===0)return 0;let n=t/e,r=Math.sign(t);switch(n){case 1:return r;case 2:return 0;case 3:return-r}return Math.sin(t)};export{t as sin};
+//# sourceMappingURL=sin.min.mjs.map

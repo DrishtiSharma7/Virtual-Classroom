@@ -1,0 +1,2 @@
+import{WebGLProbe as e}from"../filters/GLProbes/WebGLProbe.min.mjs";const t={},n=()=>({document,window,isTouchSupported:`ontouchstart`in window||`ontouchstart`in document||window&&window.navigator&&window.navigator.maxTouchPoints>0,WebGLProbe:new e,dispose(){},copyPasteData:t});export{n as getEnv};
+//# sourceMappingURL=browser.min.mjs.map

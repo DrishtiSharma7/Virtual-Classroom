@@ -1,0 +1,2 @@
+import{FILL as e,STROKE as t}from"../constants.min.mjs";const n=[`display`,`transform`,e,`fill-opacity`,`fill-rule`,`opacity`,t,`stroke-dasharray`,`stroke-linecap`,`stroke-dashoffset`,`stroke-linejoin`,`stroke-miterlimit`,`stroke-opacity`,`stroke-width`,`id`,`paint-order`,`vector-effect`,`instantiated_by_use`,`clip-path`];export{n as SHARED_ATTRIBUTES};
+//# sourceMappingURL=attributes.min.mjs.map

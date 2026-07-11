@@ -1,0 +1,2 @@
+import{FabricError as e}from"../util/internals/console.min.mjs";import{createEmptyResponse as t}from"./parseSVGDocument.min.mjs";import{loadSVGFromString as n}from"./loadSVGFromString.min.mjs";function r(r,i,a={}){return fetch(r.replace(/^\n\s*/,``).trim(),{signal:a.signal}).then(t=>{if(!t.ok)throw new e(`HTTP error! status: ${t.status}`);return t.text()}).then(e=>n(e,i,a)).catch(()=>t())}export{r as loadSVGFromURL};
+//# sourceMappingURL=loadSVGFromURL.min.mjs.map

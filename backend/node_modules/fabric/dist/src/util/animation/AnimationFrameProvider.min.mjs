@@ -1,0 +1,2 @@
+import{getFabricWindow as e}from"../../env/index.min.mjs";function t(t){return e().requestAnimationFrame(t)}function n(t){return e().cancelAnimationFrame(t)}export{n as cancelAnimFrame,t as requestAnimFrame};
+//# sourceMappingURL=AnimationFrameProvider.min.mjs.map

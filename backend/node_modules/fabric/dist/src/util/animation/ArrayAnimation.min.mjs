@@ -1,0 +1,2 @@
+import{AnimationBase as e}from"./AnimationBase.min.mjs";var t=class extends e{constructor({startValue:e=[0],endValue:t=[100],...n}){super({...n,startValue:e,byValue:t.map((t,n)=>t-e[n])})}calculate(e){let t=this.startValue.map((t,n)=>this.easing(e,t,this.byValue[n],this.duration,n));return{value:t,valueProgress:Math.abs((t[0]-this.startValue[0])/this.byValue[0])}}};export{t as ArrayAnimation};
+//# sourceMappingURL=ArrayAnimation.min.mjs.map

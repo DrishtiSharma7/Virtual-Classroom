@@ -1,0 +1,32 @@
+.dashboard-layout {
+  @apply min-h-screen bg-[#f4f3f3] flex;
+}
+
+.dashboard-main-content {
+  @apply flex-1 pl-64 flex flex-col ;
+}
+
+.dashboard-viewport {
+  @apply pt-4 pb-4 p-8 flex-1 space-y-6 max-w-7xl w-full mx-auto;
+}
+
+.stats-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.dashboard-split-section {
+  @apply flex flex-col lg:flex-row gap-4;
+}
+
+.activity-card {
+  @apply bg-white p-6 rounded-2xl border border-gray-100 shadow-md lg:w-80;
+}
+
+.activity-list {
+  @apply space-y-4 text-sm text-gray-700 font-medium;
+}
+
+.activity-list li {
+  @apply flex items-start before:content-['•'] before:mr-2 before:text-gray-400;
+}
+

@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.sidebar-container {
+  @apply w-64 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-10;
+}
+
+.sidebar-logo {
+  @apply h-16 flex items-center px-6 border-b border-gray-50;
+}
+
+.sidebar-nav {
+  @apply flex-1 py-6 px-4 space-y-1;
+}
+
+.sidebar-link {
+  @apply w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-black transition-colors font-medium text-lg;
+}
+
+.sidebar-link.active {
+  @apply bg-indigo-600 text-white;
+}
+
+.sidebar-link.active:hover {
+  @apply bg-indigo-700;
+}
+
+.sidebar-icon {
+  @apply text-lg;
+}

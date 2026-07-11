@@ -1,0 +1,2 @@
+import{Observable as e}from"./Observable.min.mjs";var t=class extends e{_setOptions(e={}){for(let t in e)this.set(t,e[t])}_setObject(e){for(let t in e)this._set(t,e[t])}set(e,t){return typeof e==`object`?this._setObject(e):this._set(e,t),this}_set(e,t){this[e]=t}toggle(e){let t=this.get(e);return typeof t==`boolean`&&this.set(e,!t),this}get(e){return this[e]}};export{t as CommonMethods};
+//# sourceMappingURL=CommonMethods.min.mjs.map

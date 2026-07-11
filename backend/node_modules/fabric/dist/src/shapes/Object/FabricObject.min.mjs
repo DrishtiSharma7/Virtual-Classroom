@@ -1,0 +1,2 @@
+import{classRegistry as e}from"../../ClassRegistry.min.mjs";import{FabricObjectSVGExportMixin as t}from"./FabricObjectSVGExportMixin.min.mjs";import"./defaultValues.min.mjs";import{InteractiveFabricObject as n}from"./InteractiveObject.min.mjs";import{applyMixins as r}from"../../util/applyMixins.min.mjs";var i=class extends n{};r(i,[t]),e.setClass(i),e.setClass(i,`object`);export{i as FabricObject};
+//# sourceMappingURL=FabricObject.min.mjs.map

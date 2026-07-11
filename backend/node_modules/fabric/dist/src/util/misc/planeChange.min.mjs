@@ -1,0 +1,2 @@
+import{iMatrix as e}from"../../constants.min.mjs";import{invertTransform as t,multiplyTransformMatrices as n}from"./matrix.min.mjs";import{applyTransformToObject as r}from"./objectTransforms.min.mjs";const i=(r=e,i=e)=>n(t(i),r),a=(t,n=e,r=e)=>t.transform(i(n,r)),o=(t,n=e,r=e)=>t.transform(i(n,r),!0),s=(e,t,a)=>{let o=i(t,a);return r(e,n(o,e.calcOwnMatrix())),o};export{i as calcPlaneChangeMatrix,s as sendObjectToPlane,a as sendPointToPlane,o as sendVectorToPlane};
+//# sourceMappingURL=planeChange.min.mjs.map

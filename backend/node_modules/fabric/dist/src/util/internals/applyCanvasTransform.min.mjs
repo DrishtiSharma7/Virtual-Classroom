@@ -1,0 +1,2 @@
+const e=(e,t)=>{let n=t.getRetinaScaling();e.setTransform(n,0,0,n,0,0);let r=t.viewportTransform;e.transform(r[0],r[1],r[2],r[3],r[4],r[5])};export{e as applyCanvasTransform};
+//# sourceMappingURL=applyCanvasTransform.min.mjs.map

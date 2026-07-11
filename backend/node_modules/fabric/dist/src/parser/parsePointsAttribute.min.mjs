@@ -1,0 +1,2 @@
+function e(e){if(!e)return[];let t=e.replace(/,/g,` `).trim().split(/\s+/),n=[];for(let e=0;e<t.length;e+=2)n.push({x:parseFloat(t[e]),y:parseFloat(t[e+1])});return n}export{e as parsePointsAttribute};
+//# sourceMappingURL=parsePointsAttribute.min.mjs.map

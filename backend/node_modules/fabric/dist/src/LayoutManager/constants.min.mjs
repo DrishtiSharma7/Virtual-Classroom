@@ -1,0 +1,2 @@
+const e=`initialization`,t=`added`,n=`removed`,r=`imperative`,i=`object_modified`,a=`object_modifying`;export{t as LAYOUT_TYPE_ADDED,r as LAYOUT_TYPE_IMPERATIVE,e as LAYOUT_TYPE_INITIALIZATION,i as LAYOUT_TYPE_OBJECT_MODIFIED,a as LAYOUT_TYPE_OBJECT_MODIFYING,n as LAYOUT_TYPE_REMOVED};
+//# sourceMappingURL=constants.min.mjs.map

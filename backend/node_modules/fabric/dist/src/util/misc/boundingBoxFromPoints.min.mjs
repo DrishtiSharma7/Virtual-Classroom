@@ -1,0 +1,2 @@
+const e=e=>{let t=0,n=0,r=0,i=0;for(let a=0,o=e.length;a<o;a++){let{x:o,y:s}=e[a];(o>r||!a)&&(r=o),(o<t||!a)&&(t=o),(s>i||!a)&&(i=s),(s<n||!a)&&(n=s)}return{left:t,top:n,width:r-t,height:i-n}};export{e as makeBoundingBoxFromPoints};
+//# sourceMappingURL=boundingBoxFromPoints.min.mjs.map

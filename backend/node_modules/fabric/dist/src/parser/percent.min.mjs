@@ -1,0 +1,2 @@
+import{capValue as e}from"../util/misc/capValue.min.mjs";import{ifNaN as t}from"../util/internals/ifNaN.min.mjs";function n(e){return e&&/%$/.test(e)&&Number.isFinite(parseFloat(e))}function r(r,i){return e(0,t(typeof r==`number`?r:typeof r==`string`?parseFloat(r)/(n(r)?100:1):NaN,i),1)}export{n as isPercent,r as parsePercent};
+//# sourceMappingURL=percent.min.mjs.map

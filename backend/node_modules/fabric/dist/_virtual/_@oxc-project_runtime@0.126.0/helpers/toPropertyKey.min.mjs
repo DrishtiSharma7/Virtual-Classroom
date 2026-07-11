@@ -1,0 +1,1 @@
+import{_typeof as e}from"./typeof.min.mjs";import{toPrimitive as t}from"./toPrimitive.min.mjs";function n(n){var r=t(n,`string`);return e(r)==`symbol`?r:r+``}export{n as toPropertyKey};

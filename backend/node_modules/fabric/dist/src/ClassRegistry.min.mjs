@@ -1,0 +1,2 @@
+import{FabricError as e}from"./util/internals/console.min.mjs";const t=`json`,n=new class{constructor(){this[t]=new Map,this.svg=new Map}has(e){return this[t].has(e)}getClass(n){let r=this[t].get(n);if(!r)throw new e(`No class registered for ${n}`);return r}setClass(e,n){n?this[t].set(n,e):(this[t].set(e.type,e),this[t].set(e.type.toLowerCase(),e))}getSVGClass(e){return this.svg.get(e)}setSVGClass(e,t){this.svg.set(t==null?e.type.toLowerCase():t,e)}};export{n as classRegistry};
+//# sourceMappingURL=ClassRegistry.min.mjs.map

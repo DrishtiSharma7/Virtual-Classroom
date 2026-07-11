@@ -1,0 +1,2 @@
+import{getSvgRegex as e}from"./getSvgRegex.min.mjs";import{svgInvalidAncestors as t}from"./constants.min.mjs";import{getTagName as n}from"./getTagName.min.mjs";const r=e(t);function i(e){let t=e;for(;t&&(t=t.parentElement);)if(t&&t.nodeName&&r.test(n(t))&&!t.getAttribute(`instantiated_by_use`))return!0;return!1}export{i as hasInvalidAncestor};
+//# sourceMappingURL=hasInvalidAncestor.min.mjs.map

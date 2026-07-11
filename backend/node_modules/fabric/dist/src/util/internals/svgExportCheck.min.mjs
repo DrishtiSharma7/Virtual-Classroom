@@ -1,0 +1,2 @@
+const e=new RegExp(String.raw`[\0-\x1F\x7F;<>\\]|\/\*|\*\/|url\s*\(|expression\s*\(|(?:java|vb)script\s*:|data\s*:|@import\b`,`iu`),t=t=>typeof t==`string`&&t.trim().length>0&&!e.test(t),n=(e,t=``)=>{let n=Number(e);return Number.isFinite(n)?`${n}`:t},r=(e,n=``)=>typeof e==`string`&&t(e)?e:n;export{n as getSafeSvgStyleNumber,r as getSafeSvgStyleToken,t as isSafeSvgStyleValue};
+//# sourceMappingURL=svgExportCheck.min.mjs.map

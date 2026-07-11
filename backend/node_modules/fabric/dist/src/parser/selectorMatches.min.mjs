@@ -1,0 +1,2 @@
+function e(e,t){let n=e.nodeName,r=e.getAttribute(`class`),i=e.getAttribute(`id`),a=`(?![a-zA-Z\\-]+)`,o;if(o=RegExp(`^`+n,`i`),t=t.replace(o,``),i&&t.length&&(o=RegExp(`#`+i+a,`i`),t=t.replace(o,``)),r&&t.length){let e=r.split(` `);for(let n=e.length;n--;)o=RegExp(`\\.`+e[n]+a,`i`),t=t.replace(o,``)}return t.length===0}export{e as selectorMatches};
+//# sourceMappingURL=selectorMatches.min.mjs.map

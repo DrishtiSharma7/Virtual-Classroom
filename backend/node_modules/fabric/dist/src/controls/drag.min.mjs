@@ -1,0 +1,2 @@
+import{MOVING as e}from"../constants.min.mjs";import{commonEventInfo as t,isLocked as n}from"./util.min.mjs";import{fireEvent as r}from"./fireEvent.min.mjs";const i=(i,a,o,s)=>{let{target:c,offsetX:l,offsetY:u}=a,d=o-l,f=s-u,p=!n(c,`lockMovementX`)&&c.left!==d,m=!n(c,`lockMovementY`)&&c.top!==f;return p&&c.set(`left`,d),m&&c.set(`top`,f),(p||m)&&r(e,t(i,a,o,s)),p||m};export{i as dragHandler};
+//# sourceMappingURL=drag.min.mjs.map

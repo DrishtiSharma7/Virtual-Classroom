@@ -1,0 +1,2 @@
+import{toFixed as e}from"../util/misc/toFixed.min.mjs";import{Color as t}from"../color/Color.min.mjs";import{FabricObject as n}from"../shapes/Object/FabricObject.min.mjs";const r={stroke:`strokeOpacity`,fill:`fillOpacity`};function i(i){let a=n.getDefaults();return Object.entries(r).forEach(([n,r])=>{if(i[r]===void 0||i[n]===``)return;if(i[n]===void 0){if(!a[n])return;i[n]=a[n]}if(i[n].indexOf(`url(`)===0)return;let o=new t(i[n]);i[n]=o.setAlpha(e(o.getAlpha()*i[r],2)).toRgba()}),i}export{i as setStrokeFillOpacity};
+//# sourceMappingURL=setStrokeFillOpacity.min.mjs.map

@@ -1,0 +1,755 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Canvas event data > HTML event "contextmenu" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "contextmenu:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "subTargets": [],
+      "target": undefined,
+    },
+  ],
+  [
+    "contextmenu",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "subTargets": [],
+      "target": undefined,
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "dblclick" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "mouse:dblclick",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "drag" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "dragstart",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "drag",
+    {
+      "dragSource": "Drag Target",
+      "dropTarget": undefined,
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "target": "Drag Target",
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "dragend" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "dragstart",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "dragend",
+    {
+      "didDrop": false,
+      "dragSource": "Drag Target",
+      "dropTarget": undefined,
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "mouse:up:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "isClick": false,
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+  [
+    "mouse:up",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "isClick": false,
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+  [
+    "after:render",
+    {
+      "ctx": CanvasRenderingContext2d,
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "dragenter" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "dragstart",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "dragenter",
+    {
+      "dragSource": "Drag Target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "drag:enter",
+    {
+      "actualTarget": undefined,
+      "dragSource": "Drag Target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "previousActualTarget": undefined,
+      "previousTarget": undefined,
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "dragleave" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "dragstart",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "dragleave",
+    {
+      "dragSource": "Drag Target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "subTargets": [],
+      "target": undefined,
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "dragover" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "dragstart",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "dragover",
+    {
+      "canDrop": true,
+      "dragSource": "Drag Target",
+      "dropTarget": "Drag Target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "drag:enter",
+    {
+      "actualTarget": undefined,
+      "canDrop": false,
+      "dragSource": "Drag Target",
+      "dropTarget": undefined,
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "previousActualTarget": undefined,
+      "previousTarget": undefined,
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "drop" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "dragstart",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "target": "Drag Target",
+    },
+  ],
+  [
+    "drop:before",
+    {
+      "didDrop": false,
+      "dragSource": "Drag Target",
+      "dropTarget": undefined,
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+  [
+    "drop",
+    {
+      "didDrop": false,
+      "dragSource": "Drag Target",
+      "dropTarget": undefined,
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+  [
+    "drop:after",
+    {
+      "didDrop": false,
+      "dragSource": "Drag Target",
+      "dropTarget": undefined,
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": "Drag Target",
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "mousedown" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "mouse:down:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+  [
+    "mouse:down",
+    {
+      "alreadySelected": false,
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "mouseenter" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "mouse:over",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "mouseleave" should fire a corresponding canvas event 1`] = `[]`;
+
+exports[`Canvas event data > HTML event "mousemove" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "mouse:move:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+  [
+    "mouse:move",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "mouseout" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "mouse:out",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "target": undefined,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "mouseover" should fire a corresponding canvas event 1`] = `[]`;
+
+exports[`Canvas event data > HTML event "mouseup" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "mouse:up:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "isClick": true,
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+  [
+    "mouse:up",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "isClick": true,
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Canvas event data > HTML event "wheel" should fire a corresponding canvas event 1`] = `
+[
+  [
+    "mouse:wheel",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": -30,
+        "y": -13,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 50,
+        "y": 50,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Event targets > should fire mouse over/out events on target 1`] = `
+[
+  [
+    "mousemove:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+      "subTargets": [],
+      "target": "target",
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+    },
+  ],
+  [
+    "mouseover",
+    {
+      "actualTarget": "target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "previousActualTarget": undefined,
+      "previousTarget": undefined,
+      "scenePoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+      "target": "target",
+      "viewportPoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+    },
+  ],
+  [
+    "mousemove",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+      "subTargets": [],
+      "target": "target",
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+    },
+  ],
+  [
+    "mouseout",
+    {
+      "actualTarget": "target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "nextActualTarget": undefined,
+      "nextTarget": undefined,
+      "scenePoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+      "target": "target",
+      "viewportPoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+    },
+  ],
+]
+`;
+
+exports[`Event targets > should fire mouse over/out events on target 2`] = `
+[
+  [
+    "mouse:move:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+      "subTargets": [],
+      "target": "target",
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+    },
+  ],
+  [
+    "mouse:over",
+    {
+      "actualTarget": "target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "previousActualTarget": undefined,
+      "previousTarget": undefined,
+      "scenePoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+      "target": "target",
+      "viewportPoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+    },
+  ],
+  [
+    "mouse:move",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+      "subTargets": [],
+      "target": "target",
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 5,
+        "y": 5,
+      },
+    },
+  ],
+  [
+    "mouse:move:before",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+    },
+  ],
+  [
+    "mouse:out",
+    {
+      "actualTarget": "target",
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "nextActualTarget": undefined,
+      "nextTarget": undefined,
+      "scenePoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+      "target": "target",
+      "viewportPoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+    },
+  ],
+  [
+    "mouse:move",
+    {
+      "e": MouseEvent {
+        "isTrusted": false,
+      },
+      "scenePoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+      "subTargets": [],
+      "target": undefined,
+      "transform": null,
+      "viewportPoint": Point {
+        "x": 20,
+        "y": 20,
+      },
+    },
+  ],
+]
+`;
