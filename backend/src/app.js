@@ -21,9 +21,9 @@ app.use("/uploads", express.static("uploads"));
 
 app.use("/api/auth", authRoutes);
 
-//app.get("/", (req, res) => {
-//  res.send("Virtual Classroom API Running...");
-//});
+app.get("/", (req, res) => {
+  res.send("Virtual Classroom API Running...");
+});
 
 app.get("/api/protected", authMiddleware, (req, res) => {
   res.json({
