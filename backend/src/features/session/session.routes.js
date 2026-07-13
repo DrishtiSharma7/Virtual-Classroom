@@ -3,29 +3,26 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../../middleware/auth.middleware");
-const roleMiddleware = require("../../middleware/role.middleware");
-const sessionController = require("./session.controller");
 
-router.post(
-  "/",
-  auth,
-  roleMiddleware("teacher"),
-  sessionController.createSession,
-);
+const {
+  createSession,
+  getSessionsByClassroom,
+  getSessionById,
+  deleteSession,
+  startSession,
+  endSession,
+} = require("./session.controller");
 
-router.get(
-  "/classroom/:classroomId",
-  auth,
-  sessionController.getSessionsByClassroom,
-);
+router.post("/", auth, createSession);
 
-router.get("/:id", auth, sessionController.getSessionById);
+router.get("/classroom/:classroomId", auth, getSessionsByClassroom);
 
-router.delete(
-  "/:id",
-  auth,
-  roleMiddleware("teacher"),
-  sessionController.deleteSession,
-);
+router.get("/:id", auth, getSessionById);
+
+router.patch("/:id/start", auth, startSession);
+
+router.patch("/:id/end", auth, endSession);
+
+router.delete("/:id", auth, deleteSession);
 
 module.exports = router;

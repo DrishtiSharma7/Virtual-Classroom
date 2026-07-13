@@ -1,4 +1,6 @@
 import React from "react";
+import { useEffect, useState } from "react";
+import { getDashboard } from "../../api/dashboard.api";
 import WelcomeBanner from "../../components/WelcomeBanner/WelcomeBanner";
 import StatCard from "../../components/StatCard/StatCard";
 import RecentClasses from "../../components/RecentClasses/RecentClasses";
@@ -8,16 +10,40 @@ import {LayoutDashboard, Users, Video, CircleCheckBig} from "lucide-react";
 import "./TeacherDashboard.css";
 
 const TeacherDashboard = () => {
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const loadDashboard = async () => {
+    try {
+      const response = await getDashboard();
+      setDashboard(response.data);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+  return <h2>Loading...</h2>;
+}
+
   return (
     <div className="dashboard-viewport">
-      <WelcomeBanner />
+      <WelcomeBanner  
+        name={dashboard?.welcomeName}
+        role={dashboard?.role}/>
 
       {/* Stats Grid */}
       <div className="stats-grid">
-        <StatCard icon={<LayoutDashboard />} label="Total Classrooms" value="5" colorClass="bg-blue-soft" />
-        <StatCard icon={<Users />} label="Total Students" value="128" colorClass="bg-orange-soft" />
-        <StatCard icon={<Video />} label="Live Sessions" value="2" colorClass="bg-purple-soft" />
-        <StatCard icon={<CircleCheckBig />} label="Attendance" value="94%" colorClass="bg-green-soft" />
+        <StatCard icon={<LayoutDashboard />} label="Total Classrooms" value={dashboard?.stats.totalClasses || 0} colorClass="bg-blue-soft" />
+        <StatCard icon={<Users />} label="Total Students" value={dashboard?.stats.totalStudents || 0} colorClass="bg-orange-soft" />
+        <StatCard icon={<Video />} label="Live Sessions" value={dashboard?.stats?.liveSessions || 0} colorClass="bg-purple-soft" />
+        <StatCard icon={<CircleCheckBig />} label="Attendance" value={`${dashboard?.stats?.attendance || 0}%`} colorClass="bg-green-soft" />
       </div>
 
       {/* Lower Split Sections */}

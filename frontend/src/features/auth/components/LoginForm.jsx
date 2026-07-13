@@ -28,7 +28,7 @@ function LoginForm() {
 
       login(data);
 
-      navigate("/classrooms");
+      navigate("/dashboard", { replace: true });
       
     } catch (error) {
       console.log(error);

@@ -130,3 +130,71 @@ exports.deleteSession = async (req, res) => {
     });
   }
 };
+
+// START SESSION
+
+exports.startSession = async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({
+        message: "Session not found",
+      });
+    }
+
+    if (session.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
+    }
+
+    session.status = "live";
+    session.startTime = new Date();
+
+    await session.save();
+
+    res.json({
+      message: "Session started",
+      session,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+// END SESSION
+
+exports.endSession = async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({
+        message: "Session not found",
+      });
+    }
+
+    if (session.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
+    }
+
+    session.status = "ended";
+    session.endTime = new Date();
+
+    await session.save();
+
+    res.json({
+      message: "Session ended",
+      session,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};

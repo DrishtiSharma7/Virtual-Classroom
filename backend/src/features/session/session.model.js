@@ -24,7 +24,13 @@ const sessionSchema = new mongoose.Schema(
 
     endTime: {
       type: Date,
-      required: true,
+      default: null,
+    },
+
+    status: {
+      type: String,
+      enum: ["scheduled", "live", "ended"],
+      default: "scheduled",
     },
 
     createdBy: {
@@ -36,7 +42,7 @@ const sessionSchema = new mongoose.Schema(
 
   {
     timestamps: true,
-  },
+  }
 );
 
 module.exports = mongoose.model("Session", sessionSchema);

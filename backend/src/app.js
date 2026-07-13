@@ -12,6 +12,7 @@ const sessionRoutes = require("./features/session/session.routes");
 const quizRoutes = require("./features/quiz/quiz.routes");
 const chatRoutes = require("./features/chat/chat.routes");
 const materialRoutes = require("./features/material/material.routes");
+const dashboardRoutes = require("./features/dashboard/dashboard.routes");
 
 const app = express();
 
@@ -51,5 +52,6 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/material", materialRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 module.exports = app;
