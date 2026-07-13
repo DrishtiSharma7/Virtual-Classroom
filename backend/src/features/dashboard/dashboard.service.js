@@ -3,6 +3,7 @@ const Session = require("../session/session.model");
 const Attendance = require("../attendance/attendance.model");
 
 const getDashboardData = async (user) => {
+  console.log("USER NAME:", user.name);
   // ============================
   // TEACHER DASHBOARD
   // ============================
