@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { GraduationCap, Eye, EyeOff, User } from "lucide-react";
+import LoginIllustration from "../../../assets/Login.png";
+import "./LoginForm.css";
 
 import { loginUser } from "../api/auth.api";
 import useAuth from "../hooks/useAuth";
@@ -7,6 +10,11 @@ import useAuth from "../hooks/useAuth";
 function LoginForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [role, setRole] = useState("student");
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -24,60 +32,147 @@ function LoginForm() {
     e.preventDefault();
 
     try {
-      const data = await loginUser(formData);
+      const data = await loginUser({
+        ...formData,
+        role,
+      });
 
       login(data);
 
-      navigate("/dashboard", { replace: true });
-      
-    } catch (error) {
-      console.log(error);
-      alert(error.response?.data?.message || "Login Failed");
+      navigate("/dashboard", {
+        replace: true,
+      });
+    } catch (err) {
+      alert(err.response?.data?.message || "Login Failed");
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
-    >
-      <h2 className="text-3xl font-bold text-center mb-6">Login</h2>
+    <div className="login-page">
+      {/* Floating background blur circles */}
+      <header className="login-header">
+        <GraduationCap className="logo-icon" />
+        <span className="logo-text">Virtual Classroom</span>
+      </header>
 
-      <div className="mb-4">
-        <label className="block mb-2 font-medium">Email</label>
+      {/* Main Card */}
+      <main className="login-container">
+        <div className="login-card">
+          {/* LEFT PANEL */}
+          <section className="login-left">
+            <img
+              src={LoginIllustration}
+              alt="Virtual Classroom Illustration"
+              className="login-illustration"
+            />
 
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-          placeholder="Enter Email"
-          required
-        />
-      </div>
+            <h2 className="left-heading">Learn, Teach and Collaborate</h2>
 
-      <div className="mb-6">
-        <label className="block mb-2 font-medium">Password</label>
+            <p className="left-text">
+              Manage your virtual classrooms, attend live sessions, submit
+              assignments, and stay connected from anywhere.
+            </p>
+          </section>
 
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-          placeholder="Enter Password"
-          required
-        />
-      </div>
+          {/* RIGHT PANEL */}
+          <section className="login-right">
+            <form className="login-form" onSubmit={handleSubmit}>
+              <h1 className="welcome-heading">
+                Welcome Back <span className="wave">👋</span>
+              </h1>
 
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
-      >
-        Login
-      </button>
-    </form>
+              <p className="welcome-subtitle">
+                Sign in to continue to your Virtual Classroom.
+              </p>
+
+              {/* EMAIL */}
+              <div className="input-box">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              {/* PASSWORD */}
+              <div className="input-box">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              {/* OPTIONS */}
+              <div className="login-options">
+                <label className="remember-me">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                  />
+                  <span>Remember Me</span>
+                </label>
+
+                <Link to="/forgot-password" className="forgot-link">
+                  Forgot Password?
+                </Link>
+              </div>
+
+              {/* ROLE SELECTOR */}
+              <div className="role-selector">
+                <button
+                  type="button"
+                  className={
+                    role === "teacher" ? "role-btn active" : "role-btn"
+                  }
+                  onClick={() => setRole("teacher")}
+                >
+                  <User size={22} />
+                  Teacher
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    role === "student" ? "role-btn active" : "role-btn"
+                  }
+                  onClick={() => setRole("student")}
+                >
+                  <GraduationCap size={24} />
+                  Student
+                </button>
+              </div>
+
+              {/* LOGIN BUTTON */}
+              <button type="submit" className="login-btn">
+                Login
+              </button>
+
+              {/* REGISTER */}
+              <p className="register-text">
+                Don't have an account? <Link to="/register">Register</Link>
+              </p>
+            </form>
+          </section>
+        </div>
+      </main>
+    </div>
   );
 }
 
