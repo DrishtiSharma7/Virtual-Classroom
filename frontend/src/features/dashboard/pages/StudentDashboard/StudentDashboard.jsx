@@ -6,12 +6,7 @@ import StatCard from "../../components/StatCard/StatCard";
 import RecentClasses from "../../components/RecentClasses/RecentClasses";
 import QuickActions from "../../components/QuickActions/QuickActions";
 
-import {
-  Layers,
-  FilePenLine,
-  Goal,
-  CheckSquare,
-} from "lucide-react";
+import { Layers, FilePenLine, Goal, CheckSquare } from "lucide-react";
 
 import "./StudentDashboard.css";
 
@@ -40,10 +35,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="dashboard-viewport">
-      <WelcomeBanner
-        name={dashboard?.welcomeName}
-        role={dashboard?.role}
-      />
+      <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
       {/* Stats Grid */}
       <div className="stats-grid">

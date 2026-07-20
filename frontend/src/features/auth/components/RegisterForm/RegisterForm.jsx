@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { registerUser } from "../api/auth.api";
+import { registerUser } from "../../api/auth.api";
 import { useNavigate } from "react-router-dom";
-import RegisterIllustration from "../../../assets/Register.png";
+import RegisterIllustration from "../../../../assets/Register.png";
 import {
   GraduationCap,
   User,

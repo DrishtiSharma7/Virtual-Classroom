@@ -3,11 +3,7 @@ const Attendance = require("./attendance.model");
 // =============================
 // Student Joins Session
 // =============================
-exports.studentJoined = async ({
-  classroomId,
-  sessionId,
-  studentId,
-}) => {
+exports.studentJoined = async ({ classroomId, sessionId, studentId }) => {
   const existingAttendance = await Attendance.findOne({
     session: sessionId,
     student: studentId,
@@ -29,10 +25,7 @@ exports.studentJoined = async ({
 // =============================
 // Student Leaves Session
 // =============================
-exports.studentLeft = async ({
-  sessionId,
-  studentId,
-}) => {
+exports.studentLeft = async ({ sessionId, studentId }) => {
   const attendance = await Attendance.findOne({
     session: sessionId,
     student: studentId,
@@ -44,9 +37,7 @@ exports.studentLeft = async ({
 
   attendance.leaveTime = leaveTime;
 
-  attendance.duration = Math.floor(
-    (leaveTime - attendance.joinTime) / 1000
-  );
+  attendance.duration = Math.floor((leaveTime - attendance.joinTime) / 1000);
 
   attendance.status = "LEFT";
 
@@ -58,9 +49,7 @@ exports.studentLeft = async ({
 // =============================
 // Teacher Ends Session
 // =============================
-exports.completeSessionAttendance = async (
-  sessionId
-) => {
+exports.completeSessionAttendance = async (sessionId) => {
   const records = await Attendance.find({
     session: sessionId,
     status: "IN_SESSION",
@@ -70,8 +59,7 @@ exports.completeSessionAttendance = async (
     attendance.leaveTime = new Date();
 
     attendance.duration = Math.floor(
-      (attendance.leaveTime - attendance.joinTime) /
-        1000
+      (attendance.leaveTime - attendance.joinTime) / 1000,
     );
 
     attendance.status = "COMPLETED";
@@ -85,9 +73,7 @@ exports.completeSessionAttendance = async (
 // =============================
 // Teacher Attendance
 // =============================
-exports.getSessionAttendance = async (
-  sessionId
-) => {
+exports.getSessionAttendance = async (sessionId) => {
   return Attendance.find({
     session: sessionId,
   })
@@ -100,9 +86,7 @@ exports.getSessionAttendance = async (
 // =============================
 // Student Attendance
 // =============================
-exports.getStudentAttendance = async (
-  studentId
-) => {
+exports.getStudentAttendance = async (studentId) => {
   return Attendance.find({
     student: studentId,
   })

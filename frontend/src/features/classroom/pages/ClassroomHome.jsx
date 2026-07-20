@@ -5,9 +5,7 @@ function ClassroomHome() {
     <div className="min-h-screen bg-slate-100 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">
-            Virtual Classrooms
-          </h1>
+          <h1 className="text-3xl font-bold">Virtual Classrooms</h1>
 
           <Link
             to="/classrooms/create"
@@ -18,15 +16,10 @@ function ClassroomHome() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
           <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold">
-              MERN Stack Batch
-            </h2>
+            <h2 className="text-xl font-bold">MERN Stack Batch</h2>
 
-            <p className="mt-2 text-gray-600">
-              Room Code : ABC123
-            </p>
+            <p className="mt-2 text-gray-600">Room Code : ABC123</p>
 
             <button className="mt-5 w-full bg-green-600 text-white py-2 rounded-lg">
               Enter Classroom
@@ -34,19 +27,14 @@ function ClassroomHome() {
           </div>
 
           <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold">
-              Python Batch
-            </h2>
+            <h2 className="text-xl font-bold">Python Batch</h2>
 
-            <p className="mt-2 text-gray-600">
-              Room Code : XYZ456
-            </p>
+            <p className="mt-2 text-gray-600">Room Code : XYZ456</p>
 
             <button className="mt-5 w-full bg-green-600 text-white py-2 rounded-lg">
               Enter Classroom
             </button>
           </div>
-
         </div>
       </div>
     </div>

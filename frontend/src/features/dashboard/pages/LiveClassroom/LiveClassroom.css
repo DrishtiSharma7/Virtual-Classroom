@@ -1,0 +1,139 @@
+.live-classroom {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f7fb;
+}
+
+.live-header {
+  height: 70px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.course-info h2 {
+  margin: 0;
+}
+
+.session-info {
+  display: flex;
+  gap: 15px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.live-badge {
+  color: red;
+  font-weight: bold;
+}
+
+.teacher-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.end-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.main-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+.whiteboard {
+  background: white;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toolbar {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.board {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  font-size: 22px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.participants,
+.chat {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.user {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.message {
+  margin: 15px 0;
+}
+
+.chat input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.bottom-controls {
+  height: 75px;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.bottom-controls button {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.danger {
+  background: #ef4444;
+  color: white;
+}

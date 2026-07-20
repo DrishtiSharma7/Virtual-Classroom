@@ -1,11 +1,29 @@
-import React from 'react';
-import './RecentClasses.css';
+import React from "react";
+import "./RecentClasses.css";
 
 const RecentClasses = () => {
   const classes = [
-    { name: 'Data Structures', subject: 'Computer Science', students: '35 Students', status: 'Active', statusStyle: 'status-active' },
-    { name: 'Web Development', subject: 'Computer Science', students: '42 Students', status: 'Upcoming', statusStyle: 'status-upcoming' },
-    { name: 'Operating Systems', subject: 'Computer Science', students: '30 Students', status: 'Completed', statusStyle: 'status-completed' },
+    {
+      name: "Data Structures",
+      subject: "Computer Science",
+      students: "35 Students",
+      status: "Active",
+      statusStyle: "status-active",
+    },
+    {
+      name: "Web Development",
+      subject: "Computer Science",
+      students: "42 Students",
+      status: "Upcoming",
+      statusStyle: "status-upcoming",
+    },
+    {
+      name: "Operating Systems",
+      subject: "Computer Science",
+      students: "30 Students",
+      status: "Completed",
+      statusStyle: "status-completed",
+    },
   ];
 
   return (
@@ -27,7 +45,9 @@ const RecentClasses = () => {
               <td className="text-gray-500">{cls.subject}</td>
               <td className="text-gray-600">{cls.students}</td>
               <td>
-                <span className={`status-badge ${cls.statusStyle}`}>{cls.status}</span>
+                <span className={`status-badge ${cls.statusStyle}`}>
+                  {cls.status}
+                </span>
               </td>
             </tr>
           ))}

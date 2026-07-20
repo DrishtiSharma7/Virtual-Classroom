@@ -8,22 +8,21 @@ router.post(
   "/",
   authMiddleware,
   roleMiddleware("student"),
-  submissionController.submitAssignment
+  submissionController.submitAssignment,
 );
 
 router.get(
   "/assignment/:assignmentId",
   authMiddleware,
   roleMiddleware("teacher"),
-  submissionController.getSubmissions
+  submissionController.getSubmissions,
 );
 
 router.patch(
   "/:id",
   authMiddleware,
   roleMiddleware("teacher"),
-  submissionController.giveMarks
+  submissionController.giveMarks,
 );
-
 
 module.exports = router;

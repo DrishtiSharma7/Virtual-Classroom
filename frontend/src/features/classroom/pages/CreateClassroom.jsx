@@ -15,9 +15,7 @@ function CreateClassroom() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-xl shadow w-450px"
       >
-        <h2 className="text-3xl font-bold mb-6">
-          Create Classroom
-        </h2>
+        <h2 className="text-3xl font-bold mb-6">Create Classroom</h2>
 
         <input
           type="text"
@@ -27,9 +25,7 @@ function CreateClassroom() {
           className="border w-full p-3 rounded-lg mb-5"
         />
 
-        <button
-          className="w-full bg-blue-600 text-white py-3 rounded-lg"
-        >
+        <button className="w-full bg-blue-600 text-white py-3 rounded-lg">
           Create
         </button>
       </form>

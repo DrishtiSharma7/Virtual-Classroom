@@ -8,12 +8,11 @@ exports.joinSession = async (req, res) => {
   try {
     const { classroomId, sessionId } = req.body;
 
-    const attendance =
-      await attendanceService.studentJoined({
-        classroomId,
-        sessionId,
-        studentId: req.user.id,
-      });
+    const attendance = await attendanceService.studentJoined({
+      classroomId,
+      sessionId,
+      studentId: req.user.id,
+    });
 
     res.status(201).json({
       success: true,
@@ -35,11 +34,10 @@ exports.leaveSession = async (req, res) => {
   try {
     const { sessionId } = req.body;
 
-    const attendance =
-      await attendanceService.studentLeft({
-        sessionId,
-        studentId: req.user.id,
-      });
+    const attendance = await attendanceService.studentLeft({
+      sessionId,
+      studentId: req.user.id,
+    });
 
     if (!attendance) {
       return res.status(404).json({
@@ -66,9 +64,7 @@ exports.leaveSession = async (req, res) => {
 // =========================================
 exports.completeSession = async (req, res) => {
   try {
-    await attendanceService.completeSessionAttendance(
-      req.params.sessionId
-    );
+    await attendanceService.completeSessionAttendance(req.params.sessionId);
 
     res.json({
       success: true,
@@ -87,10 +83,9 @@ exports.completeSession = async (req, res) => {
 // =========================================
 exports.getSessionAttendance = async (req, res) => {
   try {
-    const attendance =
-      await attendanceService.getSessionAttendance(
-        req.params.sessionId
-      );
+    const attendance = await attendanceService.getSessionAttendance(
+      req.params.sessionId,
+    );
 
     res.json({
       success: true,
@@ -110,10 +105,9 @@ exports.getSessionAttendance = async (req, res) => {
 // =========================================
 exports.getMyAttendance = async (req, res) => {
   try {
-    const attendance =
-      await attendanceService.getStudentAttendance(
-        req.user.id
-      );
+    const attendance = await attendanceService.getStudentAttendance(
+      req.user.id,
+    );
 
     res.json({
       success: true,

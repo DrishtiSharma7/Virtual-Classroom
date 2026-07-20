@@ -3,11 +3,11 @@
 }
 
 .dashboard-main-content {
-  @apply flex-1 pl-64 flex flex-col ;
+  @apply flex-1 pl-64 flex flex-col;
 }
 
 .dashboard-viewport {
-  @apply pt-4 pb-4 p-8 flex-1 space-y-6 max-w-7xl w-full mx-auto;
+  @apply w-full flex-1 px-4 py-4 sm:px-6 lg:px-8 space-y-6;
 }
 
 .stats-grid {
@@ -29,4 +29,3 @@
 .activity-list li {
   @apply flex items-start before:content-['•'] before:mr-2 before:text-gray-400;
 }
-

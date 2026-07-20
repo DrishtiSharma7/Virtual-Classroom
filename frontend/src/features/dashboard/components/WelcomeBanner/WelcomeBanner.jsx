@@ -5,9 +5,7 @@ const WelcomeBanner = ({ name, role }) => {
   return (
     <div className="banner-container">
       <div className="banner-content">
-        <h2 className="banner-heading">
-          Welcome back, {name || "User"}! 👋
-        </h2>
+        <h2 className="banner-heading">Welcome back, {name || "User"}! 👋</h2>
 
         <p className="banner-subtext">
           {role === "teacher"

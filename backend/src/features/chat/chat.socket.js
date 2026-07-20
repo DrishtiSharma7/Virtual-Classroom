@@ -9,20 +9,11 @@ module.exports = (io, socket) => {
         message: data.message,
       });
 
-      console.log(
-        "Message Saved :",
-        message.message,
-      );
+      console.log("Message Saved :", message.message);
 
-      io.to(data.sessionId).emit(
-        "receive-message",
-        message,
-      );
+      io.to(data.sessionId).emit("receive-message", message);
     } catch (err) {
-      console.log(
-        "Chat Error :",
-        err.message,
-      );
+      console.log("Chat Error :", err.message);
     }
   });
 

@@ -3,7 +3,7 @@
 }
 
 .navbar-title {
-  @apply text-2xl font-bold text-gray-900 ;
+  @apply text-2xl font-bold text-gray-900;
 }
 
 .navbar-profile-section {
@@ -24,4 +24,12 @@
 
 .navbar-username {
   @apply text-sm font-semibold text-gray-700;
+}
+
+.navbar-left {
+  @apply flex items-center gap-3;
+}
+
+.navbar-menu-btn {
+  @apply p-2 rounded-lg hover:bg-gray-100 lg:hidden;
 }

@@ -15,7 +15,15 @@
 }
 
 /* Color variations mapped to match your UI mockup */
-.bg-blue-soft { @apply bg-blue-50 text-blue-600; }
-.bg-orange-soft { @apply bg-orange-50 text-orange-600; }
-.bg-purple-soft { @apply bg-purple-50 text-purple-600; }
-.bg-green-soft { @apply bg-green-50 text-green-600; }
+.bg-blue-soft {
+  @apply bg-blue-50 text-blue-600;
+}
+.bg-orange-soft {
+  @apply bg-orange-50 text-orange-600;
+}
+.bg-purple-soft {
+  @apply bg-purple-50 text-purple-600;
+}
+.bg-green-soft {
+  @apply bg-green-50 text-green-600;
+}

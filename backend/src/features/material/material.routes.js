@@ -8,29 +8,21 @@ const upload = require("../../middleware/upload.middleware");
 
 const materialController = require("./material.controller");
 
-
 router.post(
   "/",
   auth,
   teacherOnly("teacher"),
   upload.single("file"),
-  materialController.uploadMaterial
+  materialController.uploadMaterial,
 );
 
-
-router.get(
-  "/classroom/:classroomId",
-  auth,
-  materialController.getMaterials
-);
-
+router.get("/classroom/:classroomId", auth, materialController.getMaterials);
 
 router.delete(
   "/:id",
   auth,
   teacherOnly("teacher"),
-  materialController.deleteMaterial
+  materialController.deleteMaterial,
 );
-
 
 module.exports = router;

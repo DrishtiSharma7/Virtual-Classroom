@@ -1,12 +1,91 @@
 .dashboard-layout {
-  @apply min-h-screen bg-[#f8fafc] flex w-full;
+  @apply min-h-screen flex bg-[#f4f3f3];
 }
+
+/* ==========================
+   Main Dashboard Area
+========================== */
 
 .dashboard-main {
-  /* Sidebar ki fixed width (w-64 = 16rem) ke barabar left padding de rahe hain taaki content chhipe na */
-  @apply flex-1 pl-64 flex flex-col min-w-0;
+  @apply flex-1 flex flex-col min-w-0;
 }
 
+/* Desktop Sidebar Space */
+@screen lg {
+  .dashboard-main {
+    @apply ml-64;
+  }
+}
+
+/* ==========================
+   Page Content
+========================== */
+
 .dashboard-content {
-  @apply flex-1 w-full;
+  @apply flex-1 w-full p-3 sm:p-5 lg:p-6;
+}
+
+@screen sm {
+  .dashboard-content {
+    @apply p-5;
+  }
+}
+
+@screen lg {
+  .dashboard-content {
+    @apply p-6;
+  }
+}
+
+/* ==========================
+   Mobile / Tablet Header
+========================== */
+
+.mobile-header {
+  @apply flex items-center justify-between h-16 px-4 bg-white shadow-sm sticky top-0 z-30 lg:hidden;
+}
+
+.menu-btn {
+  @apply p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition;
+}
+
+/* ==========================
+   Sidebar Overlay
+========================== */
+
+.sidebar-overlay {
+  @apply fixed inset-0 bg-black/40 z-40 lg:hidden;
+}
+
+/* ==========================
+   Responsive Breakpoints
+========================== */
+
+/* Mobile (<640px) */
+@media (max-width: 639px) {
+  .dashboard-main {
+    margin-left: 0;
+  }
+
+  .dashboard-content {
+    padding: 12px;
+  }
+}
+
+/* Tablet (640px–1023px) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .dashboard-main {
+    margin-left: 0;
+  }
+
+  .dashboard-content {
+    padding: 20px;
+  }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: 1024px) {
+  .dashboard-main {
+    margin-left: 16rem;
+  }
 }

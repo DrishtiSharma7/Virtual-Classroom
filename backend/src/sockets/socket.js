@@ -1,14 +1,8 @@
-const registerChatEvents = require(
-  "../features/chat/chat.socket"
-);
+const registerChatEvents = require("../features/chat/chat.socket");
 
-const registerWhiteboardEvents = require(
-  "../features/whiteboard/whiteboard.socket"
-);
+const registerWhiteboardEvents = require("../features/whiteboard/whiteboard.socket");
 
-const registerWebRTCEvents = require(
-  "../features/webrtc/webrtc.socket"
-);
+const registerWebRTCEvents = require("../features/webrtc/webrtc.socket");
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -20,9 +14,7 @@ module.exports = (io) => {
 
         console.log(
           socket.id,
-
           "joined room",
-
           roomId,
         );
       }
@@ -34,9 +26,7 @@ module.exports = (io) => {
 
         console.log(
           socket.id,
-
           "left room",
-
           roomId,
         );
       }
@@ -49,7 +39,6 @@ module.exports = (io) => {
     socket.on("disconnect", () => {
       console.log(
         "User Disconnected :",
-
         socket.id,
       );
     });

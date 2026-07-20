@@ -1,15 +1,22 @@
 .quick-actions-panel {
-  @apply bg-white p-6 rounded-2xl border border-gray-100 shadow-md pt-4;
+  @apply bg-white rounded-2xl border border-gray-100 shadow-md
+         p-4 sm:p-5 lg:p-6;
 }
 
 .quick-actions-title {
-  @apply text-lg font-bold text-gray-900 mb-4;
+  @apply text-base sm:text-lg font-bold text-gray-900 mb-4;
 }
 
 .quick-actions-buttons {
-  @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+  @apply grid grid-cols-2 xl:grid-cols-4 gap-3;
 }
 
 .action-btn {
-  @apply border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium py-3 px-4 rounded-xl transition-colors text-center text-sm shadow-sm;
+  @apply min-h-[40px]
+         flex items-center justify-center
+         rounded-xl border border-slate-200
+         text-center
+         text-sm
+         font-medium
+         text-slate-700;
 }

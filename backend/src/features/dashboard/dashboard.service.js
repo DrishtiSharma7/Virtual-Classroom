@@ -47,9 +47,7 @@ const getDashboardData = async (user) => {
       createdBy: user.id,
     }).select("_id");
 
-    const sessionIds = teacherSessions.map(
-      (session) => session._id
-    );
+    const sessionIds = teacherSessions.map((session) => session._id);
 
     // Attendance
     const totalAttendance = await Attendance.countDocuments({
@@ -58,22 +56,19 @@ const getDashboardData = async (user) => {
       },
     });
 
-    const completedAttendance =
-      await Attendance.countDocuments({
-        session: {
-          $in: sessionIds,
-        },
-        status: {
-          $in: ["LEFT", "COMPLETED"],
-        },
-      });
+    const completedAttendance = await Attendance.countDocuments({
+      session: {
+        $in: sessionIds,
+      },
+      status: {
+        $in: ["LEFT", "COMPLETED"],
+      },
+    });
 
     const attendance =
       totalAttendance === 0
         ? 0
-        : Math.round(
-            (completedAttendance / totalAttendance) * 100
-          );
+        : Math.round((completedAttendance / totalAttendance) * 100);
 
     return {
       role: "teacher",
@@ -110,20 +105,17 @@ const getDashboardData = async (user) => {
     student: user.id,
   });
 
-  const completedAttendance =
-    await Attendance.countDocuments({
-      student: user.id,
-      status: {
-        $in: ["LEFT", "COMPLETED"],
-      },
-    });
+  const completedAttendance = await Attendance.countDocuments({
+    student: user.id,
+    status: {
+      $in: ["LEFT", "COMPLETED"],
+    },
+  });
 
   const attendance =
     totalAttendance === 0
       ? 0
-      : Math.round(
-          (completedAttendance / totalAttendance) * 100
-        );
+      : Math.round((completedAttendance / totalAttendance) * 100);
 
   return {
     role: "student",

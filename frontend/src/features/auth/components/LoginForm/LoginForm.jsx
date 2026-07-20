@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap, Eye, EyeOff, User } from "lucide-react";
-import LoginIllustration from "../../../assets/Login.png";
+import LoginIllustration from "../../../../assets/Login.png";
 import "./LoginForm.css";
 
-import { loginUser } from "../api/auth.api";
-import useAuth from "../hooks/useAuth";
+import { loginUser } from "../../api/auth.api";
+import useAuth from "../../hooks/useAuth";
 
 function LoginForm() {
   const navigate = useNavigate();

@@ -5,15 +5,12 @@ exports.createQuiz = async (req, res) => {
   try {
     const quiz = await Quiz.create({
       session: req.body.session,
-
       createdBy: req.user.id,
-
       questions: req.body.questions,
     });
 
     res.status(201).json({
       message: "Quiz created",
-
       quiz,
     });
   } catch (err) {
@@ -27,7 +24,6 @@ exports.submitQuiz = async (req, res) => {
   try {
     const existing = await QuizResponse.findOne({
       quiz: req.params.id,
-
       student: req.user.id,
     });
 
@@ -55,19 +51,14 @@ exports.submitQuiz = async (req, res) => {
 
     const response = await QuizResponse.create({
       quiz: req.params.id,
-
       student: req.user.id,
-
       answers: req.body.answers,
-
       score,
     });
 
     res.json({
       message: "Quiz submitted",
-
       score,
-
       response,
     });
   } catch (err) {
@@ -85,7 +76,6 @@ exports.getResults = async (req, res) => {
 
       .populate(
         "student",
-
         "name email",
       );
 

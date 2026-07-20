@@ -8,9 +8,7 @@ function RecentActivity({ activities }) {
 
       <ul className="recent-activity-list">
         {activities.length === 0 ? (
-          <li className="recent-activity-empty">
-            No recent activity.
-          </li>
+          <li className="recent-activity-empty">No recent activity.</li>
         ) : (
           activities.map((activity, i) => (
             <li key={i} className="recent-activity-item">

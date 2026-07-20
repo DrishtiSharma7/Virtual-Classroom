@@ -2,12 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-.sidebar-container {
-  @apply w-64 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-10;
-}
-
 .sidebar-logo {
   @apply h-16 flex items-center px-6 border-b border-gray-50;
+}
+
+.sidebar-header {
+  @apply flex items-center pl-6 pt-6 space-x-3;
+}
+
+.sidebar-logo-icon {
+  @apply w-10 h-10;
+}
+
+.sidebar-logo-text {
+  @apply text-lg font-bold text-gray-900;
 }
 
 .sidebar-nav {
@@ -28,4 +36,25 @@
 
 .sidebar-icon {
   @apply text-lg;
+}
+
+.sidebar-container {
+  @apply fixed top-0 left-0 w-64 h-screen bg-white border-r border-gray-100 flex flex-col z-50;
+
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+/* Mobile open */
+
+.sidebar-container.open {
+  transform: translateX(0);
+}
+
+/* Desktop */
+
+@screen lg {
+  .sidebar-container {
+    @apply translate-x-0;
+  }
 }

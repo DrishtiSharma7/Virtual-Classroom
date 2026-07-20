@@ -5,12 +5,7 @@ const auth = require("../../middleware/auth.middleware");
 const roleMiddleware = require("../../middleware/role.middleware");
 const quizController = require("./quiz.controller");
 
-router.post(
-  "/",
-  auth,
-  roleMiddleware("teacher"),
-  quizController.createQuiz,
-);
+router.post("/", auth, roleMiddleware("teacher"), quizController.createQuiz);
 
 router.post(
   "/submit/:id",

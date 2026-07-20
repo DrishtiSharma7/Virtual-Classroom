@@ -9,7 +9,7 @@ router.post(
   "/join",
   auth,
   roleMiddleware("student"),
-  attendanceController.joinSession
+  attendanceController.joinSession,
 );
 
 // Student leaves live session
@@ -17,7 +17,7 @@ router.post(
   "/leave",
   auth,
   roleMiddleware("student"),
-  attendanceController.leaveSession
+  attendanceController.leaveSession,
 );
 
 // Teacher ends session
@@ -25,7 +25,7 @@ router.put(
   "/complete/:sessionId",
   auth,
   roleMiddleware("teacher"),
-  attendanceController.completeSession
+  attendanceController.completeSession,
 );
 
 // Teacher views attendance
@@ -33,7 +33,7 @@ router.get(
   "/session/:sessionId",
   auth,
   roleMiddleware("teacher"),
-  attendanceController.getSessionAttendance
+  attendanceController.getSessionAttendance,
 );
 
 // Student views own attendance
@@ -41,7 +41,7 @@ router.get(
   "/me",
   auth,
   roleMiddleware("student"),
-  attendanceController.getMyAttendance
+  attendanceController.getMyAttendance,
 );
 
 module.exports = router;

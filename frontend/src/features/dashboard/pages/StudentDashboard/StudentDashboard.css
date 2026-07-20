@@ -3,7 +3,7 @@
 }
 
 .dashboard-main-content {
-  @apply flex-1 pl-64 flex flex-col ;
+  @apply flex-1 pl-64 flex flex-col;
 }
 
 .dashboard-viewport {
@@ -29,4 +29,3 @@
 .activity-list li {
   @apply flex items-start before:content-['•'] before:mr-2 before:text-gray-400;
 }
-

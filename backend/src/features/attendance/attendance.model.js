@@ -42,7 +42,7 @@ const attendanceSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 attendanceSchema.index({
