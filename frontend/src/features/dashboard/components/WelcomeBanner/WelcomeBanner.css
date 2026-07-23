@@ -1,23 +1,44 @@
 .banner-container {
-  @apply bg-gradient-to-r from-blue-300 via-indigo-400 to-purple-400 rounded-3xl p-6 px-8 flex justify-between items-center relative overflow-hidden shadow-sm mb-4;
+  @apply bg-gradient-to-r from-blue-300 via-indigo-400 to-purple-400
+  rounded-2xl md:rounded-3xl
+  p-5 sm:p-6 lg:px-8 lg:py-6
+  flex flex-col md:flex-row
+  items-start md:items-center
+  justify-between
+  gap-6
+  relative overflow-hidden shadow-sm mb-4;
 }
 
 .banner-content {
-  @apply relative z-10 max-w-xl;
+  @apply relative z-10 w-full md:max-w-xl;
 }
 
 .banner-heading {
-  @apply text-2xl font-bold text-gray-900 mb-2;
+  @apply text-xl sm:text-2xl lg:text-3xl
+  font-bold text-gray-900
+  mb-2 leading-tight;
 }
 
 .banner-subtext {
-  @apply text-gray-800 mb-4 font-medium;
+  @apply text-sm sm:text-base lg:text-lg
+  text-gray-800
+  mb-5 font-medium;
 }
 
 .banner-btn {
-  @apply bg-indigo-700 hover:bg-indigo-900 text-white font-medium px-5 py-3 rounded-xl transition-colors shadow-sm text-sm;
+  @apply w-full sm:w-auto
+  bg-indigo-700 hover:bg-indigo-900
+  text-white
+  font-medium
+  text-sm sm:text-base
+  px-5 py-3
+  rounded-xl
+  transition-colors
+  shadow-sm;
 }
 
 .banner-illustration {
-  @apply hidden md:block mr-8;
+  @apply self-center md:self-auto
+  text-5xl sm:text-6xl lg:text-7xl
+  opacity-80;
 }

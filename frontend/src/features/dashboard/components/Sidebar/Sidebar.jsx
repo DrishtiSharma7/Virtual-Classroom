@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -14,14 +15,46 @@ import "./Sidebar.css";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const menuItems = [
-    { icon: <LayoutDashboard />, label: "Dashboard", active: true },
-    { icon: <Users />, label: "Classrooms" },
-    { icon: <CalendarCheck />, label: "Attendance" },
-    { icon: <FileText />, label: "Assignments" },
-    { icon: <ClipboardCheck />, label: "Quizzes" },
-    { icon: <Video />, label: "Recordings" },
-    { icon: <ChartColumn />, label: "Analytics" },
-    { icon: <Settings />, label: "Settings" },
+    {
+      icon: <LayoutDashboard />,
+      label: "Dashboard",
+      path: "/dashboard",
+    },
+    {
+      icon: <Users />,
+      label: "Classrooms",
+      path: "/classrooms",
+    },
+    {
+      icon: <CalendarCheck />,
+      label: "Attendance",
+      path: "/attendance",
+    },
+    {
+      icon: <FileText />,
+      label: "Assignments",
+      path: "/assignments",
+    },
+    {
+      icon: <ClipboardCheck />,
+      label: "Quizzes",
+      path: "/quizzes",
+    },
+    {
+      icon: <Video />,
+      label: "Recordings",
+      path: "/recordings",
+    },
+    {
+      icon: <ChartColumn />,
+      label: "Analytics",
+      path: "/analytics",
+    },
+    {
+      icon: <Settings />,
+      label: "Settings",
+      path: "/settings",
+    },
   ];
 
   return (
@@ -32,14 +65,17 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       </header>
       <nav className="sidebar-nav">
         {menuItems.map((item, index) => (
-          <button
+          <NavLink
             key={index}
-            className={`sidebar-link ${item.active ? "active" : ""}`}
+            to={item.path}
             onClick={() => setSidebarOpen(false)}
+            className={({ isActive }) =>
+              `sidebar-link ${isActive ? "active" : ""}`
+            }
           >
             <span className="sidebar-icon">{item.icon}</span>
             <span className="sidebar-label">{item.label}</span>
-          </button>
+          </NavLink>
         ))}
       </nav>
     </aside>

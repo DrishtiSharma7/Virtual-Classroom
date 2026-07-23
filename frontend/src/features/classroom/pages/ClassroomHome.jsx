@@ -1,42 +1,147 @@
 import { Link } from "react-router-dom";
+import {
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  ArrowRight,
+  Plus,
+} from "lucide-react";
 
 function ClassroomHome() {
+  const classrooms = [
+    {
+      id: 1,
+      name: "MERN Stack Batch",
+      subject: "Web Development",
+      code: "MERN101",
+      students: 35,
+    },
+    {
+      id: 2,
+      name: "Python Batch",
+      subject: "Programming",
+      code: "PY202",
+      students: 42,
+    },
+    {
+      id: 3,
+      name: "Java Batch",
+      subject: "Programming",
+      code: "JAVA303",
+      students: 28,
+    },
+    {
+      id: 4,
+      name: "DBMS",
+      subject: "Computer Science",
+      code: "DB404",
+      students: 31,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Virtual Classrooms</h1>
+    <div className="min-h-screen #f4f3f3 pl-10 pr-4">
+
+      <div className="max-w-7xl mx-auto">
+
+        {/* Header */}
+
+        <div className="flex justify-between items-center mb-6 ">
+
+          <div>
+
+            <h1 className="text-2xl font-bold text-slate-800">
+              My Classrooms
+            </h1>
+
+            <p className="text-slate-500 mt-2">
+              Manage all your classrooms from one place.
+            </p>
+
+          </div>
 
           <Link
             to="/classrooms/create"
-            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl transition"
           >
-            + Create Classroom
+            <Plus size={20} />
+            Create Classroom
           </Link>
+
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold">MERN Stack Batch</h2>
+        {/* Cards */}
 
-            <p className="mt-2 text-gray-600">Room Code : ABC123</p>
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
 
-            <button className="mt-5 w-full bg-green-600 text-white py-2 rounded-lg">
-              Enter Classroom
-            </button>
-          </div>
+          {classrooms.map((room) => (
 
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold">Python Batch</h2>
+            <div
+              key={room.id}
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6"
+            >
 
-            <p className="mt-2 text-gray-600">Room Code : XYZ456</p>
+              <div className="flex justify-between items-center">
 
-            <button className="mt-5 w-full bg-green-600 text-white py-2 rounded-lg">
-              Enter Classroom
-            </button>
-          </div>
+                  <h2 className="text-xl font-bold mt-1">
+                {room.name}
+              </h2>
+                <span className="mt-4 bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full">
+                  Active
+                </span>
+
+              </div>
+
+              <p className="text-gray-500">
+                {room.subject}
+              </p>
+
+              <div className="mt-6 space-y-3">
+
+                <div className="flex justify-between">
+                  <span className="flex items-center gap-2 text-gray-500">
+                    <LayoutDashboard size={18} />
+                    Room Code
+                  </span>
+
+                  <span className="font-semibold">
+                    {room.code}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+
+                  <span className="flex items-center gap-2 text-gray-500">
+                    <Users size={18} />
+                    Students
+                  </span>
+
+                  <span className="font-semibold">
+                    {room.students}
+                  </span>
+
+                </div>
+
+              </div>
+
+              <Link
+                to={`/classrooms/${room.id}`}
+                className="mt-6 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl transition"
+              >
+                Enter Classroom
+
+                <ArrowRight size={18} />
+
+              </Link>
+
+            </div>
+
+          ))}
+
         </div>
+
       </div>
+
     </div>
   );
 }

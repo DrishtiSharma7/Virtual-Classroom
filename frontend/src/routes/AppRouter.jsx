@@ -32,9 +32,10 @@ function AppRouter() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/classrooms" element={<ClassroomHome />} />
             <Route path="/classrooms/create" element={<CreateClassroom />} />
-            <Route path="/live/:sessionId" element={<LiveClassroom />} />
           </Route>
         </Route>
+
+        <Route path="/live/:sessionId" element={<LiveClassroom />} />
       </Routes>
     </BrowserRouter>
   );
