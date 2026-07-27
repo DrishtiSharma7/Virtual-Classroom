@@ -1,0 +1,248 @@
+.attendance-page {
+  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+}
+
+.attendance-container {
+  @apply max-w-7xl mx-auto;
+}
+
+/* Header */
+
+.attendance-header {
+  @apply flex justify-between items-center mb-6;
+}
+
+.attendance-title {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+.attendance-subtitle {
+  @apply text-slate-500;
+}
+
+.header-buttons {
+  @apply flex gap-3;
+}
+
+.import-btn {
+  @apply flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl transition;
+}
+
+.export-btn {
+  @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl transition;
+}
+
+/* Statistics Cards */
+
+.stats-grid {
+  @apply grid md:grid-cols-2 xl:grid-cols-4 gap-5 mb-4;
+}
+
+.stat-card {
+  @apply bg-white rounded-2xl shadow p-6;
+}
+
+.stat-icon-indigo {
+  @apply text-indigo-600 mb-3 mt-2;
+}
+
+.stat-icon-green {
+  @apply text-green-600 mb-3 mt-2;
+}
+
+.stat-icon-red {
+  @apply text-red-600 mb-3 mt-2;
+}
+
+.stat-icon-blue {
+  @apply text-blue-600 mb-3 mt-2;
+}
+
+.stat-label {
+  @apply text-gray-500;
+}
+
+.stat-value {
+  @apply text-2xl font-bold mt-2;
+}
+
+/* Search & Filters */
+
+.filter-card {
+  @apply bg-white rounded-xl shadow p-3 mb-4;
+}
+
+.filter-grid {
+  @apply grid lg:grid-cols-3 gap-4;
+}
+
+.search-wrapper {
+  @apply relative;
+}
+
+.search-icon {
+  @apply absolute left-4 top-4 text-gray-400;
+}
+
+.search-input {
+  @apply w-full border rounded-xl pl-11 pr-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+.date-input {
+  @apply border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+.status-select {
+  @apply border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+/* Table */
+
+.table-wrapper {
+  @apply bg-white rounded-2xl shadow overflow-x-auto;
+}
+
+.attendance-table {
+  @apply min-w-full;
+}
+
+.table-head {
+  @apply bg-gray-200;
+}
+
+.table-heading {
+  @apply px-6 py-4 text-left;
+}
+
+.table-cell {
+  @apply px-6 py-2;
+}
+
+.table-row {
+  @apply border-t hover:bg-gray-50;
+}
+
+.student-name {
+  @apply font-semibold;
+}
+
+.attendance-value {
+  @apply font-semibold;
+}
+
+/* Status Badges */
+
+.status-present {
+  @apply bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm;
+}
+
+.status-absent {
+  @apply bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm;
+}
+
+.status-leave {
+  @apply bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm;
+}
+
+/* Actions */
+
+.action-buttons {
+  @apply flex justify-center gap-2;
+}
+
+.view-btn {
+  @apply p-2 rounded-lg hover:bg-blue-100;
+}
+
+.edit-btn {
+  @apply p-2 rounded-lg hover:bg-yellow-100;
+}
+
+.delete-btn {
+  @apply p-2 rounded-lg hover:bg-red-100;
+}
+
+.view-icon {
+  @apply text-blue-600;
+}
+
+.edit-icon {
+  @apply text-yellow-600;
+}
+
+.delete-icon {
+  @apply text-red-600;
+}
+
+/* Empty State */
+
+.no-data {
+  @apply text-center py-12 text-gray-500;
+}
+
+/* Pagination */
+
+.pagination {
+  @apply flex justify-between items-center mt-4;
+}
+
+.pagination-pages {
+  @apply flex gap-2;
+}
+
+.page-btn {
+  @apply w-10 h-10 rounded-lg font-semibold transition;
+}
+
+.page-btn-active {
+  @apply bg-indigo-600 text-white;
+}
+
+.page-btn-inactive {
+  @apply bg-gray-200 hover:bg-gray-300;
+}
+
+.pagination-btn {
+  @apply px-4 py-2 rounded-lg font-medium;
+}
+
+.pagination-btn-active {
+  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+}
+
+.pagination-btn-disabled {
+  @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .attendance-page {
+    @apply p-4;
+  }
+
+  .attendance-header {
+    @apply flex-col items-start gap-4;
+  }
+
+  .header-buttons {
+    @apply w-full flex-col;
+  }
+
+  .import-btn,
+  .export-btn {
+    @apply justify-center w-full;
+  }
+
+  .stats-grid {
+    @apply grid-cols-1;
+  }
+
+  .filter-grid {
+    @apply grid-cols-1;
+  }
+
+  .pagination {
+    @apply flex-col gap-4;
+  }
+}

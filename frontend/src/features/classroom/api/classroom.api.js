@@ -5,6 +5,11 @@ export const getMyClassrooms = async () => {
   return response.data;
 };
 
+export const getClassroomById = async (id) => {
+  const response = await api.get(`/classrooms/${id}`);
+  return response.data;
+};
+
 export const deleteClassroom = async (id) => {
   const response = await api.delete(`/classrooms/${id}`);
   return response.data;

@@ -1,11 +1,27 @@
 const Classroom = require("./classroom.model");
 
+const generateRoomCode = async () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code;
+  let exists = true;
+  while (exists) {
+    code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    exists = await Classroom.findOne({ code });
+  }
+  return code;
+};
+
 exports.createClassroom = async (req, res) => {
   try {
+    const roomCode = await generateRoomCode();
     const classroom = await Classroom.create({
       name: req.body.name,
       subject: req.body.subject,
       teacher: req.user.id,
+      code: roomCode,
     });
     res.status(201).json(classroom);
   } catch (err) {

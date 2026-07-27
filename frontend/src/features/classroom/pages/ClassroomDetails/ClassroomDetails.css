@@ -1,0 +1,268 @@
+.details-page {
+  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+}
+
+.details-container {
+  @apply max-w-7xl mx-auto;
+}
+
+/* Back Button */
+
+.back-btn {
+  @apply inline-flex items-center gap-2 text-indigo-600 font-medium hover:text-indigo-700 mb-5;
+}
+
+/* Banner */
+
+.class-banner {
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-4 pl-6 text-white flex justify-between items-center shadow-lg mb-4;
+}
+
+.class-title {
+  @apply text-2xl font-bold;
+}
+
+.class-subject {
+  @apply mt-1 text-indigo-100 text-lg;
+}
+
+.class-meta {
+  @apply flex flex-wrap gap-3 mt-3;
+}
+
+.meta-chip {
+  @apply bg-white/20 backdrop-blur px-4 py-2 rounded-full text-sm;
+}
+
+.meta-chip.active {
+  @apply bg-green-500 text-white;
+}
+
+.live-btn {
+  @apply flex items-center gap-2 bg-white text-indigo-700 font-semibold px-6 py-3 rounded-xl hover:bg-indigo-50 transition;
+}
+
+/* Statistics */
+
+.stats-grid {
+  @apply grid md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6;
+}
+
+.stat-card {
+  @apply bg-white rounded-2xl shadow p-6 hover:shadow-lg transition;
+}
+
+.stat-card p {
+  @apply text-gray-500;
+}
+
+.stat-card h2 {
+  @apply text-3xl font-bold mt-1;
+}
+
+.stat-icon {
+  @apply mb-2;
+}
+
+.indigo {
+  @apply text-indigo-600 mt-1;
+}
+
+.green {
+  @apply text-green-600 mt-1;
+}
+
+.blue {
+  @apply text-blue-600 mt-1;
+}
+
+.purple {
+  @apply text-purple-600 mt-1;
+}
+
+/* Main Grid */
+
+.details-grid {
+  @apply grid lg:grid-cols-3 gap-6;
+}
+
+.left-section {
+  @apply lg:col-span-2 space-y-6;
+}
+
+.right-section {
+  @apply space-y-6;
+}
+
+/* Cards */
+
+.section-card {
+  @apply bg-white rounded-2xl shadow p-5;
+}
+
+.section-title {
+  @apply flex items-center gap-2 text-sm font-semibold text-slate-800 mb-5;
+}
+
+/* Live Session */
+
+.section-card h3 {
+  @apply text-xl font-bold text-slate-800;
+}
+
+.section-card p {
+  @apply text-gray-500 mt-2;
+}
+
+.session-time {
+  @apply flex items-center gap-2 text-gray-500 mt-4;
+}
+
+.join-btn {
+  @apply mt-6 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl transition;
+}
+
+/* Announcement */
+
+.announcement-item {
+  @apply border-b last:border-none py-4;
+}
+
+.announcement-item h4 {
+  @apply font-semibold text-slate-800;
+}
+
+.announcement-item p {
+  @apply text-sm text-gray-500 mt-1;
+}
+
+/* Assignment */
+
+.assignment-item {
+  @apply flex justify-between items-center border-b last:border-none py-4;
+}
+
+.assignment-item h4 {
+  @apply font-semibold text-slate-800;
+}
+
+.assignment-item p {
+  @apply text-sm text-gray-500 mt-1;
+}
+
+.view-btn {
+  @apply bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-lg transition;
+}
+
+/* Students */
+
+.student-row {
+  @apply flex items-center justify-between border-b last:border-none py-2;
+}
+
+.student-left {
+  @apply flex items-center gap-4;
+}
+
+.student-left svg {
+  @apply text-indigo-600;
+}
+
+.student-left h4 {
+  @apply font-semibold text-slate-800;
+}
+
+.student-left p {
+  @apply text-sm text-gray-500;
+}
+
+.students-list {
+  @apply mt-2 overflow-y-auto pr-2;
+  max-height: 420px;
+}
+
+/* Recordings */
+
+.recording-row {
+  @apply flex justify-between items-center border-b last:border-none py-4;
+}
+
+.recording-row h4 {
+  @apply font-semibold text-slate-800;
+}
+
+.recording-row p {
+  @apply text-sm text-gray-500 mt-1;
+}
+
+.watch-btn {
+  @apply bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg transition;
+}
+
+/* Empty */
+
+.empty-text {
+  @apply text-center text-gray-400 py-10;
+}
+
+/* Loading */
+
+.classroom-loading {
+  @apply flex justify-center items-center h-screen text-lg font-semibold;
+}
+
+.classroom-error {
+  @apply flex justify-center items-center h-screen text-red-600 text-lg font-semibold;
+}
+
+/* Responsive */
+
+@media (max-width: 1024px) {
+  .details-page {
+    @apply p-5;
+  }
+
+  .class-banner {
+    @apply flex-col items-start gap-6;
+  }
+
+  .live-btn {
+    @apply w-full justify-center;
+  }
+
+  .details-grid {
+    @apply grid-cols-1;
+  }
+}
+
+@media (max-width: 640px) {
+  .details-page {
+    @apply p-3;
+  }
+
+  .class-title {
+    @apply text-2xl;
+  }
+
+  .class-subject {
+    @apply text-base;
+  }
+
+  .stats-grid {
+    @apply grid-cols-1;
+  }
+
+  .assignment-item,
+  .recording-row {
+    @apply flex-col items-start gap-3;
+  }
+
+  .view-btn,
+  .watch-btn {
+    @apply w-full text-center justify-center;
+  }
+
+  .student-row {
+    @apply flex-col items-start gap-3;
+  }
+}

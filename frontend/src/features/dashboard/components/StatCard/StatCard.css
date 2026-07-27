@@ -1,5 +1,5 @@
 .stat-card {
-  @apply bg-white p-5 rounded-2xl border border-gray-100 flex items-center space-x-4 shadow-md;
+  @apply bg-white p-4 rounded-2xl border border-gray-100 flex items-center space-x-4 shadow-md;
 }
 
 .stat-icon-wrapper {

@@ -12,6 +12,12 @@ const classroomSchema = new mongoose.Schema(
       required: true,
     },
 
+    code: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

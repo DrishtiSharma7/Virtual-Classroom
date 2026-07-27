@@ -34,6 +34,16 @@ const attendanceSchema = new mongoose.Schema(
       default: 0,
     },
 
+    attendancePercentage: {
+      type: Number,
+      default: 0,
+    },
+
+    isPresent: {
+      type: Boolean,
+      default: false,
+    },
+
     status: {
       type: String,
       enum: ["IN_SESSION", "LEFT", "COMPLETED"],

@@ -1,0 +1,127 @@
+.classroom-page {
+  @apply min-h-screen bg-[#f4f3f3] pl-4 pr-8;
+}
+
+.classroom-container {
+  @apply max-w-7xl mx-auto;
+}
+
+.classroom-header {
+  @apply flex justify-between items-center mb-6;
+}
+
+.classroom-title {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+.classroom-subtitle {
+  @apply text-slate-500;
+}
+
+.create-classroom-btn {
+  @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl transition;
+}
+
+.classroom-grid {
+  @apply grid md:grid-cols-2 xl:grid-cols-3 gap-4;
+}
+
+.classroom-card {
+  @apply bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6;
+}
+
+.classroom-card-header {
+  @apply flex justify-between items-center;
+}
+
+.classroom-name {
+  @apply text-xl font-bold mt-1;
+}
+
+.classroom-status {
+  @apply mt-2 bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full;
+}
+
+.delete-btn {
+  @apply p-2 rounded-lg hover:bg-red-100 transition;
+}
+
+.delete-icon {
+  @apply text-red-500 hover:text-red-700;
+}
+
+.classroom-subject {
+  @apply text-gray-500;
+}
+
+.classroom-details {
+  @apply mt-6 space-y-3;
+}
+
+.classroom-detail-row {
+  @apply flex justify-between;
+}
+
+.classroom-detail-label {
+  @apply flex items-center gap-2 text-gray-500;
+}
+
+.classroom-detail-value {
+  @apply font-semibold;
+}
+
+.enter-classroom-btn {
+  @apply mt-6 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl transition;
+}
+
+.classroom-loading {
+  @apply flex justify-center items-center h-screen;
+}
+
+.classroom-error {
+  @apply text-center text-red-500 mt-10;
+}
+
+/* Responsive */
+
+@media (max-width: 639px) {
+  .classroom-page {
+    @apply px-3;
+  }
+
+  .classroom-header {
+    @apply flex-col items-start gap-4;
+  }
+
+  .create-classroom-btn {
+    @apply w-full justify-center;
+  }
+
+  .classroom-grid {
+    @apply grid-cols-1;
+  }
+
+  .classroom-card-header {
+    @apply gap-2;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .classroom-page {
+    @apply px-5;
+  }
+
+  .classroom-grid {
+    @apply grid-cols-2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .classroom-page {
+    @apply p-8 pt-3;
+  }
+
+  .classroom-grid {
+    @apply xl:grid-cols-3;
+  }
+}

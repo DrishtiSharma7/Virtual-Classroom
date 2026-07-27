@@ -7,7 +7,7 @@
 }
 
 .dashboard-content {
-  @apply flex-1 p-4 sm:p-5 lg:p-6;
+  @apply flex-1 p-2 sm:p-5 lg:p-6;
 }
 
 .mobile-header {
@@ -48,6 +48,6 @@
   }
 
   .dashboard-content {
-    padding: 24px;
+    padding: 2px;
   }
 }
