@@ -280,6 +280,15 @@
   cursor: pointer;
 }
 
+.rp-error {
+  color: #dc2626;
+  font-size: 14px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+
+
 /* ---------- Submit button ---------- */
 .rp-submit-btn {
   width: 100%;

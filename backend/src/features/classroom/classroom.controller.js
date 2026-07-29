@@ -16,14 +16,23 @@ const generateRoomCode = async () => {
 
 exports.createClassroom = async (req, res) => {
   try {
+    const { name, subject } = req.body;
+    if (!name || !subject) {
+      return res.status(400).json({
+        message: "Name and Subject are required",
+      });
+    }
     const roomCode = await generateRoomCode();
     const classroom = await Classroom.create({
-      name: req.body.name,
-      subject: req.body.subject,
+      name,
+      subject,
       teacher: req.user.id,
       code: roomCode,
     });
-    res.status(201).json(classroom);
+    res.status(201).json({
+      success: true,
+      classroom,
+    });
   } catch (err) {
     res.status(500).json({
       message: err.message,

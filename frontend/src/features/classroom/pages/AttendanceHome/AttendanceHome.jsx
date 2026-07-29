@@ -81,7 +81,6 @@ function AttendanceHome() {
   const fetchAttendance = async () => {
     try {
       const data = await getClassroomAttendance(classroomId);
-
       setAttendance(data.attendance);
     } catch (err) {
       console.log(err);
@@ -159,6 +158,7 @@ function AttendanceHome() {
               <Search size={16} className="search-icon" />
 
               <input
+                className="search-input"
                 type="text"
                 placeholder="Search by Name, Roll No or Email..."
                 value={search}
@@ -166,7 +166,6 @@ function AttendanceHome() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="search-input"
               />
             </div>
 
@@ -202,17 +201,11 @@ function AttendanceHome() {
             <thead className="table-head">
               <tr>
                 <th className="table-heading">Student</th>
-
                 <th className="table-heading">Roll No</th>
-
                 <th className="table-heading">Email</th>
-
                 <th className="table-heading">Date</th>
-
                 <th className="table-heading">Status</th>
-
                 <th className="table-heading">Attendance %</th>
-
                 <th className="table-heading text-center">Actions</th>
               </tr>
             </thead>
@@ -232,13 +225,9 @@ function AttendanceHome() {
                         <p className="student-name">{student.name}</p>
                       </div>
                     </td>
-
                     <td className="table-cell">{student.rollNo}</td>
-
                     <td className="table-cell">{student.email}</td>
-
                     <td className="table-cell">{student.date}</td>
-
                     <td className="table-cell">
                       {student.status === "Present" && (
                         <span className="status-present">Present</span>

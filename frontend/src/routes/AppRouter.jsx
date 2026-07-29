@@ -10,6 +10,7 @@ import ClassroomHome from "../features/classroom/pages/ClassroomHome/ClassroomHo
 import ClassroomDetails from "../features/classroom/pages/ClassroomDetails/ClassroomDetails";
 import CreateClassroom from "../features/classroom/pages/CreateClassroom/CreateClassroom";
 import AttendanceHome from "../features/classroom/pages/AttendanceHome/AttendanceHome";
+import TeacherAssignmentHome from "../features/classroom/pages/AssignmentHome/TeacherAssignmentHome";
 
 import Dashboard from "../features/dashboard/Dashboard";
 
@@ -43,6 +44,7 @@ function AppRouter() {
             <Route path="/classrooms/:classroomId" element={<ClassroomDetails />} />
             <Route path="/attendance" element={<AttendanceHome />} />
             <Route path="/attendance/:id" element={<AttendanceHome />} />
+            <Route path="/assignments" element={<TeacherAssignmentHome />} />
           </Route>
         </Route>
 

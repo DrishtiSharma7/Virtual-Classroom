@@ -26,39 +26,62 @@ function RegisterForm() {
   });
 
   const [loading, setLoading] = useState(false);
-
+  const [termsError, setTermsError] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  
+  const validateEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  setFormData((prev) => ({
+    ...prev,
+    [e.target.name]: e.target.value,
+  }));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  if (e.target.name === "email") {
+    setEmailError("");
+  }
+};
 
-    setLoading(true);
-
-    try {
-      const response = await registerUser(formData);
-
-      alert(response.message);
-
-      navigate("/login");
-    } catch (error) {
-      alert(error.response?.data?.message || "Registration Failed");
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleRoleSelect = (role) => {
     setFormData((prev) => ({ ...prev, role }));
   };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!validateEmail(formData.email)) {
+    setEmailError("Please enter a valid email address.");
+    return;
+  }
+
+  setEmailError("");
+
+  if (!agreeTerms) {
+    setTermsError("Please accept the Terms & Conditions to continue.");
+    return;
+  }
+
+  setTermsError("");
+
+  setLoading(true);
+
+  try {
+    const response = await registerUser(formData);
+
+    alert(response.message);
+    navigate("/login");
+  } catch (error) {
+    alert(error.response?.data?.message || "Registration Failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="register-page">
@@ -146,19 +169,25 @@ function RegisterForm() {
               </div>
 
               <div className="rp-field">
-                <label htmlFor="email" className="rp-sr-only">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  placeholder="Email Address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="rp-input"
-                  required
-                />
+  <label htmlFor="email" className="rp-sr-only">
+    Email Address
+  </label>
+
+  <input
+    id="email"
+    type="email"
+    name="email"
+    placeholder="Email Address"
+    value={formData.email}
+    onChange={handleChange}
+    className="rp-input"
+    required
+  />
+
+  {emailError && (
+    <p className="rp-error">{emailError}</p>
+  )}
+
               </div>
 
               <div className="rp-field">
@@ -222,19 +251,25 @@ function RegisterForm() {
               </div>
 
               <div className="rp-checkbox-row">
-                <input
-                  id="agreeTerms"
-                  type="checkbox"
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="rp-checkbox"
-                  required
-                />
-                <label htmlFor="agreeTerms" className="rp-checkbox-label">
-                  I agree to the Terms &amp; Conditions and Privacy Policy.
-                </label>
-              </div>
+  <input
+    id="agreeTerms"
+    type="checkbox"
+    checked={agreeTerms}
+    onChange={(e) => {
+      setAgreeTerms(e.target.checked);
+      if (e.target.checked) setTermsError("");
+    }}
+    className="rp-checkbox"
+  />
 
+  <label htmlFor="agreeTerms" className="rp-checkbox-label">
+    I agree to the Terms &amp; Conditions and Privacy Policy.
+  </label>
+</div>
+
+{termsError && (
+  <p className="rp-error">{termsError}</p>
+)}
               <button
                 type="submit"
                 disabled={loading}
