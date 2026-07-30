@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { io } from "socket.io-client";
+import axios from "axios";
 import {
   GraduationCap,
   Circle,
@@ -95,7 +97,7 @@ const chatMessages = [
   },
   { id: 4, text: "Your professional", time: "", mine: true },
 ];
- 
+
 const quizOptions = [
   { id: "a", label: "2c", selected: true },
   { id: "b", label: "2x", selected: false },
@@ -115,6 +117,8 @@ const SidebarIcon = ({ Icon, active }) => (
     <Icon size={20} />
   </button>
 );
+
+
  
 const ToolbarButton = ({ Icon, active, colorDot }) => (
   <button
@@ -153,12 +157,436 @@ const BottomControl = ({ Icon, label, active, danger }) => (
     {label}
   </button>
 );
- 
 /* ---------------- Main Component ---------------- */
  
-export default function Component() {
+export default function LiveClassroom() {
   const [rightTab, setRightTab] = useState("participants");
- 
+  const localVideoRef = useRef(null);
+
+const remoteVideosRef = useRef({});
+
+const socketRef = useRef(null);
+
+const peerConnections = useRef({});
+
+const localStream = useRef(null);
+
+const screenTrack = useRef(null);
+
+const [participants, setParticipants] = useState([]);
+
+const [messages, setMessages] = useState([]);
+
+const [message, setMessage] = useState("");
+
+const [connected, setConnected] = useState(false);
+
+const [loading, setLoading] = useState(true);
+
+const [cameraEnabled, setCameraEnabled] = useState(true);
+
+const [micEnabled, setMicEnabled] = useState(true);
+
+const [sharingScreen, setSharingScreen] = useState(false);
+
+const [sessionId] = useState("demo-session");
+
+const [user] = useState({
+    id:"teacher1",
+    name:"Sarah Johnson",
+    role:"teacher"
+});
+
+const rtcConfig = {
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+        ],
+      },
+    ],
+  };
+const createPeerConnection = useCallback((userId) => {
+  const pc = new RTCPeerConnection(rtcConfig);
+
+  peerConnections.current[userId] = pc;
+
+  localStream.current?.getTracks().forEach((track) => {
+    pc.addTrack(track, localStream.current);
+  });
+
+  pc.onicecandidate = (event) => {
+    if (!event.candidate) return;
+
+    socketRef.current.emit("ice-candidate", {
+      roomId: sessionId,
+      target: userId,
+      candidate: event.candidate,
+    });
+  };
+
+  pc.ontrack = (event) => {
+    setParticipants((prev) =>
+      prev.map((p) =>
+        p.id === userId
+          ? {
+              ...p,
+              stream: event.streams[0],
+            }
+          : p
+      )
+    );
+  };
+
+  return pc;
+}, [sessionId]);
+useEffect(() => {
+
+  if (!socketRef.current) return;
+
+  socketRef.current.on("user-joined", async (userData) => {
+
+    setParticipants((prev) => [
+      ...prev,
+      {
+        ...userData,
+        stream: null,
+      },
+    ]);
+
+    const pc = createPeerConnection(userData.id);
+
+    const offer = await pc.createOffer();
+
+    await pc.setLocalDescription(offer);
+
+    socketRef.current.emit("offer", {
+
+      roomId: sessionId,
+
+      target: userData.id,
+
+      offer,
+
+    });
+
+  });
+
+  return () => {
+
+    socketRef.current.off("user-joined");
+
+  };
+
+}, [createPeerConnection]);
+
+useEffect(() => {
+
+  socketRef.current?.on("offer", async (data) => {
+
+    const pc = createPeerConnection(data.sender);
+
+    await pc.setRemoteDescription(
+      new RTCSessionDescription(data.offer)
+    );
+
+    const answer = await pc.createAnswer();
+
+    await pc.setLocalDescription(answer);
+
+    socketRef.current.emit("answer", {
+
+      roomId: sessionId,
+
+      target: data.sender,
+
+      answer,
+
+    });
+
+  });
+
+  return () => {
+
+    socketRef.current?.off("offer");
+
+  };
+
+}, [createPeerConnection]);
+
+useEffect(() => {
+
+  socketRef.current?.on("answer", async (data) => {
+
+    const pc = peerConnections.current[data.sender];
+
+    if (!pc) return;
+
+    await pc.setRemoteDescription(
+
+      new RTCSessionDescription(data.answer)
+
+    );
+
+  });
+
+  return () => {
+
+    socketRef.current?.off("answer");
+
+  };
+
+}, []);
+
+useEffect(() => {
+
+  socketRef.current?.on("ice-candidate", async (data) => {
+
+    const pc = peerConnections.current[data.sender];
+
+    if (!pc) return;
+
+    try {
+
+      await pc.addIceCandidate(
+
+        new RTCIceCandidate(data.candidate)
+
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  });
+
+  return () => {
+
+    socketRef.current?.off("ice-candidate");
+
+  };
+
+}, []);
+
+useEffect(() => {
+
+  socketRef.current?.on("user-left", (id) => {
+
+    peerConnections.current[id]?.close();
+
+    delete peerConnections.current[id];
+
+    setParticipants((prev) =>
+
+      prev.filter((p) => p.id !== id)
+
+    );
+
+  });
+
+  return () => {
+
+    socketRef.current?.off("user-left");
+
+  };
+
+}, []);
+
+const RemoteVideo = ({ stream, name }) => {
+
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+
+    if (videoRef.current && stream) {
+
+      videoRef.current.srcObject = stream;
+
+    }
+
+  }, [stream]);
+
+  return (
+
+    <div className="overflow-hidden rounded-xl bg-black">
+
+      <video
+
+        ref={videoRef}
+
+        autoPlay
+
+        playsInline
+
+        className="h-44 w-full object-cover"
+
+      />
+
+      <div className="bg-slate-900 p-2 text-xs text-white">
+
+        {name}
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+useEffect(() => {
+  const socket = io("http://localhost:5173", {
+    transports: ["websocket"],
+  });
+
+  socketRef.current = socket;
+
+  socket.on("connect", () => {
+    console.log("Connected:", socket.id);
+    setConnected(true);
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("Socket Error:", err.message);
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("Disconnected:", reason);
+    setConnected(false);
+  });
+
+  return () => {
+    socket.disconnect();
+  };
+}, []);
+
+useEffect(()=>{
+
+async function initMedia(){
+
+try{
+
+const stream=await navigator.mediaDevices.getUserMedia({
+
+video:true,
+
+audio:true
+
+});
+
+localStream.current=stream;
+
+if(localVideoRef.current){
+
+localVideoRef.current.srcObject=stream;
+
+}
+
+setLoading(false);
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+
+initMedia();
+
+},[]);
+
+useEffect(()=>{
+
+if(!socketRef.current) return;
+
+if(!connected) return;
+
+socketRef.current.emit("join-room",{
+
+roomId:sessionId,
+
+user
+
+});
+
+},[connected]);
+
+useEffect(()=>{
+
+return ()=>{
+
+Object.values(peerConnections.current).forEach(pc=>{
+
+pc.close();
+
+});
+
+localStream.current?.getTracks().forEach(track=>track.stop());
+
+socketRef.current?.emit("leave-room",{
+
+roomId:sessionId,
+
+userId:user.id
+
+});
+
+};
+
+},[]);
+
+const toggleCamera=()=>{
+
+const track=localStream.current
+.getVideoTracks()[0];
+
+if(!track) return;
+
+track.enabled=!track.enabled;
+
+setCameraEnabled(track.enabled);
+
+}
+
+const toggleMic=()=>{
+
+const track=localStream.current
+.getAudioTracks()[0];
+
+if(!track) return;
+
+track.enabled=!track.enabled;
+
+setMicEnabled(track.enabled);
+
+}
+
+const startScreenShare=async()=>{
+
+try{
+
+const stream=await navigator.mediaDevices.getDisplayMedia({
+
+video:true
+
+});
+
+screenTrack.current=stream.getVideoTracks()[0];
+
+setSharingScreen(true);
+
+}catch(e){
+
+console.log(e);
+
+}
+
+};
+
   return (
     <div className="flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
       {/* ---------- Top Bar ---------- */}
@@ -471,6 +899,24 @@ export default function Component() {
           </aside>
         </main>
       </div>
+
+      <div className="absolute left-5 bottom-5 grid grid-cols-2 gap-3">
+
+  {participants.map((participant) => (
+
+    <RemoteVideo
+
+      key={participant.id}
+
+      stream={participant.stream}
+
+      name={participant.name}
+
+    />
+
+  ))}
+
+</div>
  
       {/* ---------- Bottom Bar ---------- */}
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-3">

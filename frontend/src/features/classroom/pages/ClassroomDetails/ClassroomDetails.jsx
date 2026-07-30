@@ -16,7 +16,8 @@ import {
 
 import "./ClassroomDetails.css";
 import { getClassroomById } from "../../api/classroom.api";
-
+import { useNavigate } from "react-router-dom";
+import { createSession, startSession } from "../../../auth/api/session.api";
 
 function ClassroomDetails() {
   const { classroomId } = useParams();
@@ -24,6 +25,9 @@ function ClassroomDetails() {
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const [startingSession, setStartingSession] = useState(false);
 
   useEffect(() => {
     fetchClassroom();
@@ -53,6 +57,32 @@ function ClassroomDetails() {
     return <div className="classroom-error">Classroom not found.</div>;
   }
 
+  const handleStartSession = async () => {
+    try {
+      setStartingSession(true);
+
+      // Session create
+      const createRes = await createSession({
+        classroom: classroom._id,
+        title: `${classroom.subject} Live Session`,
+        description: `Live class for ${classroom.name}`,
+        startTime: new Date(),
+      });
+
+      const session = createRes.data.session;
+      
+      await startSession(session._id);
+
+      navigate(`/live/${session._id}`);
+    } catch (err) {
+      console.error(err);
+
+      alert(err.response?.data?.message || "Unable to start session.");
+    } finally {
+      setStartingSession(false);
+    }
+  };
+
   const students = classroom.students || [];
   const assignments = classroom.assignments || [];
   const recordings = classroom.recordings || [];
@@ -62,7 +92,6 @@ function ClassroomDetails() {
     <div className="details-page">
       <div className="details-container">
         {/* Back */}
-
         <Link to="/classrooms" className="back-btn">
           <ArrowLeft size={18} />
           Back to Classrooms
@@ -73,21 +102,21 @@ function ClassroomDetails() {
         <div className="class-banner">
           <div>
             <h1 className="class-title">{classroom.name}</h1>
-
             <p className="class-subject">{classroom.subject}</p>
-
             <div className="class-meta">
               <span className="meta-chip">Room Code : {classroom.code}</span>
-
               <span className="meta-chip">{students.length} Students</span>
-
               <span className="meta-chip active">Active</span>
             </div>
           </div>
 
-          <button className="live-btn">
+          <button
+            className="live-btn"
+            onClick={handleStartSession}
+            disabled={startingSession}
+          >
             <Video size={18} />
-            Start Live Session
+            {startingSession ? "Starting..." : "Start Live Session"}
           </button>
         </div>
 
