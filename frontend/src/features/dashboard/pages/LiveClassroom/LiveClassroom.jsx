@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
-import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   GraduationCap,
   Circle,
@@ -24,9 +25,8 @@ import {
   Mic,
   MicOff,
   Video,
-  Volume2,
+  VideoOff,
   Users,
-  MessageSquare,
   ClipboardList,
   Edit3,
   MessageCircle,
@@ -42,87 +42,132 @@ import {
   Paperclip,
   Send,
   Wifi,
-  Rows3,
+  WifiOff,
+  RefreshCcw,
 } from "lucide-react";
- 
-/* ---------------- Static Data ---------------- */
- 
-const participantsData = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    status: "host",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces",
-  },
-  {
-    id: 2,
-    name: "Priya Sharma",
-    status: "online",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces",
-    action: "mute",
-  },
-  {
-    id: 3,
-    name: "Priya Sharma",
-    status: "online",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces",
-    muted: true,
-  },
-  {
-    id: 4,
-    name: "Priya Sharma",
-    status: "speaking",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces",
-    speaking: true,
-  },
-];
- 
-const chatMessages = [
-  { id: 1, text: "Professional or soon!", time: "12:37 AM", mine: false },
-  {
-    id: 2,
-    text: "Hi, are we meeting your wifi/fine",
-    time: "13:51 AM",
-    mine: true,
-  },
-  {
-    id: 3,
-    text: "Professional conversation and attachments.",
-    time: "12:47 AM",
-    mine: false,
-  },
-  { id: 4, text: "Your professional", time: "", mine: true },
-];
+
+import { getSession, endSession } from "../../../auth/api/session.api";
+import { getChatHistory } from "../../../../features/classroom/api/chat.api";
+
+/* ---------------- Helpers ---------------- */
+
+const drawElement = (ctx, el) => {
+  if (!el) return;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  if (el.type === "path") {
+    if (!el.points || el.points.length < 2) return;
+    ctx.strokeStyle = el.eraser ? "#ffffff" : el.color;
+    ctx.lineWidth = el.size;
+    ctx.beginPath();
+    ctx.moveTo(el.points[0][0], el.points[0][1]);
+    for (let i = 1; i < el.points.length; i++) {
+      ctx.lineTo(el.points[i][0], el.points[i][1]);
+    }
+    ctx.stroke();
+  } else if (el.type === "rect") {
+    ctx.strokeStyle = el.color;
+    ctx.lineWidth = el.size;
+    ctx.strokeRect(
+      Math.min(el.x1, el.x2),
+      Math.min(el.y1, el.y2),
+      Math.abs(el.x2 - el.x1),
+      Math.abs(el.y2 - el.y1)
+    );
+  } else if (el.type === "circle") {
+    ctx.strokeStyle = el.color;
+    ctx.lineWidth = el.size;
+    const rx = Math.abs(el.x2 - el.x1) / 2;
+    const ry = Math.abs(el.y2 - el.y1) / 2;
+    const cx = (el.x1 + el.x2) / 2;
+    const cy = (el.y1 + el.y2) / 2;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx || 0.01, ry || 0.01, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (el.type === "arrow") {
+    const { x1, y1, x2, y2 } = el;
+    ctx.strokeStyle = el.color;
+    ctx.fillStyle = el.color;
+    ctx.lineWidth = el.size;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const headLen = 10 + el.size;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(
+      x2 - headLen * Math.cos(angle - Math.PI / 6),
+      y2 - headLen * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+      x2 - headLen * Math.cos(angle + Math.PI / 6),
+      y2 - headLen * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
+    ctx.fill();
+  } else if (el.type === "text") {
+    ctx.fillStyle = el.color;
+    ctx.font = "18px sans-serif";
+    ctx.fillText(el.text, el.x1, el.y1);
+  }
+};
+const avatarFor = (name = "?") =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
+
+const formatClock = (seconds) => {
+  const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
+  const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+  const s = String(Math.floor(seconds % 60)).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+};
+
+const rtcConfig = {
+  iceServers: [
+    {
+      urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"],
+    },
+  ],
+};
 
 const quizOptions = [
   { id: "a", label: "2c", selected: true },
   { id: "b", label: "2x", selected: false },
   { id: "c", label: "x", selected: true, highlight: true },
   { id: "d", label: "x^2/2", selected: false },
-  { id: "e", label: "ln(v)", selected: false },
 ];
- 
+
 /* ---------------- Reusable Pieces ---------------- */
- 
-const SidebarIcon = ({ Icon, active }) => (
+
+const SidebarIcon = ({ Icon, active, onClick }) => (
   <button
-    className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
-      active ? "bg-indigo-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+    onClick={onClick}
+    className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
+      active
+        ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/30"
+        : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
     }`}
   >
     <Icon size={20} />
   </button>
 );
 
-
- 
-const ToolbarButton = ({ Icon, active, colorDot }) => (
+const ToolbarButton = ({
+  Icon,
+  active,
+  colorDot,
+  onClick,
+  disabled,
+  title,
+}) => (
   <button
-    className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
+    onClick={onClick}
+    disabled={disabled}
+    title={title}
+    className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
       active ? "bg-indigo-600 text-white" : "text-slate-500 hover:bg-slate-100"
     }`}
   >
@@ -136,20 +181,25 @@ const ToolbarButton = ({ Icon, active, colorDot }) => (
     )}
   </button>
 );
- 
-const BottomControl = ({ Icon, label, active, danger }) => (
+
+const BottomControl = ({ Icon, label, active, danger, onClick }) => (
   <button
-    className={`flex flex-col items-center gap-1 rounded-xl px-4 py-2 text-xs font-medium transition-colors ${
+    onClick={onClick}
+    className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-medium whitespace-nowrap transition-colors ${
       danger
-        ? "bg-red-50 text-red-500 hover:bg-red-100"
+        ? "text-red-500"
         : active
-        ? "bg-indigo-600 text-white"
-        : "text-slate-600 hover:bg-slate-100"
+          ? "bg-indigo-50 text-indigo-600"
+          : "text-slate-600 hover:bg-slate-100"
     }`}
   >
     <span
       className={`flex h-9 w-9 items-center justify-center rounded-full ${
-        active ? "bg-indigo-500" : danger ? "bg-red-100" : "bg-slate-100"
+        danger
+          ? "bg-red-100 text-red-500"
+          : active
+            ? "bg-indigo-100 text-indigo-600"
+            : "bg-slate-100 text-slate-600"
       }`}
     >
       <Icon size={17} />
@@ -157,610 +207,1043 @@ const BottomControl = ({ Icon, label, active, danger }) => (
     {label}
   </button>
 );
-/* ---------------- Main Component ---------------- */
- 
-export default function LiveClassroom() {
-  const [rightTab, setRightTab] = useState("participants");
-  const localVideoRef = useRef(null);
-
-const remoteVideosRef = useRef({});
-
-const socketRef = useRef(null);
-
-const peerConnections = useRef({});
-
-const localStream = useRef(null);
-
-const screenTrack = useRef(null);
-
-const [participants, setParticipants] = useState([]);
-
-const [messages, setMessages] = useState([]);
-
-const [message, setMessage] = useState("");
-
-const [connected, setConnected] = useState(false);
-
-const [loading, setLoading] = useState(true);
-
-const [cameraEnabled, setCameraEnabled] = useState(true);
-
-const [micEnabled, setMicEnabled] = useState(true);
-
-const [sharingScreen, setSharingScreen] = useState(false);
-
-const [sessionId] = useState("demo-session");
-
-const [user] = useState({
-    id:"teacher1",
-    name:"Sarah Johnson",
-    role:"teacher"
-});
-
-const rtcConfig = {
-    iceServers: [
-      {
-        urls: [
-          "stun:stun.l.google.com:19302",
-          "stun:stun1.l.google.com:19302",
-        ],
-      },
-    ],
-  };
-const createPeerConnection = useCallback((userId) => {
-  const pc = new RTCPeerConnection(rtcConfig);
-
-  peerConnections.current[userId] = pc;
-
-  localStream.current?.getTracks().forEach((track) => {
-    pc.addTrack(track, localStream.current);
-  });
-
-  pc.onicecandidate = (event) => {
-    if (!event.candidate) return;
-
-    socketRef.current.emit("ice-candidate", {
-      roomId: sessionId,
-      target: userId,
-      candidate: event.candidate,
-    });
-  };
-
-  pc.ontrack = (event) => {
-    setParticipants((prev) =>
-      prev.map((p) =>
-        p.id === userId
-          ? {
-              ...p,
-              stream: event.streams[0],
-            }
-          : p
-      )
-    );
-  };
-
-  return pc;
-}, [sessionId]);
-useEffect(() => {
-
-  if (!socketRef.current) return;
-
-  socketRef.current.on("user-joined", async (userData) => {
-
-    setParticipants((prev) => [
-      ...prev,
-      {
-        ...userData,
-        stream: null,
-      },
-    ]);
-
-    const pc = createPeerConnection(userData.id);
-
-    const offer = await pc.createOffer();
-
-    await pc.setLocalDescription(offer);
-
-    socketRef.current.emit("offer", {
-
-      roomId: sessionId,
-
-      target: userData.id,
-
-      offer,
-
-    });
-
-  });
-
-  return () => {
-
-    socketRef.current.off("user-joined");
-
-  };
-
-}, [createPeerConnection]);
-
-useEffect(() => {
-
-  socketRef.current?.on("offer", async (data) => {
-
-    const pc = createPeerConnection(data.sender);
-
-    await pc.setRemoteDescription(
-      new RTCSessionDescription(data.offer)
-    );
-
-    const answer = await pc.createAnswer();
-
-    await pc.setLocalDescription(answer);
-
-    socketRef.current.emit("answer", {
-
-      roomId: sessionId,
-
-      target: data.sender,
-
-      answer,
-
-    });
-
-  });
-
-  return () => {
-
-    socketRef.current?.off("offer");
-
-  };
-
-}, [createPeerConnection]);
-
-useEffect(() => {
-
-  socketRef.current?.on("answer", async (data) => {
-
-    const pc = peerConnections.current[data.sender];
-
-    if (!pc) return;
-
-    await pc.setRemoteDescription(
-
-      new RTCSessionDescription(data.answer)
-
-    );
-
-  });
-
-  return () => {
-
-    socketRef.current?.off("answer");
-
-  };
-
-}, []);
-
-useEffect(() => {
-
-  socketRef.current?.on("ice-candidate", async (data) => {
-
-    const pc = peerConnections.current[data.sender];
-
-    if (!pc) return;
-
-    try {
-
-      await pc.addIceCandidate(
-
-        new RTCIceCandidate(data.candidate)
-
-      );
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-
-  });
-
-  return () => {
-
-    socketRef.current?.off("ice-candidate");
-
-  };
-
-}, []);
-
-useEffect(() => {
-
-  socketRef.current?.on("user-left", (id) => {
-
-    peerConnections.current[id]?.close();
-
-    delete peerConnections.current[id];
-
-    setParticipants((prev) =>
-
-      prev.filter((p) => p.id !== id)
-
-    );
-
-  });
-
-  return () => {
-
-    socketRef.current?.off("user-left");
-
-  };
-
-}, []);
 
 const RemoteVideo = ({ stream, name }) => {
-
   const videoRef = useRef(null);
 
   useEffect(() => {
-
     if (videoRef.current && stream) {
-
       videoRef.current.srcObject = stream;
-
     }
-
   }, [stream]);
 
   return (
-
-    <div className="overflow-hidden rounded-xl bg-black">
-
+    <div className="overflow-hidden rounded-xl bg-black shadow-sm">
       <video
-
         ref={videoRef}
-
         autoPlay
-
         playsInline
-
-        className="h-44 w-full object-cover"
-
+        className="h-24 w-full object-cover"
       />
-
-      <div className="bg-slate-900 p-2 text-xs text-white">
-
-        {name}
-
+      <div className="truncate bg-slate-900 p-1 text-[10px] text-white">
+        {name || "Participant"}
       </div>
-
     </div>
+  );
+};
 
+/* ---------------- Main Component ---------------- */
+
+export default function LiveClassroom() {
+  const { sessionId } = useParams();
+  const navigate = useNavigate();
+
+  const currentUser = useSelector((state) => state.auth.user);
+  const token = useSelector((state) => state.auth.token);
+
+  const [rightTab, setRightTab] = useState("participants");
+
+  const localVideoRef = useRef(null);
+  const socketRef = useRef(null);
+  const peerConnections = useRef({});
+  const pendingCandidates = useRef({});
+  const localStream = useRef(null);
+  const screenStream = useRef(null);
+
+  const [session, setSession] = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionError, setSessionError] = useState("");
+
+  const [participants, setParticipants] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
+  const [peerTyping, setPeerTyping] = useState(false);
+
+  const [connected, setConnected] = useState(false);
+  const [mediaReady, setMediaReady] = useState(false);
+  const [mediaError, setMediaError] = useState("");
+
+  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [sharingScreen, setSharingScreen] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [ending, setEnding] = useState(false);
+
+  const [cameraDevices, setCameraDevices] = useState([]);
+  const [activeCameraId, setActiveCameraId] = useState(null);
+  const [showCameraMenu, setShowCameraMenu] = useState(false);
+
+  const canvasRef = useRef(null);
+  const canvasWrapRef = useRef(null);
+  const ctxRef = useRef(null);
+  const colorInputRef = useRef(null);
+  const elementsRef = useRef([]);
+  const redoRef = useRef([]);
+  const drawStateRef = useRef({ isDrawing: false, current: null });
+  const [tool, setTool] = useState("pen");
+  const [color, setColor] = useState("#1e293b");
+  const [historyTick, setHistoryTick] = useState(0);
+  const bumpHistory = useCallback(() => setHistoryTick((t) => t + 1), []);
+
+  const isHost =
+    !!session &&
+    !!currentUser &&
+    (session.createdBy?._id === currentUser.id ||
+      session.createdBy === currentUser.id);
+
+  /* ---- Load the session tied to this classroom (never a hardcoded room) ---- */
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSession = async () => {
+      try {
+        setSessionLoading(true);
+        const res = await getSession(sessionId);
+        if (!cancelled) setSession(res.data);
+      } catch (err) {
+        if (!cancelled) {
+          setSessionError(
+            err.response?.data?.message || "Unable to load this session."
+          );
+        }
+      } finally {
+        if (!cancelled) setSessionLoading(false);
+      }
+    };
+
+    if (sessionId) loadSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
+  /* ---- Load prior chat history for this session ---- */
+  useEffect(() => {
+    if (!sessionId) return;
+
+    getChatHistory(sessionId)
+      .then((history) => setMessages(history))
+      .catch((err) => console.log("Chat history error:", err));
+  }, [sessionId]);
+
+  /* ---- Live session clock ---- */
+  useEffect(() => {
+    if (!session?.startTime) return;
+
+    const start = new Date(session.startTime).getTime();
+    const tick = () =>
+      setElapsed(Math.max(0, Math.floor((Date.now() - start) / 1000)));
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [session?.startTime]);
+
+  /* ---- Local camera / mic ---- */
+  useEffect(() => {
+    let cancelled = false;
+
+    const initMedia = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+
+        localStream.current = stream;
+
+        const [track] = stream.getVideoTracks();
+        if (track) setActiveCameraId(track.getSettings().deviceId || null);
+
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.log(err);
+        if (!cancelled) setMediaError("Camera/microphone unavailable.");
+      } finally {
+        if (!cancelled) setMediaReady(true);
+      }
+    };
+
+    initMedia();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* ---- List available cameras (labels only show up once permission is granted) ---- */
+  useEffect(() => {
+    if (!mediaReady || !navigator.mediaDevices?.enumerateDevices) return;
+
+    navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => {
+        setCameraDevices(devices.filter((d) => d.kind === "videoinput"));
+      })
+      .catch((err) => console.log(err));
+  }, [mediaReady]);
+
+  /* ---- Peer connection factory, keyed by the remote socket id ---- */
+  const createPeerConnection = useCallback(
+    (targetId) => {
+      const pc = new RTCPeerConnection(rtcConfig);
+      peerConnections.current[targetId] = pc;
+
+      localStream.current?.getTracks().forEach((track) => {
+        pc.addTrack(track, localStream.current);
+      });
+
+      pc.onicecandidate = (event) => {
+        if (!event.candidate) return;
+
+        socketRef.current?.emit("ice-candidate", {
+          roomId: sessionId,
+          target: targetId,
+          candidate: event.candidate,
+        });
+      };
+
+      pc.ontrack = (event) => {
+        setParticipants((prev) =>
+          prev.map((p) =>
+            p.socketId === targetId ? { ...p, stream: event.streams[0] } : p
+          )
+        );
+      };
+
+      return pc;
+    },
+    [sessionId]
   );
 
-};
+  const flushQueuedCandidates = async (peerId, pc) => {
+    const queued = pendingCandidates.current[peerId];
+    if (!queued?.length) return;
 
-useEffect(() => {
-  const socket = io("http://localhost:5173", {
-    transports: ["websocket"],
-  });
+    for (const candidate of queued) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.log(err);
+      }
+    }
 
-  socketRef.current = socket;
-
-  socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-    setConnected(true);
-  });
-
-  socket.on("connect_error", (err) => {
-    console.error("Socket Error:", err.message);
-  });
-
-  socket.on("disconnect", (reason) => {
-    console.log("Disconnected:", reason);
-    setConnected(false);
-  });
-
-  return () => {
-    socket.disconnect();
+    pendingCandidates.current[peerId] = [];
   };
-}, []);
 
-useEffect(()=>{
+  /* ---- Whiteboard canvas: size it to its wrapper, keep it crisp on resize ---- */
+  const redrawCanvas = useCallback(() => {
+    const ctx = ctxRef.current;
+    const canvas = canvasRef.current;
+    if (!ctx || !canvas) return;
 
-async function initMedia(){
+    const ratio = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
+    elementsRef.current.forEach((el) => drawElement(ctx, el));
+  }, []);
 
-try{
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = canvasWrapRef.current;
+    if (!canvas || !wrap) return;
 
-const stream=await navigator.mediaDevices.getUserMedia({
+    const resize = () => {
+      const { width, height } = wrap.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
 
-video:true,
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
 
-audio:true
+      const ctx = canvas.getContext("2d");
+      ctx.scale(ratio, ratio);
+      ctxRef.current = ctx;
+      redrawCanvas();
+    };
 
-});
+    resize();
 
-localStream.current=stream;
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [redrawCanvas]);
 
-if(localVideoRef.current){
+  const getCanvasPos = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return [clientX - rect.left, clientY - rect.top];
+  };
 
-localVideoRef.current.srcObject=stream;
+  const commitElement = useCallback(
+    (el) => {
+      elementsRef.current.push(el);
+      redoRef.current = [];
+      redrawCanvas();
+      bumpHistory();
+      socketRef.current?.emit("draw", { roomId: sessionId, element: el });
+    },
+    [sessionId, redrawCanvas, bumpHistory]
+  );
 
-}
+  const handlePointerDown = (e) => {
+    const [x, y] = getCanvasPos(e);
 
-setLoading(false);
+    if (tool === "text") {
+      const text = window.prompt("Enter text");
+      if (text && text.trim()) {
+        commitElement({
+          id: `${socketRef.current?.id || "local"}-${Date.now()}`,
+          type: "text",
+          color,
+          size: 2,
+          x1: x,
+          y1: y,
+          text: text.trim(),
+        });
+      }
+      return;
+    }
 
-}catch(err){
+    drawStateRef.current.isDrawing = true;
 
-console.log(err);
+    if (tool === "pen" || tool === "eraser") {
+      drawStateRef.current.current = {
+        id: `${socketRef.current?.id || "local"}-${Date.now()}`,
+        type: "path",
+        color,
+        size: tool === "eraser" ? 22 : 3,
+        eraser: tool === "eraser",
+        points: [[x, y]],
+      };
+    } else {
+      drawStateRef.current.current = {
+        id: `${socketRef.current?.id || "local"}-${Date.now()}`,
+        type: tool, // rect | circle | arrow
+        color,
+        size: 3,
+        x1: x,
+        y1: y,
+        x2: x,
+        y2: y,
+      };
+    }
+  };
 
-}
+  const handlePointerMove = (e) => {
+    if (!drawStateRef.current.isDrawing || !drawStateRef.current.current)
+      return;
 
-}
+    const [x, y] = getCanvasPos(e);
+    const current = drawStateRef.current.current;
 
-initMedia();
+    if (current.type === "path") {
+      current.points.push([x, y]);
+    } else {
+      current.x2 = x;
+      current.y2 = y;
+    }
 
-},[]);
+    redrawCanvas();
+    if (ctxRef.current) drawElement(ctxRef.current, current);
+  };
 
-useEffect(()=>{
+  const handlePointerUp = () => {
+    const current = drawStateRef.current.current;
+    drawStateRef.current.isDrawing = false;
+    drawStateRef.current.current = null;
 
-if(!socketRef.current) return;
+    if (!current) return;
+    if (current.type === "path" && current.points.length < 2) return;
 
-if(!connected) return;
+    commitElement(current);
+  };
 
-socketRef.current.emit("join-room",{
+  const handleUndo = () => {
+    const last = elementsRef.current.pop();
+    if (!last) return;
+    redoRef.current.push(last);
+    redrawCanvas();
+    bumpHistory();
+  };
 
-roomId:sessionId,
+  const handleRedo = () => {
+    const el = redoRef.current.pop();
+    if (!el) return;
+    elementsRef.current.push(el);
+    redrawCanvas();
+    bumpHistory();
+  };
 
-user
+  const handleClearBoard = () => {
+    elementsRef.current = [];
+    redoRef.current = [];
+    redrawCanvas();
+    bumpHistory();
+    socketRef.current?.emit("clear-board", sessionId);
+  };
 
-});
+  /* ---- Socket connection + signaling, scoped to this session's room ---- */
+  useEffect(() => {
+    if (!sessionId) return;
 
-},[connected]);
+    const socketUrl =
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:8000";
 
-useEffect(()=>{
+    const socket = io(socketUrl, {
+      transports: ["websocket"],
+      auth: { token },
+    });
 
-return ()=>{
+    socketRef.current = socket;
 
-Object.values(peerConnections.current).forEach(pc=>{
+    socket.on("connect", () => setConnected(true));
+    socket.on("connect_error", (err) =>
+      console.error("Socket error:", err.message)
+    );
+    socket.on("disconnect", () => setConnected(false));
 
-pc.close();
+    // The server tells us who's already in this session's room; we initiate
+    // the offer to each of them.
+    socket.on("existing-participants", (existing) => {
+      setParticipants((prev) => {
+        const known = new Set(prev.map((p) => p.socketId));
+        const additions = existing
+          .filter((p) => !known.has(p.socketId))
+          .map((p) => ({ socketId: p.socketId, user: p.user, stream: null }));
+        return [...prev, ...additions];
+      });
 
-});
+      existing.forEach(async ({ socketId }) => {
+        const pc = createPeerConnection(socketId);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit("offer", { roomId: sessionId, target: socketId, offer });
+      });
+    });
 
-localStream.current?.getTracks().forEach(track=>track.stop());
+    // Someone else joined after us - just track them for the UI; the peer
+    // connection is created once their offer arrives.
+    socket.on("user-joined", ({ socketId, user }) => {
+      setParticipants((prev) =>
+        prev.some((p) => p.socketId === socketId)
+          ? prev
+          : [...prev, { socketId, user, stream: null }]
+      );
+    });
 
-socketRef.current?.emit("leave-room",{
+    socket.on("offer", async ({ sender, offer }) => {
+      const pc = createPeerConnection(sender);
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      await flushQueuedCandidates(sender, pc);
 
-roomId:sessionId,
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit("answer", { roomId: sessionId, target: sender, answer });
+    });
 
-userId:user.id
+    socket.on("answer", async ({ sender, answer }) => {
+      const pc = peerConnections.current[sender];
+      if (!pc) return;
 
-});
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      await flushQueuedCandidates(sender, pc);
+    });
 
-};
+    socket.on("ice-candidate", async ({ sender, candidate }) => {
+      const pc = peerConnections.current[sender];
 
-},[]);
+      if (!pc || !pc.remoteDescription) {
+        pendingCandidates.current[sender] =
+          pendingCandidates.current[sender] || [];
+        pendingCandidates.current[sender].push(candidate);
+        return;
+      }
 
-const toggleCamera=()=>{
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.log(err);
+      }
+    });
 
-const track=localStream.current
-.getVideoTracks()[0];
+    socket.on("user-left", ({ socketId }) => {
+      peerConnections.current[socketId]?.close();
+      delete peerConnections.current[socketId];
+      delete pendingCandidates.current[socketId];
+      setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
+    });
 
-if(!track) return;
+    socket.on("receive-message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
 
-track.enabled=!track.enabled;
+    socket.on("user-typing", () => setPeerTyping(true));
+    socket.on("user-stop-typing", () => setPeerTyping(false));
 
-setCameraEnabled(track.enabled);
+    socket.on("draw", ({ element }) => {
+      if (!element) return;
+      elementsRef.current.push(element);
+      redrawCanvas();
+      bumpHistory();
+    });
 
-}
+    socket.on("clear-board", () => {
+      elementsRef.current = [];
+      redoRef.current = [];
+      redrawCanvas();
+      bumpHistory();
+    });
 
-const toggleMic=()=>{
+    return () => {
+      socket.emit("leave-call", { roomId: sessionId });
+      socket.emit("leave-room", { roomId: sessionId });
+      socket.disconnect();
+    };
+  }, [sessionId, token, createPeerConnection, redrawCanvas, bumpHistory]);
 
-const track=localStream.current
-.getAudioTracks()[0];
+  /* ---- Join this exact session's room once socket + media are ready ---- */
+  useEffect(() => {
+    if (!connected || !mediaReady || !socketRef.current || !sessionId) return;
+    if (!currentUser) return;
 
-if(!track) return;
+    socketRef.current.emit("join-room", {
+      roomId: sessionId,
+      user: currentUser,
+    });
+    socketRef.current.emit("join-call", {
+      roomId: sessionId,
+      user: currentUser,
+    });
+  }, [connected, mediaReady, sessionId, currentUser]);
 
-track.enabled=!track.enabled;
+  /* ---- Cleanup local media + peer connections on unmount ---- */
+  useEffect(() => {
+    return () => {
+      Object.values(peerConnections.current).forEach((pc) => pc.close());
+      peerConnections.current = {};
+      localStream.current?.getTracks().forEach((t) => t.stop());
+      screenStream.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
 
-setMicEnabled(track.enabled);
+  const toggleCamera = () => {
+    const track = localStream.current?.getVideoTracks()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    setCameraEnabled(track.enabled);
+  };
 
-}
+  const toggleMic = () => {
+    const track = localStream.current?.getAudioTracks()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    setMicEnabled(track.enabled);
+  };
 
-const startScreenShare=async()=>{
+  const replaceOutgoingVideoTrack = (track) => {
+    Object.values(peerConnections.current).forEach((pc) => {
+      const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+      sender?.replaceTrack(track);
+    });
+  };
 
-try{
+  /* ---- Switch to a different physical camera without dropping the call ---- */
+  const switchCamera = async (deviceId) => {
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: { exact: deviceId } },
+      });
+      const newTrack = newStream.getVideoTracks()[0];
 
-const stream=await navigator.mediaDevices.getDisplayMedia({
+      const oldTrack = localStream.current?.getVideoTracks()[0];
+      if (oldTrack) {
+        localStream.current.removeTrack(oldTrack);
+        oldTrack.stop();
+      }
+      localStream.current?.addTrack(newTrack);
 
-video:true
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream.current;
+      }
 
-});
+      if (!sharingScreen) {
+        replaceOutgoingVideoTrack(newTrack);
+      }
 
-screenTrack.current=stream.getVideoTracks()[0];
+      setActiveCameraId(newTrack.getSettings().deviceId || deviceId);
+      setCameraEnabled(true);
+      setShowCameraMenu(false);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-setSharingScreen(true);
+  /* ---- Retry camera/mic permission after an earlier denial/error ---- */
+  const retryCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
 
-}catch(e){
+      localStream.current = stream;
 
-console.log(e);
+      const [track] = stream.getVideoTracks();
+      if (track) setActiveCameraId(track.getSettings().deviceId || null);
 
-}
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
 
-};
+      replaceOutgoingVideoTrack(track);
+      setMediaError("");
+      setCameraEnabled(true);
+      setMicEnabled(true);
+    } catch (err) {
+      console.log(err);
+      setMediaError("Camera/microphone unavailable.");
+    }
+  };
+
+  const stopScreenShare = useCallback(() => {
+    screenStream.current?.getTracks().forEach((t) => t.stop());
+    screenStream.current = null;
+
+    const camTrack = localStream.current?.getVideoTracks()[0] || null;
+    replaceOutgoingVideoTrack(camTrack);
+
+    if (localVideoRef.current && localStream.current) {
+      localVideoRef.current.srcObject = localStream.current;
+    }
+
+    setSharingScreen(false);
+  }, []);
+
+  const startScreenShare = async () => {
+    if (sharingScreen) {
+      stopScreenShare();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+      });
+      const screenTrack = stream.getVideoTracks()[0];
+      screenStream.current = stream;
+
+      replaceOutgoingVideoTrack(screenTrack);
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      setSharingScreen(true);
+      screenTrack.onended = stopScreenShare;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const handleSendMessage = () => {
+    const text = message.trim();
+    if (!text || !socketRef.current) return;
+
+    socketRef.current.emit("send-message", {
+      sessionId,
+      senderId: currentUser?.id,
+      message: text,
+    });
+
+    socketRef.current.emit("stop-typing", sessionId);
+    setMessage("");
+  };
+
+  const handleMessageChange = (e) => {
+    setMessage(e.target.value);
+    socketRef.current?.emit("typing", sessionId);
+  };
+
+  const handleEndOrLeave = async () => {
+    try {
+      setEnding(true);
+      if (isHost) {
+        await endSession(sessionId);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setEnding(false);
+      navigate(
+        session?.classroom?._id
+          ? `/classrooms/${session.classroom._id}`
+          : "/classrooms"
+      );
+    }
+  };
+
+  if (sessionLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-100 text-slate-500">
+        Loading session...
+      </div>
+    );
+  }
+
+  if (sessionError || !session) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-slate-100 text-slate-600">
+        <p>{sessionError || "Session not found."}</p>
+        <button
+          onClick={() => navigate("/classrooms")}
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+        >
+          Back to Classrooms
+        </button>
+      </div>
+    );
+  }
+
+  const classroomName = session.classroom?.name || session.title;
+  const classroomSubject = session.classroom?.subject;
+  const classroomCode = session.classroom?.code;
+
+  const formattedDateTime = session.startTime
+    ? (() => {
+        const d = new Date(session.startTime);
+        const weekday = d.toLocaleDateString([], { weekday: "short" });
+        const time = d.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return `${weekday}, ${d.getFullYear()}, ${time}`;
+      })()
+    : "";
 
   return (
     <div className="flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
       {/* ---------- Top Bar ---------- */}
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-3">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="text-slate-700" size={26} />
+      <header className="border-b border-slate-200 bg-white px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <GraduationCap className="text-slate-800" size={28} />
             <h1 className="text-lg font-bold text-slate-800">
-              Advanced Mathematics 101
+              {classroomName}
             </h1>
-            <span className="ml-2 flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-xs font-semibold text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-              LIVE
-            </span>
-          
- 
-        <div className="hidden items-center gap-6 text-sm text-slate-500 md:flex">
-          <span className="flex items-center gap-1.5">
-            <Clock size={15} />
-            01:15:30
-          </span>
-          <span>Date & Time • Wed, 2026, 08:30</span>
-          <span className="flex items-center gap-1.5 text-emerald-500">
-            <BarChart3 size={15} />
-            excellent
-          </span>
-          <span className="flex items-center gap-1.5 text-red-500">
-            <Circle size={9} fill="currentColor" />
-            Recording
-          </span>
-        </div>
-        </div>
-        </div>
- 
-        <div className="flex items-center gap-4">
-          <Bell className="text-slate-500" size={20} />
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-700">
-              Sarah Johnson
-            </span>
-            <img
-              src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces"
-              alt="Sarah Johnson"
-              className="h-9 w-9 rounded-full object-cover"
-            />
+            {session.status === "live" && (
+              <span className="flex items-center gap-2 rounded-full bg-red-500 px-2.5 py-1 text-xs font-semibold text-white">
+                <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                LIVE
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-6">
+            <Bell className="text-slate-500" size={20} />
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-slate-700">
+                {currentUser?.name || "Guest"}
+              </span>
+              <img
+                src={avatarFor(currentUser?.name)}
+                alt={currentUser?.name}
+                className="h-9 w-9 rounded-full object-cover"
+              />
+            </div>
           </div>
         </div>
+
+        <div className="mt-1.5 flex flex-wrap items-center gap-3 pl-9 text-sm text-slate-500">
+          <span className="flex items-center gap-1.5">
+            <Clock size={15} />
+            {formatClock(elapsed)}
+          </span>
+          <Dot className="text-slate-300" size={16} />
+          <span>Date &amp; Time • {formattedDateTime}</span>
+          <Dot className="text-slate-300" size={16} />
+          <span
+            className={`flex items-center gap-1.5 ${
+              connected ? "text-emerald-500" : "text-amber-500"
+            }`}
+          >
+            <BarChart3 size={15} />
+            {connected ? "excellent" : "reconnecting"}
+          </span>
+          {session.status === "live" && (
+            <>
+              <Dot className="text-slate-300" size={16} />
+              <span className="flex items-center gap-1.5 text-red-500">
+                <Circle size={9} fill="currentColor" />
+                Recording
+              </span>
+            </>
+          )}
+        </div>
       </header>
- 
+
       {/* ---------- Body ---------- */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left icon rail */}
-        <nav className="flex w-16 flex-col items-center gap-3 bg-slate-900 py-4">
+        <nav className="flex w-[72px] flex-col items-center gap-4 bg-slate-900 py-5">
           <SidebarIcon Icon={Edit3} active />
           <SidebarIcon Icon={Video} />
-          <SidebarIcon Icon={Users} />
+          <SidebarIcon
+            Icon={Users}
+            onClick={() => setRightTab("participants")}
+          />
           <SidebarIcon Icon={ClipboardList} />
           <SidebarIcon Icon={FileText} />
-          <SidebarIcon Icon={MessageCircle} />
+          <SidebarIcon
+            Icon={MessageCircle}
+            onClick={() => setRightTab("chat")}
+          />
           <SidebarIcon Icon={FileText} />
           <SidebarIcon Icon={BarChart3} />
           <div className="mt-auto">
             <SidebarIcon Icon={Settings} />
           </div>
         </nav>
- 
+
         {/* Center + Right */}
         <main className="flex flex-1 gap-4 overflow-hidden p-4">
-          {/* Whiteboard column */}
-          <section className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-              <div className="flex items-center gap-1">
-                <ToolbarButton Icon={Pencil} active />
-                <ToolbarButton Icon={Eraser} />
-                <ToolbarButton Icon={Square} />
-                <ToolbarButton Icon={CircleIcon} />
-                <ToolbarButton Icon={MoveUpRight} />
-                <ToolbarButton Icon={Type} />
-                <ToolbarButton colorDot="#22c55e" />
-                <ToolbarButton colorDot="#a855f7" />
-                <ToolbarButton Icon={Pipette} />
-                <ToolbarButton Icon={Undo2} />
-                <ToolbarButton Icon={Redo2} />
-                <ToolbarButton Icon={Trash2} />
-              </div>
-            </div>
- 
-            {/* Whiteboard canvas area */}
-            <div className="relative flex-1 overflow-hidden bg-white">
-              
-              
- 
-            
- 
-              {/* ---- Live Quiz Panel overlay ---- */}
-              <div className="absolute left-[54%] top-[46%] w-[280px] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-800">
-                    Live Quiz Panel
-                  </h3>
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <MoreVertical size={16} />
-                    <X size={16} />
-                  </div>
+          {/* Board column: whiteboard + controls stacked underneath it */}
+          <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+            {/* Whiteboard */}
+            <section className="relative flex flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+                <div className="flex items-center gap-1">
+                  <ToolbarButton
+                    Icon={Pencil}
+                    active={tool === "pen"}
+                    onClick={() => setTool("pen")}
+                    title="Pen"
+                  />
+                  <ToolbarButton
+                    Icon={Eraser}
+                    active={tool === "eraser"}
+                    onClick={() => setTool("eraser")}
+                    title="Eraser"
+                  />
+                  <ToolbarButton
+                    Icon={Square}
+                    active={tool === "rect"}
+                    onClick={() => setTool("rect")}
+                    title="Rectangle"
+                  />
+                  <ToolbarButton
+                    Icon={CircleIcon}
+                    active={tool === "circle"}
+                    onClick={() => setTool("circle")}
+                    title="Circle"
+                  />
+                  <ToolbarButton
+                    Icon={MoveUpRight}
+                    active={tool === "arrow"}
+                    onClick={() => setTool("arrow")}
+                    title="Arrow"
+                  />
+                  <ToolbarButton
+                    Icon={Type}
+                    active={tool === "text"}
+                    onClick={() => setTool("text")}
+                    title="Text"
+                  />
+                  <ToolbarButton
+                    colorDot="#1e293b"
+                    active={color === "#1e293b"}
+                    onClick={() => setColor("#1e293b")}
+                    title="Black"
+                  />
+                  <ToolbarButton
+                    colorDot="#22c55e"
+                    active={color === "#22c55e"}
+                    onClick={() => setColor("#22c55e")}
+                    title="Green"
+                  />
+                  <ToolbarButton
+                    colorDot="#a855f7"
+                    active={color === "#a855f7"}
+                    onClick={() => setColor("#a855f7")}
+                    title="Purple"
+                  />
+                  <ToolbarButton
+                    Icon={Pipette}
+                    onClick={() => colorInputRef.current?.click()}
+                    title="Custom color"
+                  />
+                  <input
+                    ref={colorInputRef}
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="hidden"
+                  />
+                  <ToolbarButton
+                    Icon={Undo2}
+                    onClick={handleUndo}
+                    disabled={elementsRef.current.length === 0}
+                    title="Undo"
+                  />
+                  <ToolbarButton
+                    Icon={Redo2}
+                    onClick={handleRedo}
+                    disabled={redoRef.current.length === 0}
+                    title="Redo"
+                  />
+                  <ToolbarButton
+                    Icon={Trash2}
+                    onClick={handleClearBoard}
+                    title="Clear board"
+                  />
                 </div>
-                <p className="mb-3 text-sm text-slate-600">
-                  What is the derivative of x^2?
-                </p>
- 
-                <div className="mb-3 grid grid-cols-2 gap-2">
-                  {quizOptions.map((opt) => (
-                    <label
-                      key={opt.id}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                        opt.highlight
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-slate-200 text-slate-600"
-                      }`}
-                    >
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded-full border ${
-                          opt.selected
-                            ? opt.highlight
-                              ? "border-emerald-500 bg-emerald-500"
-                              : "border-indigo-500 bg-indigo-500"
-                            : "border-slate-300"
+              </div>
+
+              <div
+                ref={canvasWrapRef}
+                className="relative flex-1 overflow-hidden bg-white"
+              >
+                <canvas
+                  ref={canvasRef}
+                  onMouseDown={handlePointerDown}
+                  onMouseMove={handlePointerMove}
+                  onMouseUp={handlePointerUp}
+                  onMouseLeave={handlePointerUp}
+                  onTouchStart={handlePointerDown}
+                  onTouchMove={handlePointerMove}
+                  onTouchEnd={handlePointerUp}
+                  className={`absolute inset-0 h-full w-full touch-none ${
+                    tool === "text" ? "cursor-text" : "cursor-crosshair"
+                  }`}
+                />
+                <div className="absolute left-[71%] top-[40%] w-[280px] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-slate-800">
+                      Live Quiz Panel
+                    </h3>
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <MoreVertical size={16} />
+                      <X size={16} />
+                    </div>
+                  </div>
+                  <p className="mb-3 text-sm text-slate-600">
+                    What is the derivative of x^2?
+                  </p>
+
+                  <div className="mb-3 grid grid-cols-2 gap-2">
+                    {quizOptions.map((opt) => (
+                      <label
+                        key={opt.id}
+                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                          opt.highlight
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 text-slate-600"
                         }`}
                       >
-                        {opt.selected && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                        )}
-                      </span>
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
- 
-                <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full w-3/4 rounded-full bg-emerald-500" />
-                </div>
-                <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
-                  <span />
-                  <span>01:33</span>
-                </div>
- 
-                <div className="mb-3 flex items-center gap-2">
-                  <button className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                    Submit
-                  </button>
-                  <button className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                    Close Poll
-                  </button>
-                </div>
- 
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>Live responses</span>
-                  <div className="flex items-center">
-                    <div className="flex -space-x-2">
-                      <span className="h-5 w-5 rounded-full border-2 border-white bg-indigo-400" />
-                      <span className="h-5 w-5 rounded-full border-2 border-white bg-purple-400" />
-                      <span className="h-5 w-5 rounded-full border-2 border-white bg-pink-400" />
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                            opt.selected
+                              ? opt.highlight
+                                ? "border-emerald-500 bg-emerald-500"
+                                : "border-indigo-500 bg-indigo-500"
+                              : "border-slate-300"
+                          }`}
+                        >
+                          {opt.selected && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                          )}
+                        </span>
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full w-3/4 rounded-full bg-emerald-500" />
+                  </div>
+                  <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
+                    <span />
+                    <span>01:33</span>
+                  </div>
+
+                  <div className="mb-3 flex items-center gap-2">
+                    <button className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                      Submit
+                    </button>
+                    <button className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                      Close Poll
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <span>Live responses</span>
+                    <div className="flex items-center">
+                      <div className="flex -space-x-2">
+                        <span className="h-5 w-5 rounded-full border-2 border-white bg-indigo-400" />
+                        <span className="h-5 w-5 rounded-full border-2 border-white bg-purple-400" />
+                        <span className="h-5 w-5 rounded-full border-2 border-white bg-pink-400" />
+                      </div>
+                      <span className="ml-1">{participants.length + 1}</span>
                     </div>
-                    <span className="ml-1">120</span>
                   </div>
                 </div>
               </div>
+            </section>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-white px-8 py-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-6 rounded-2xl border border-slate-200 bg-white p-1">
+                  <BottomControl
+                    Icon={micEnabled ? Mic : MicOff}
+                    label="Mic"
+                    active={micEnabled}
+                    onClick={toggleMic}
+                  />
+                  <BottomControl
+                    Icon={cameraEnabled ? Camera : VideoOff}
+                    label="Camera"
+                    active={cameraEnabled}
+                    onClick={toggleCamera}
+                  />
+                  <BottomControl
+                    Icon={ScreenShare}
+                    label={sharingScreen ? "Stop Sharing" : "Share Screen"}
+                    active={sharingScreen}
+                    onClick={startScreenShare}
+                  />
+                  <BottomControl Icon={PencilRuler} label="Tools" active />
+                  <BottomControl Icon={Presentation} label="Materials" />
+                  <BottomControl Icon={Vote} label="Polls" />
+                  <BottomControl Icon={DoorOpen} label="Breakout" />
+                  <BottomControl Icon={ThumbsUp} label="Feedback" />
+                </div>
+
+                <div className="rounded-2xl bg-red-50 p-1.5">
+                  <BottomControl
+                    Icon={X}
+                    label={
+                      ending ? "..." : isHost ? "End Session" : "Leave Session"
+                    }
+                    danger
+                    onClick={handleEndOrLeave}
+                  />
+                </div>
+              </div>
             </div>
-          </section>
- 
-          {/* Right Panel */}
+          </div>
+
           <aside className="flex w-[340px] flex-shrink-0 flex-col gap-4 overflow-hidden">
-            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
-              {/* Tabs */}
+            <div className="flex flex-[2] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
               <div className="flex border-b border-slate-100">
                 <button
                   onClick={() => setRightTab("participants")}
@@ -783,72 +1266,106 @@ console.log(e);
                   Chat Panel
                 </button>
               </div>
- 
+
               {rightTab === "participants" ? (
                 <div className="flex-1 overflow-y-auto p-4">
                   <h4 className="mb-3 text-sm font-bold text-slate-800">
                     Participants
                   </h4>
                   <div className="space-y-3">
-                    {participantsData.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={p.avatar}
-                            alt={p.name}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
-                          <div>
-                            <p className="text-sm font-medium text-slate-700">
-                              {p.name}
-                            </p>
-                            <p className="flex items-center gap-1 text-xs text-slate-400">
-                              {p.status === "host" && (
-                                <span className="text-slate-400">Host</span>
-                              )}
-                              {p.status === "online" && (
-                                <>
-                                  <Dot className="text-emerald-500" size={14} />
-                                  Online
-                                </>
-                              )}
-                              {p.status === "speaking" && (
-                                <>
-                                  <Dot className="text-emerald-500" size={14} />
-                                  Speaking
-                                </>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {p.id === 1 && (
-                            <span className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white">
-                              Manage
-                            </span>
-                          )}
-                          {p.id === 2 && (
-                            <span className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500">
-                              Mute
-                            </span>
-                          )}
-                          {p.muted ? (
-                            <MicOff size={16} className="text-red-400" />
-                          ) : (
-                            <Mic
-                              size={16}
-                              className={
-                                p.speaking ? "text-emerald-500" : "text-slate-400"
-                              }
-                            />
-                          )}
-                          <Video size={16} className="text-slate-400" />
+                    {/* You */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={avatarFor(currentUser?.name)}
+                          alt={currentUser?.name}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-slate-700">
+                            {currentUser?.name || "You"}
+                          </p>
+                          <p className="flex items-center gap-1 text-xs text-slate-400">
+                            {isHost ? (
+                              "Host"
+                            ) : (
+                              <>
+                                <Dot className="text-emerald-500" size={14} />
+                                Online (You)
+                              </>
+                            )}
+                          </p>
                         </div>
                       </div>
-                    ))}
+                      <div className="flex items-center gap-2">
+                        {isHost && (
+                          <span className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white">
+                            Manage
+                          </span>
+                        )}
+                        {micEnabled ? (
+                          <Mic size={16} className="text-slate-400" />
+                        ) : (
+                          <MicOff size={16} className="text-red-400" />
+                        )}
+                        {cameraEnabled ? (
+                          <Video size={16} className="text-slate-400" />
+                        ) : (
+                          <VideoOff size={16} className="text-red-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {participants.length === 0 && (
+                      <p className="text-xs text-slate-400">
+                        Waiting for others to join this session...
+                      </p>
+                    )}
+
+                    {participants.map((p) => {
+                      const isRowHost = p.user?.role === "teacher";
+                      return (
+                        <div
+                          key={p.socketId}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={avatarFor(p.user?.name)}
+                              alt={p.user?.name}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-slate-700">
+                                {p.user?.name || "Participant"}
+                              </p>
+                              <p className="flex items-center gap-1 text-xs text-slate-400">
+                                {isRowHost ? (
+                                  "Host"
+                                ) : (
+                                  <>
+                                    <Dot
+                                      className="text-emerald-500"
+                                      size={14}
+                                    />
+                                    Online
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isHost && !isRowHost && (
+                              <span className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500">
+                                Mute
+                              </span>
+                            )}
+                            <Mic size={16} className="text-slate-400" />
+                            <Video size={16} className="text-slate-400" />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
@@ -857,95 +1374,152 @@ console.log(e);
                     Chat
                   </h4>
                   <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-                    {chatMessages.map((m) => (
-                      <div
-                        key={m.id}
-                        className={`flex flex-col ${
-                          m.mine ? "items-end" : "items-start"
-                        }`}
-                      >
+                    {messages.map((m) => {
+                      const mine =
+                        (m.sender?._id || m.sender) === currentUser?.id;
+                      return (
                         <div
-                          className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
-                            m.mine
-                              ? "bg-indigo-600 text-white"
-                              : "bg-slate-100 text-slate-700"
-                          }`}
+                          key={m._id || m.id}
+                          className={`flex flex-col ${mine ? "items-end" : "items-start"}`}
                         >
-                          {m.text}
+                          {!mine && (
+                            <span className="mb-0.5 text-[10px] font-medium text-slate-400">
+                              {m.sender?.name || "Participant"}
+                            </span>
+                          )}
+                          <div
+                            className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
+                              mine
+                                ? "bg-indigo-600 text-white"
+                                : "bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            {m.message}
+                          </div>
+                          {m.createdAt && (
+                            <span className="mt-1 text-[10px] text-slate-400">
+                              {new Date(m.createdAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          )}
                         </div>
-                        {m.time && (
-                          <span className="mt-1 text-[10px] text-slate-400">
-                            {m.time}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
+                    {peerTyping && (
+                      <p className="text-xs italic text-slate-400">
+                        Someone is typing...
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 border-t border-slate-100 p-3">
                     <Smile size={18} className="text-slate-400" />
                     <input
                       type="text"
+                      value={message}
+                      onChange={handleMessageChange}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleSendMessage()
+                      }
                       placeholder="Active message..."
                       className="flex-1 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 outline-none placeholder:text-slate-400"
                     />
                     <Paperclip size={18} className="text-slate-400" />
-                    <button className="rounded-lg bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700">
+                    <button
+                      onClick={handleSendMessage}
+                      className="rounded-lg bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700"
+                    >
                       <Send size={16} />
                     </button>
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Camera panel - self + everyone else in THIS session's room */}
+            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-3 shadow-sm">
+              <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-800">
+                <Camera size={16} />
+                Camera
+              </h4>
+              <div className="grid flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto">
+                <div className="relative overflow-hidden rounded-xl bg-black shadow-sm">
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`h-24 w-full origin-center object-cover [transform:scaleX(-1)] ${
+                      cameraEnabled ? "" : "opacity-0"
+                    }`}
+                  />
+
+                  {!cameraEnabled && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                      <img
+                        src={avatarFor(currentUser?.name)}
+                        alt={currentUser?.name}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {mediaError && (
+                    <button
+                      onClick={retryCamera}
+                      className="absolute right-1 top-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600 hover:bg-white"
+                    >
+                      Retry
+                    </button>
+                  )}
+
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-slate-900/80 px-1.5 py-1 text-[10px] text-white">
+                    <span className="truncate">
+                      You {mediaError ? "(no camera)" : ""}
+                    </span>
+                    {cameraDevices.length > 1 && (
+                      <button
+                        onClick={() => setShowCameraMenu((v) => !v)}
+                        title="Switch camera"
+                        className="ml-1 shrink-0 rounded p-0.5 hover:bg-white/20"
+                      >
+                        <RefreshCcw size={11} />
+                      </button>
+                    )}
+                  </div>
+
+                  {showCameraMenu && cameraDevices.length > 1 && (
+                    <div className="absolute bottom-6 right-1 z-10 w-32 rounded-lg bg-white p-1 text-[11px] text-slate-700 shadow-lg">
+                      {cameraDevices.map((d, i) => (
+                        <button
+                          key={d.deviceId}
+                          onClick={() => switchCamera(d.deviceId)}
+                          className={`block w-full truncate rounded px-2 py-1 text-left hover:bg-slate-100 ${
+                            activeCameraId === d.deviceId
+                              ? "bg-indigo-50 text-indigo-600"
+                              : ""
+                          }`}
+                        >
+                          {d.label || `Camera ${i + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {participants.map((p) => (
+                  <RemoteVideo
+                    key={p.socketId}
+                    stream={p.stream}
+                    name={p.user?.name}
+                  />
+                ))}
+              </div>
+            </div>
           </aside>
         </main>
       </div>
-
-      <div className="absolute left-5 bottom-5 grid grid-cols-2 gap-3">
-
-  {participants.map((participant) => (
-
-    <RemoteVideo
-
-      key={participant.id}
-
-      stream={participant.stream}
-
-      name={participant.name}
-
-    />
-
-  ))}
-
-</div>
- 
-      {/* ---------- Bottom Bar ---------- */}
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-3">
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
-              <Wifi size={15} className="text-emerald-500" />
-              Internet Status
-            </p>
-            <p className="text-xs text-slate-400">Stable, 50 Mbps</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-700">Class Code</p>
-            <p className="text-xs text-slate-400">XY72AB</p>
-          </div>
-        </div>
- 
-        <div className="flex flex-wrap items-center gap-2">
-          <BottomControl Icon={Mic} label="Mic" active />
-          <BottomControl Icon={Camera} label="Camera" active />
-          <BottomControl Icon={ScreenShare} label="Share Screen" />
-          <BottomControl Icon={PencilRuler} label="Whiteboard Tools" active />
-          <BottomControl Icon={Presentation} label="Present Materials" />
-          <BottomControl Icon={Vote} label="Polls / Quiz" />
-          <BottomControl Icon={DoorOpen} label="Breakout Rooms" />
-          <BottomControl Icon={ThumbsUp} label="Student Feedback" />
-          <BottomControl Icon={X} label="End Session for All" danger />
-        </div>
-      </footer>
     </div>
   );
 }

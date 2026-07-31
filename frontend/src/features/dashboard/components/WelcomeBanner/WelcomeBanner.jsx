@@ -12,12 +12,7 @@ const WelcomeBanner = ({ name, role }) => {
             ? "Manage your classrooms, students, and live sessions from one place."
             : "Continue learning, join your classes, and track your progress."}
         </p>
-
-        <button className="banner-btn">
-          {role === "teacher" ? "Create Classroom" : "Join Classroom"}
-        </button>
       </div>
-
       <div className="banner-illustration">
         <span className="text-7xl opacity-80">🎓</span>
       </div>
