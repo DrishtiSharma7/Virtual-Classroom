@@ -42,7 +42,9 @@ exports.createClassroom = async (req, res) => {
 
 exports.joinClassroom = async (req, res) => {
   try {
-    const classroom = await Classroom.findById(req.params.id);
+    const classroom = await Classroom.findOne({
+      code: req.params.id.toUpperCase(),
+    });
     if (!classroom) {
       return res.status(404).json({
         message: "Classroom not found",

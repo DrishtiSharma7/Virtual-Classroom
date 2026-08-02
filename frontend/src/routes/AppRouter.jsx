@@ -9,6 +9,7 @@ import RegisterPage from "../features/auth/pages/RegisterPage";
 import ClassroomHome from "../features/classroom/pages/ClassroomHome/ClassroomHome";
 import ClassroomDetails from "../features/classroom/pages/ClassroomDetails/ClassroomDetails";
 import CreateClassroom from "../features/classroom/pages/CreateClassroom/CreateClassroom";
+import JoinClassroom from "../features/classroom/pages/JoinClassroom/JoinClassroom";
 import AttendanceHome from "../features/classroom/pages/AttendanceHome/AttendanceHome";
 import TeacherAssignmentHome from "../features/classroom/pages/AssignmentHome/TeacherAssignmentHome";
 import LiveClassroomTeacher from "../features/dashboard/pages/LiveClassroom/LiveClassroomTeacher";
@@ -37,6 +38,7 @@ function AppRouter() {
           <Route element={<DashboardLayout showNavbar={true} />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/classrooms/create" element={<CreateClassroom />} />
+            <Route path="/classrooms/join" element={<JoinClassroom />} />
           </Route>
         </Route>
 

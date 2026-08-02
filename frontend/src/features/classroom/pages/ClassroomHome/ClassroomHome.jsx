@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMyClassrooms, deleteClassroom } from "../../api/classroom.api";
-import { LayoutDashboard, Trash, Users, ArrowRight, Plus } from "lucide-react";
+import {
+  LayoutDashboard,
+  Trash,
+  Users,
+  ArrowRight,
+  Plus,
+  KeyRound,
+} from "lucide-react";
 import "./ClassroomHome.css";
 
 function ClassroomHome() {
@@ -61,7 +68,7 @@ function ClassroomHome() {
         <div className="classroom-header">
           <div>
             <h1 className="classroom-title">
-              {isTeacher ? "My Classrooms" : "Joined Classrooms"}
+              {isTeacher ? "My Classrooms" : "My Classrooms"}
             </h1>
             <p className="classroom-subtitle">
               {isTeacher
@@ -75,6 +82,14 @@ function ClassroomHome() {
             <Link to="/classrooms/create" className="create-classroom-btn">
               <Plus size={20} />
               Create Classroom
+            </Link>
+          )}
+
+          {/* Join button sirf student ko dikhega */}
+          {!isTeacher && (
+            <Link to="/classrooms/join" className="create-classroom-btn">
+              <KeyRound size={20} />
+              Join Classroom
             </Link>
           )}
         </div>
