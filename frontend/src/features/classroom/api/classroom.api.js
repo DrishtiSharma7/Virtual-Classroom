@@ -1,5 +1,10 @@
 import api from "../../../config/axios.config";
 
+export const createClassroom = async (payload) => {
+  const response = await api.post("/classrooms", payload);
+  return response.data;
+};
+
 export const getMyClassrooms = async () => {
   const response = await api.get("/classrooms/my");
   return response.data;
