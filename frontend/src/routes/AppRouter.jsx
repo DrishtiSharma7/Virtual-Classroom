@@ -11,12 +11,14 @@ import ClassroomDetails from "../features/classroom/pages/ClassroomDetails/Class
 import CreateClassroom from "../features/classroom/pages/CreateClassroom/CreateClassroom";
 import AttendanceHome from "../features/classroom/pages/AttendanceHome/AttendanceHome";
 import TeacherAssignmentHome from "../features/classroom/pages/AssignmentHome/TeacherAssignmentHome";
+import LiveClassroomTeacher from "../features/dashboard/pages/LiveClassroom/LiveClassroomTeacher";
 
 import Dashboard from "../features/dashboard/Dashboard";
 
 import ProtectedRoute from "./ProtectedRoute";
 
-import LiveClassroomTeacher from "../features/dashboard/pages/LiveClassroom/LiveClassroomTeacher";
+import SettingsPage from "../features/settings/pages/SettingsPage/SettingsPage";
+
 import { Sidebar } from "lucide-react";
 
 function AppRouter() {
@@ -45,6 +47,7 @@ function AppRouter() {
             <Route path="/attendance" element={<AttendanceHome />} />
             <Route path="/attendance/:id" element={<AttendanceHome />} />
             <Route path="/assignments" element={<TeacherAssignmentHome />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>
 

@@ -21,7 +21,7 @@ import {
 import "./ClassroomDetails.css";
 import { getClassroomById } from "../../api/classroom.api";
 import { useNavigate } from "react-router-dom";
-import { createSession, startSession } from "../../../auth/api/session.api";
+import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 
 function ClassroomDetails() {
   const { classroomId } = useParams();
@@ -95,6 +95,24 @@ function ClassroomDetails() {
       setStartingSession(false);
     }
   };
+
+  const handleJoinSession = async () => {
+  try {
+    const res = await getSessionsByClassroom(classroom._id);
+    // yaha assume kar raha hoon response array hai, live session dhoondh rahe hain
+    const liveSession = res.data?.find((s) => s.status === "live");
+
+    if (!liveSession) {
+      alert("No live session running right now.");
+      return;
+    }
+
+    navigate(`/live/${liveSession._id}`);
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.message || "Unable to join session.");
+  }
+};
 
   // --- TEACHER-ONLY ACTIONS (stubbed handlers — wire up to your API) ---
   const handleAddAssignment = () => {
@@ -216,7 +234,7 @@ function ClassroomDetails() {
 
               {/* Students join; teachers get a "Manage" affordance instead */}
               {isStudent && (
-                <button className="join-btn">
+                <button className="join-btn" onClick={handleJoinSession}>
                   Join Session
                   <ArrowRight size={18} />
                 </button>

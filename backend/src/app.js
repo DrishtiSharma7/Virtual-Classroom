@@ -13,7 +13,7 @@ const quizRoutes = require("./features/quiz/quiz.routes");
 const chatRoutes = require("./features/chat/chat.routes");
 const materialRoutes = require("./features/material/material.routes");
 const dashboardRoutes = require("./features/dashboard/dashboard.routes");
-
+const settingsRoutes = require("./features/settings/settings.routes");
 const app = express();
 
 app.use(cors());
@@ -53,5 +53,6 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/material", materialRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/settings", settingsRoutes);
 
 module.exports = app;
