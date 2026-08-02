@@ -12,6 +12,10 @@ import {
   ArrowRight,
   UserCircle2,
   Clock3,
+  Plus,
+  Trash2,
+  UploadCloud,
+  CheckCircle2,
 } from "lucide-react";
 
 import "./ClassroomDetails.css";
@@ -28,6 +32,15 @@ function ClassroomDetails() {
   const navigate = useNavigate();
 
   const [startingSession, setStartingSession] = useState(false);
+
+  // --- ROLE DETECTION -------------------------------------------------
+  // Adjust this to however your app actually stores/exposes the logged-in
+  // user. This assumes a JSON object with a `role` field in localStorage.
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const role = user?.role; // "teacher" | "student"
+  const isTeacher = role === "teacher";
+  const isStudent = role === "student";
+  // ---------------------------------------------------------------------
 
   useEffect(() => {
     fetchClassroom();
@@ -70,7 +83,7 @@ function ClassroomDetails() {
       });
 
       const session = createRes.data.session;
-      
+
       await startSession(session._id);
 
       navigate(`/live/${session._id}`);
@@ -82,6 +95,31 @@ function ClassroomDetails() {
       setStartingSession(false);
     }
   };
+
+  // --- TEACHER-ONLY ACTIONS (stubbed handlers — wire up to your API) ---
+  const handleAddAssignment = () => {
+    navigate(`/classrooms/${classroom._id}/assignments/new`);
+  };
+
+  const handlePostAnnouncement = () => {
+    navigate(`/classrooms/${classroom._id}/announcements/new`);
+  };
+
+  const handleUploadRecording = () => {
+    navigate(`/classrooms/${classroom._id}/recordings/upload`);
+  };
+
+  const handleRemoveStudent = (studentId) => {
+    if (!window.confirm("Remove this student from the classroom?")) return;
+    // TODO: call your removeStudent(classroom._id, studentId) API, then refetch
+    console.log("Remove student:", studentId);
+  };
+
+  // --- STUDENT-ONLY ACTIONS ---------------------------------------------
+  const handleSubmitAssignment = (assignmentId) => {
+    navigate(`/classrooms/${classroom._id}/assignments/${assignmentId}/submit`);
+  };
+  // -----------------------------------------------------------------------
 
   const students = classroom.students || [];
   const assignments = classroom.assignments || [];
@@ -110,14 +148,17 @@ function ClassroomDetails() {
             </div>
           </div>
 
-          <button
-            className="live-btn"
-            onClick={handleStartSession}
-            disabled={startingSession}
-          >
-            <Video size={18} />
-            {startingSession ? "Starting..." : "Start Live Session"}
-          </button>
+          {/* Only teachers can start a live session */}
+          {isTeacher && (
+            <button
+              className="live-btn"
+              onClick={handleStartSession}
+              disabled={startingSession}
+            >
+              <Video size={18} />
+              {startingSession ? "Starting..." : "Start Live Session"}
+            </button>
+          )}
         </div>
 
         {/* Stats */}
@@ -137,7 +178,7 @@ function ClassroomDetails() {
 
           <Link to={`/attendance/${classroom._id}`} className="stat-card">
             <CalendarDays size={26} className="stat-icon blue" />
-            <p>Attendance</p>
+            <p>{isTeacher ? "Attendance" : "My Attendance"}</p>
             <h2>91%</h2>
           </Link>
 
@@ -158,8 +199,10 @@ function ClassroomDetails() {
 
             <div className="section-card">
               <div className="section-title">
-                <Video size={20} />
-                Today's Live Session
+                <span className="section-title-left">
+                  <Video size={20} />
+                  Today's Live Session
+                </span>
               </div>
 
               <h3>React Authentication using JWT</h3>
@@ -171,18 +214,40 @@ function ClassroomDetails() {
                 Today • 2:00 PM - 3:00 PM
               </div>
 
-              <button className="join-btn">
-                Join Session
-                <ArrowRight size={18} />
-              </button>
+              {/* Students join; teachers get a "Manage" affordance instead */}
+              {isStudent && (
+                <button className="join-btn">
+                  Join Session
+                  <ArrowRight size={18} />
+                </button>
+              )}
+
+              {isTeacher && (
+                <button className="join-btn" onClick={handleStartSession}>
+                  Go Live Now
+                  <ArrowRight size={18} />
+                </button>
+              )}
             </div>
 
             {/* Announcements */}
 
             <div className="section-card">
               <div className="section-title">
-                <Bell size={20} />
-                Announcements
+                <span className="section-title-left">
+                  <Bell size={20} />
+                  Announcements
+                </span>
+                {isTeacher && (
+                  <button
+                    className="inline-add-btn"
+                    onClick={handlePostAnnouncement}
+                    title="Post Announcement"
+                  >
+                    <Plus size={18} />
+                    New
+                  </button>
+                )}
               </div>
 
               {announcements.length === 0 ? (
@@ -202,8 +267,20 @@ function ClassroomDetails() {
 
             <div className="section-card">
               <div className="section-title">
-                <BookOpen size={20} />
-                Assignments
+                <span className="section-title-left">
+                  <BookOpen size={20} />
+                  Assignments
+                </span>
+                {isTeacher && (
+                  <button
+                    className="inline-add-btn"
+                    onClick={handleAddAssignment}
+                    title="Add Assignment"
+                  >
+                    <Plus size={16} />
+                    New
+                  </button>
+                )}
               </div>
 
               {assignments.length === 0 ? (
@@ -217,7 +294,23 @@ function ClassroomDetails() {
                       <p>Due : {assignment.dueDate || "Not Available"}</p>
                     </div>
 
-                    <button className="view-btn">View</button>
+                    {/* Students submit; teachers view submissions */}
+                    {isStudent ? (
+                      <button
+                        className="view-btn"
+                        onClick={() => handleSubmitAssignment(assignment._id)}
+                      >
+                        {assignment.submitted ? (
+                          <>
+                            <CheckCircle2 size={16} /> Submitted
+                          </>
+                        ) : (
+                          "Submit"
+                        )}
+                      </button>
+                    ) : (
+                      <button className="view-btn">View Submissions</button>
+                    )}
                   </div>
                 ))
               )}
@@ -231,8 +324,10 @@ function ClassroomDetails() {
 
             <div className="section-card">
               <div className="section-title">
-                <Users size={20} />
-                Students
+                <span className="section-title-left">
+                  <Users size={20} />
+                  Students
+                </span>
               </div>
 
               {students.length === 0 ? (
@@ -249,6 +344,17 @@ function ClassroomDetails() {
                           <p>{student.email}</p>
                         </div>
                       </div>
+
+                      {/* Only teachers can remove students */}
+                      {isTeacher && (
+                        <button
+                          className="remove-btn"
+                          onClick={() => handleRemoveStudent(student._id)}
+                          title="Remove student"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -259,8 +365,20 @@ function ClassroomDetails() {
 
             <div className="section-card">
               <div className="section-title">
-                <PlayCircle size={20} />
-                Recordings
+                <span className="section-title-left">
+                  <PlayCircle size={20} />
+                  Recordings
+                </span>
+                {isTeacher && (
+                  <button
+                    className="inline-add-btn"
+                    onClick={handleUploadRecording}
+                    title="Upload Recording"
+                  >
+                    <UploadCloud size={16} />
+                    Upload
+                  </button>
+                )}
               </div>
 
               {recordings.length === 0 ? (

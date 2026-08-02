@@ -47,7 +47,7 @@ import {
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
-import { getChatHistory } from "../../../../features/classroom/api/chat.api";
+import { getChatHistory } from "../../../classroom/api/chat.api";
 
 /* ---------------- Helpers ---------------- */
 
@@ -234,7 +234,7 @@ const RemoteVideo = ({ stream, name }) => {
 
 /* ---------------- Main Component ---------------- */
 
-export default function LiveClassroom() {
+export default function LiveClassroomTeacher() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
 
@@ -963,7 +963,7 @@ export default function LiveClassroom() {
           </div>
         </div>
 
-        <div className="mt-1.5 flex flex-wrap items-center gap-3 pl-9 text-sm text-slate-500">
+        <div className="mt-1 flex flex-wrap items-center gap-3 pl-9 text-sm text-slate-500">
           <span className="flex items-center gap-1.5">
             <Clock size={15} />
             {formatClock(elapsed)}

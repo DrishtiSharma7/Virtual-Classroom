@@ -16,7 +16,7 @@ import Dashboard from "../features/dashboard/Dashboard";
 
 import ProtectedRoute from "./ProtectedRoute";
 
-import LiveClassroom from "../features/dashboard/pages/LiveClassroom/LiveClassroom";
+import LiveClassroomTeacher from "../features/dashboard/pages/LiveClassroom/LiveClassroomTeacher";
 import { Sidebar } from "lucide-react";
 
 function AppRouter() {
@@ -48,7 +48,7 @@ function AppRouter() {
           </Route>
         </Route>
 
-        <Route path="/live/:sessionId" element={<LiveClassroom />} />
+        <Route path="/live/:sessionId" element={<LiveClassroomTeacher />} />
       </Routes>
     </BrowserRouter>
   );
