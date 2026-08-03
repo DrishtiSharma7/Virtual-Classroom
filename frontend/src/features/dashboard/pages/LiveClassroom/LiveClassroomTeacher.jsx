@@ -1125,6 +1125,9 @@ export default function LiveClassroomTeacher() {
                     <TeacherQuizPanel
                       socket={socketRef.current}
                       sessionId={sessionId}
+                      classroomId={
+                        session?.classroom?._id || session?.classroom
+                      }
                       onClose={() => setShowQuizPanel(false)}
                     />
                   </div>

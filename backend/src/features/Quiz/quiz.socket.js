@@ -1,7 +1,9 @@
+const Quiz = require("../Quiz/quiz.model");
+
 module.exports = (io, socket) => {
   // Teacher launches a quiz to everyone in the session room.
   // Strip correctAnswer before broadcasting so students can't inspect it via devtools.
-  socket.on("launch-quiz", (data) => {
+  socket.on("launch-quiz", async (data) => {
     // data: { sessionId, quiz } where quiz is the full Quiz doc from createQuiz's response
     const sanitizedQuestions = data.quiz.questions.map((q) => ({
       _id: q._id,
@@ -9,6 +11,12 @@ module.exports = (io, socket) => {
       options: q.options,
       timeLimit: q.timeLimit || 60,
     }));
+
+    try {
+      await Quiz.findByIdAndUpdate(data.quiz._id, { launched: true });
+    } catch {
+      // Non-fatal — the live launch still proceeds even if this write fails.
+    }
 
     io.to(data.sessionId).emit("quiz-launched", {
       quizId: data.quiz._id,

@@ -20,6 +20,15 @@ const quizResponseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    // "live"   -> submitted during the teacher's live-launched session (via socket flow)
+    // "retake" -> submitted afterwards, self-attempted from the Quiz page
+    // once the teacher has opened the quiz for retake.
+    source: {
+      type: String,
+      enum: ["live", "retake"],
+      default: "live",
+    },
   },
 
   {

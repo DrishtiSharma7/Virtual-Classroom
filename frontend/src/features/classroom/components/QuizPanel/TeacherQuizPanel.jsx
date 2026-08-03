@@ -1,7 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MoreVertical, Plus, Trash2, Upload, X, Download } from "lucide-react";
+import {
+  MoreVertical,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+  Download,
+  Radio,
+  FileQuestion,
+  Users,
+  ArrowLeft,
+} from "lucide-react";
 
-import { createQuiz, getQuizResults } from "../../api/quiz.api";
+import {
+  createQuiz,
+  getClassroomQuizzes,
+  getQuizDetail,
+  getQuizResults,
+} from "../../api/quiz.api";
 import {
   downloadQuizTemplate,
   exportResultsToExcel,
@@ -21,14 +37,26 @@ const emptyQuestion = () => ({
  * props:
  *  - socket: the live socket.io-client instance (socketRef.current)
  *  - sessionId: current live session id (room id)
+ *  - classroomId: current classroom id (used to list previously saved quizzes)
  *  - onClose: called when the panel's X button is clicked
  */
-export default function TeacherQuizPanel({ socket, sessionId, onClose }) {
-  const [stage, setStage] = useState("builder"); // builder | live | results
+export default function TeacherQuizPanel({
+  socket,
+  sessionId,
+  classroomId,
+  onClose,
+}) {
+  const [stage, setStage] = useState("select"); // select | builder | live | results
   const [questions, setQuestions] = useState([emptyQuestion()]);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
+
+  // Previously saved quizzes for this classroom, so the teacher can pick
+  // one of their own choosing instead of always building from scratch.
+  const [savedQuizzes, setSavedQuizzes] = useState([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+  const [launchingId, setLaunchingId] = useState(null);
 
   // Full quiz doc (still has correctAnswer client-side; only the socket
   // broadcast to students strips it, on the backend).
@@ -41,6 +69,54 @@ export default function TeacherQuizPanel({ socket, sessionId, onClose }) {
 
   const [results, setResults] = useState([]);
   const [resultsLoading, setResultsLoading] = useState(false);
+
+  /* ---------------- Saved quiz selection ---------------- */
+
+  useEffect(() => {
+    if (stage !== "select" || !classroomId) return;
+
+    let cancelled = false;
+
+    (async () => {
+      setLoadingSaved(true);
+      try {
+        const data = await getClassroomQuizzes(classroomId);
+        if (!cancelled) setSavedQuizzes(data);
+      } catch {
+        if (!cancelled) setSavedQuizzes([]);
+      } finally {
+        if (!cancelled) setLoadingSaved(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [stage, classroomId]);
+
+  const handleSelectSaved = async (summary) => {
+    setError("");
+    setLaunchingId(summary._id);
+
+    try {
+      const full = await getQuizDetail(summary._id);
+
+      const localQuiz = { _id: full._id, questions: full.questions };
+
+      setQuiz(localQuiz);
+      setQuestionIndex(0);
+      setRevealed(false);
+      setLiveAnswerCount(0);
+
+      socket?.emit("launch-quiz", { sessionId, quiz: localQuiz });
+
+      setStage("live");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Could not launch this quiz.");
+    } finally {
+      setLaunchingId(null);
+    }
+  };
 
   /* ---------------- Question builder ---------------- */
 
@@ -209,7 +285,10 @@ export default function TeacherQuizPanel({ socket, sessionId, onClose }) {
   };
 
   const handleExport = () => {
-    exportResultsToExcel(results, quiz?.questions?.[0]?.question ? "Quiz Results" : "Quiz Results");
+    exportResultsToExcel(
+      results,
+      quiz?.questions?.[0]?.question ? "Quiz Results" : "Quiz Results"
+    );
   };
 
   const handleStartNewQuiz = () => {
@@ -217,7 +296,7 @@ export default function TeacherQuizPanel({ socket, sessionId, onClose }) {
     setQuestions([emptyQuestion()]);
     setResults([]);
     setQuestionIndex(0);
-    setStage("builder");
+    setStage("select");
   };
 
   /* ---------------- Render ---------------- */
@@ -240,9 +319,72 @@ export default function TeacherQuizPanel({ socket, sessionId, onClose }) {
         </p>
       )}
 
+      {/* -------- Select a saved quiz, or build a new one -------- */}
+      {stage === "select" && (
+        <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+          <button
+            onClick={() => {
+              setQuestions([emptyQuestion()]);
+              setStage("builder");
+            }}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            <Plus size={14} /> Build New Quiz
+          </button>
+
+          <p className="pt-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Or launch a saved quiz
+          </p>
+
+          {loadingSaved ? (
+            <p className="py-4 text-center text-xs text-slate-400">
+              Loading your quizzes...
+            </p>
+          ) : savedQuizzes.length === 0 ? (
+            <p className="py-4 text-center text-xs text-slate-400">
+              No saved quizzes yet for this classroom.
+            </p>
+          ) : (
+            savedQuizzes.map((q) => (
+              <div
+                key={q._id}
+                className="rounded-xl border border-slate-200 p-3"
+              >
+                <p className="mb-1 text-sm font-medium text-slate-800">
+                  {q.title}
+                </p>
+                <div className="mb-2 flex items-center gap-3 text-[11px] text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <FileQuestion size={11} /> {q.questionCount} questions
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users size={11} /> {q.responseCount} submissions
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleSelectSaved(q)}
+                  disabled={launchingId === q._id}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60"
+                >
+                  <Radio size={12} />
+                  {launchingId === q._id ? "Launching..." : "Launch Live"}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
       {/* -------- Builder -------- */}
       {stage === "builder" && (
         <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+          <button
+            onClick={() => setStage("select")}
+            className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-indigo-600"
+          >
+            <ArrowLeft size={12} /> Back to saved quizzes
+          </button>
+
           <div className="flex items-center gap-2">
             <button
               onClick={handleImportClick}
@@ -287,7 +429,9 @@ export default function TeacherQuizPanel({ socket, sessionId, onClose }) {
 
               <input
                 value={q.question}
-                onChange={(e) => updateQuestion(qi, { question: e.target.value })}
+                onChange={(e) =>
+                  updateQuestion(qi, { question: e.target.value })
+                }
                 placeholder="Question text"
                 className="mb-2 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
               />
@@ -381,7 +525,8 @@ export default function TeacherQuizPanel({ socket, sessionId, onClose }) {
               className="h-full rounded-full bg-emerald-500 transition-all"
               style={{
                 width: `${
-                  (timeLeft / (quiz.questions[questionIndex].timeLimit || 60)) * 100
+                  (timeLeft / (quiz.questions[questionIndex].timeLimit || 60)) *
+                  100
                 }%`,
               }}
             />

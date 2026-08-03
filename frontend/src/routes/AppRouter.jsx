@@ -13,6 +13,8 @@ import JoinClassroom from "../features/classroom/pages/JoinClassroom/JoinClassro
 import AttendanceHome from "../features/classroom/pages/AttendanceHome/AttendanceHome";
 import TeacherAssignmentHome from "../features/classroom/pages/AssignmentHome/TeacherAssignmentHome";
 import LiveClassroomTeacher from "../features/dashboard/pages/LiveClassroom/LiveClassroomTeacher";
+import QuizHome from "../features/classroom/pages/QuizHome/QuizHome";
+import QuizDetail from "../features/classroom/pages/QuizHome/QuizDetail";
 
 import Dashboard from "../features/dashboard/Dashboard";
 
@@ -49,6 +51,8 @@ function AppRouter() {
             <Route path="/attendance" element={<AttendanceHome />} />
             <Route path="/attendance/:id" element={<AttendanceHome />} />
             <Route path="/assignments" element={<TeacherAssignmentHome />} />
+            <Route path="/quizzes" element={<QuizHome />} />
+            <Route path="/quizzes/:quizId" element={<QuizDetail />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>
