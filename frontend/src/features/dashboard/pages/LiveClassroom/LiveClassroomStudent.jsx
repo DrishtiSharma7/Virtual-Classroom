@@ -45,6 +45,7 @@ import {
 
 import { getSession, leaveSession } from "../../../auth/api/session.api";
 import { getChatHistory } from "../../../classroom/api/chat.api";
+import StudentQuizPanel from "../../../classroom/components/QuizPanel/StudentQuizPanel";
 
 /* ---------------- Helpers ---------------- */
 
@@ -129,18 +130,6 @@ const rtcConfig = {
       urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"],
     },
   ],
-};
-
-// Demo quiz state shown while waiting on the live "active-quiz" socket event.
-const demoQuiz = {
-  question: "What is the derivative of x^2?",
-  options: [
-    { id: "a", label: "2c" },
-    { id: "b", label: "2x" },
-    { id: "c", label: "x" },
-    { id: "d", label: "x^2/2" },
-  ],
-  timeLeft: "01:33",
 };
 
 /* ---------------- Reusable Pieces ---------------- */
@@ -297,12 +286,9 @@ export default function LiveClassroomStudent() {
   const [historyTick, setHistoryTick] = useState(0);
   const bumpHistory = useCallback(() => setHistoryTick((t) => t + 1), []);
 
-  // Live quiz pushed by the teacher over the socket. Falls back to a
-  // placeholder question so the panel has something to render before the
-  // first "active-quiz" event arrives.
-  const [activeQuiz, setActiveQuiz] = useState(demoQuiz);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  // Live quiz UI is driven entirely by socket events inside StudentQuizPanel;
+  // this just tracks whether the student has dismissed it after finishing.
+  const [showQuizPanel, setShowQuizPanel] = useState(true);
 
   const teacherParticipant = participants.find(
     (p) => p.user?.role === "teacher"
@@ -724,17 +710,6 @@ export default function LiveClassroomStudent() {
       bumpHistory();
     });
 
-    // Teacher launches or closes a poll for everyone in the room.
-    socket.on("active-quiz", (quiz) => {
-      setActiveQuiz(quiz);
-      setSelectedOption(null);
-      setQuizSubmitted(false);
-    });
-
-    socket.on("quiz-closed", () => {
-      setActiveQuiz(null);
-    });
-
     // Session ended by the teacher - send the student back to the classroom.
     socket.on("session-ended", () => {
       navigate(
@@ -913,16 +888,6 @@ export default function LiveClassroomStudent() {
   const handleMessageChange = (e) => {
     setMessage(e.target.value);
     socketRef.current?.emit("typing", sessionId);
-  };
-
-  const handleSubmitQuiz = () => {
-    if (!selectedOption || !socketRef.current || !activeQuiz) return;
-
-    socketRef.current.emit("submit-quiz-answer", {
-      roomId: sessionId,
-      optionId: selectedOption,
-    });
-    setQuizSubmitted(true);
   };
 
   const handleLeaveSession = async () => {
@@ -1171,63 +1136,14 @@ export default function LiveClassroomStudent() {
                 />
 
                 {/* Live Quiz Panel - student can only pick an option and submit */}
-                {activeQuiz && (
-                  <div className="absolute left-[71%] top-[40%] w-[280px] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                    <div className="mb-3 flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-slate-800">
-                        Live Quiz Panel
-                      </h3>
-                    </div>
-                    <p className="mb-3 text-sm text-slate-600">
-                      {activeQuiz.question}
-                    </p>
-
-                    <div className="mb-3 grid grid-cols-2 gap-2">
-                      {activeQuiz.options.map((opt) => {
-                        const isSelected = selectedOption === opt.id;
-                        return (
-                          <label
-                            key={opt.id}
-                            onClick={() =>
-                              !quizSubmitted && setSelectedOption(opt.id)
-                            }
-                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                              isSelected
-                                ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-                                : "border-slate-200 text-slate-600"
-                            } ${quizSubmitted ? "cursor-not-allowed opacity-70" : ""}`}
-                          >
-                            <span
-                              className={`flex h-4 w-4 items-center justify-center rounded-full border ${
-                                isSelected
-                                  ? "border-indigo-500 bg-indigo-500"
-                                  : "border-slate-300"
-                              }`}
-                            >
-                              {isSelected && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                              )}
-                            </span>
-                            {opt.label}
-                          </label>
-                        );
-                      })}
-                    </div>
-
-                    <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
-                      <span>
-                        {quizSubmitted ? "Answer submitted" : "Pick an option"}
-                      </span>
-                      <span>{activeQuiz.timeLeft}</span>
-                    </div>
-
-                    <button
-                      onClick={handleSubmitQuiz}
-                      disabled={!selectedOption || quizSubmitted}
-                      className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      {quizSubmitted ? "Submitted" : "Submit"}
-                    </button>
+                {showQuizPanel && (
+                  <div className="absolute left-[68%] top-[8%]">
+                    <StudentQuizPanel
+                      socket={socketRef.current}
+                      sessionId={sessionId}
+                      studentId={currentUser?.id}
+                      onClose={() => setShowQuizPanel(false)}
+                    />
                   </div>
                 )}
               </div>
@@ -1256,7 +1172,12 @@ export default function LiveClassroomStudent() {
                   />
                   <BottomControl Icon={PencilRuler} label="Tools" active />
                   <BottomControl Icon={Presentation} label="Materials" />
-                  <BottomControl Icon={Vote} label="Polls" />
+                  <BottomControl
+                    Icon={Vote}
+                    label="Quiz"
+                    active={showQuizPanel}
+                    onClick={() => setShowQuizPanel((v) => !v)}
+                  />
                   <BottomControl Icon={ThumbsUp} label="Feedback" />
                 </div>
 

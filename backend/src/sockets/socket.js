@@ -4,6 +4,8 @@ const registerWhiteboardEvents = require("../features/whiteboard/whiteboard.sock
 
 const registerWebRTCEvents = require("../features/webrtc/webrtc.socket");
 
+const registerQuizEvents = require("../features/Quiz/quiz.socket");
+
 module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log("User Connected :", socket.id);
@@ -35,6 +37,7 @@ module.exports = (io) => {
     registerChatEvents(io, socket);
     registerWhiteboardEvents(io, socket);
     registerWebRTCEvents(io, socket);
+    registerQuizEvents(io, socket);
 
     socket.on("disconnect", () => {
       console.log(

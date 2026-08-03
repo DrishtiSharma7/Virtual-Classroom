@@ -16,6 +16,11 @@ const questionSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+
+  timeLimit: {
+    type: Number,
+    default: 60,
+  },
 });
 
 const quizSchema = new mongoose.Schema(

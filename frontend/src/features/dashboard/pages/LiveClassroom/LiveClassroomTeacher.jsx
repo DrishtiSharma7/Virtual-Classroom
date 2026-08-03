@@ -21,7 +21,6 @@ import {
   Trash2,
   Pipette,
   X,
-  MoreVertical,
   Mic,
   MicOff,
   Video,
@@ -48,6 +47,7 @@ import {
 
 import { getSession, endSession } from "../../../auth/api/session.api";
 import { getChatHistory } from "../../../classroom/api/chat.api";
+import TeacherQuizPanel from "../../../classroom/components/QuizPanel/TeacherQuizPanel";
 
 /* ---------------- Helpers ---------------- */
 
@@ -132,13 +132,6 @@ const rtcConfig = {
     },
   ],
 };
-
-const quizOptions = [
-  { id: "a", label: "2c", selected: true },
-  { id: "b", label: "2x", selected: false },
-  { id: "c", label: "x", selected: true, highlight: true },
-  { id: "d", label: "x^2/2", selected: false },
-];
 
 /* ---------------- Reusable Pieces ---------------- */
 
@@ -242,6 +235,7 @@ export default function LiveClassroomTeacher() {
   const token = useSelector((state) => state.auth.token);
 
   const [rightTab, setRightTab] = useState("participants");
+  const [showQuizPanel, setShowQuizPanel] = useState(false);
 
   const localVideoRef = useRef(null);
   const socketRef = useRef(null);
@@ -1126,77 +1120,15 @@ export default function LiveClassroomTeacher() {
                     tool === "text" ? "cursor-text" : "cursor-crosshair"
                   }`}
                 />
-                <div className="absolute left-[71%] top-[40%] w-[280px] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-slate-800">
-                      Live Quiz Panel
-                    </h3>
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <MoreVertical size={16} />
-                      <X size={16} />
-                    </div>
+                {showQuizPanel && (
+                  <div className="absolute left-[68%] top-[8%]">
+                    <TeacherQuizPanel
+                      socket={socketRef.current}
+                      sessionId={sessionId}
+                      onClose={() => setShowQuizPanel(false)}
+                    />
                   </div>
-                  <p className="mb-3 text-sm text-slate-600">
-                    What is the derivative of x^2?
-                  </p>
-
-                  <div className="mb-3 grid grid-cols-2 gap-2">
-                    {quizOptions.map((opt) => (
-                      <label
-                        key={opt.id}
-                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                          opt.highlight
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-slate-200 text-slate-600"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
-                            opt.selected
-                              ? opt.highlight
-                                ? "border-emerald-500 bg-emerald-500"
-                                : "border-indigo-500 bg-indigo-500"
-                              : "border-slate-300"
-                          }`}
-                        >
-                          {opt.selected && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                          )}
-                        </span>
-                        {opt.label}
-                      </label>
-                    ))}
-                  </div>
-
-                  <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full w-3/4 rounded-full bg-emerald-500" />
-                  </div>
-                  <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
-                    <span />
-                    <span>01:33</span>
-                  </div>
-
-                  <div className="mb-3 flex items-center gap-2">
-                    <button className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                      Submit
-                    </button>
-                    <button className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                      Close Poll
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>Live responses</span>
-                    <div className="flex items-center">
-                      <div className="flex -space-x-2">
-                        <span className="h-5 w-5 rounded-full border-2 border-white bg-indigo-400" />
-                        <span className="h-5 w-5 rounded-full border-2 border-white bg-purple-400" />
-                        <span className="h-5 w-5 rounded-full border-2 border-white bg-pink-400" />
-                      </div>
-                      <span className="ml-1">{participants.length + 1}</span>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </section>
 
@@ -1223,7 +1155,12 @@ export default function LiveClassroomTeacher() {
                   />
                   <BottomControl Icon={PencilRuler} label="Tools" active />
                   <BottomControl Icon={Presentation} label="Materials" />
-                  <BottomControl Icon={Vote} label="Polls" />
+                  <BottomControl
+                    Icon={Vote}
+                    label="Quiz"
+                    active={showQuizPanel}
+                    onClick={() => setShowQuizPanel((v) => !v)}
+                  />
                   <BottomControl Icon={DoorOpen} label="Breakout" />
                   <BottomControl Icon={ThumbsUp} label="Feedback" />
                 </div>
