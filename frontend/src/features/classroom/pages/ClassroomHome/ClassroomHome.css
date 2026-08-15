@@ -1,5 +1,5 @@
 .classroom-page {
-  @apply min-h-screen bg-[#f4f3f3] pl-4 pr-8;
+  @apply min-h-screen bg-[#f4f3f3] px-4 py-5;
 }
 
 .classroom-container {
@@ -7,7 +7,7 @@
 }
 
 .classroom-header {
-  @apply flex justify-between items-center mb-6;
+  @apply flex justify-between items-center mb-8;
 }
 
 .classroom-title {
@@ -15,7 +15,7 @@
 }
 
 .classroom-subtitle {
-  @apply text-slate-500;
+  @apply text-slate-500 mt-1;
 }
 
 .create-classroom-btn {
@@ -23,7 +23,7 @@
 }
 
 .classroom-grid {
-  @apply grid md:grid-cols-2 xl:grid-cols-3 gap-4;
+  @apply grid md:grid-cols-2 xl:grid-cols-3 gap-6;
 }
 
 .classroom-card {
@@ -31,35 +31,27 @@
 }
 
 .classroom-card-header {
-  @apply flex justify-between items-center;
+  @apply flex justify-between items-center gap-3;
 }
 
 .classroom-name {
-  @apply text-xl font-bold mt-1;
+  @apply text-xl font-bold text-slate-800;
 }
 
 .classroom-status {
-  @apply mt-2 bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full;
-}
-
-.delete-btn {
-  @apply p-2 rounded-lg hover:bg-red-100 transition;
-}
-
-.delete-icon {
-  @apply text-red-500 hover:text-red-700;
+  @apply bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full whitespace-nowrap;
 }
 
 .classroom-subject {
-  @apply text-gray-500;
+  @apply text-gray-500 mt-1;
 }
 
 .classroom-details {
-  @apply mt-6 space-y-3;
+  @apply mt-6 space-y-4;
 }
 
 .classroom-detail-row {
-  @apply flex justify-between;
+  @apply flex justify-between items-center gap-4;
 }
 
 .classroom-detail-label {
@@ -67,61 +59,109 @@
 }
 
 .classroom-detail-value {
-  @apply font-semibold;
+  @apply font-semibold text-slate-800;
+}
+
+.classroom-enter-delete {
+  @apply mt-6 flex items-center gap-3;
 }
 
 .enter-classroom-btn {
-  @apply mt-6 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl transition;
+  @apply flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-xl transition;
+}
+
+.delete-btn {
+  @apply !w-auto !flex-none p-2 rounded-xl text-red-500 hover:bg-red-100 hover:text-red-700 transition;
+}
+
+.delete-icon {
+  @apply text-red-500 hover:text-red-700;
 }
 
 .classroom-loading {
-  @apply flex justify-center items-center h-screen;
+  @apply flex justify-center items-center min-h-screen;
 }
 
 .classroom-error {
   @apply text-center text-red-500 mt-10;
 }
 
-/* Responsive */
+.classroom-empty {
+  @apply bg-white rounded-2xl p-8 text-center text-gray-500 shadow-sm mb-6;
+}
+
+/* Mobile */
 
 @media (max-width: 639px) {
   .classroom-page {
-    @apply px-3;
+    @apply px-3 py-4;
   }
 
   .classroom-header {
-    @apply flex-col items-start gap-4;
+    @apply flex-col items-start gap-4 mb-6;
+  }
+
+  .classroom-title {
+    @apply text-xl;
   }
 
   .create-classroom-btn {
-    @apply w-full justify-center;
+    @apply justify-center;
   }
 
   .classroom-grid {
-    @apply grid-cols-1;
+    @apply grid-cols-1 gap-4;
+  }
+
+  .classroom-card {
+    @apply p-5;
   }
 
   .classroom-card-header {
-    @apply gap-2;
+    @apply items-start;
+  }
+
+  .classroom-name {
+    @apply text-lg;
+  }
+
+  .classroom-details {
+    @apply mt-5 space-y-4;
+  }
+
+  .classroom-enter-delete {
+    @apply mt-5 flex items-center gap-3;
+  }
+
+  .enter-classroom-btn {
+    @apply flex-1;
+  }
+
+  .delete-btn {
+    @apply !w-auto !flex-none p-2;
   }
 }
+
+/* Tablet */
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .classroom-page {
-    @apply px-5;
+    @apply px-5 py-6;
   }
 
   .classroom-grid {
-    @apply grid-cols-2;
+    @apply grid-cols-2 gap-5;
   }
 }
 
+/* Desktop */
+
 @media (min-width: 1024px) {
   .classroom-page {
-    @apply p-8 pt-3;
+    @apply px-8 pt-5 pb-8;
   }
 
   .classroom-grid {
-    @apply xl:grid-cols-3;
+    @apply xl:grid-cols-3 gap-6;
   }
 }

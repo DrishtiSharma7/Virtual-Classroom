@@ -64,7 +64,7 @@ function JoinClassroom() {
 
   if (isTeacher) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+      <div className="flex items-center justify-center h-full bg-[#f4f3f3]">
         <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
           <h2 className="mb-2 text-xl font-bold text-gray-900">
             Students only
@@ -132,7 +132,7 @@ function JoinClassroom() {
   // Already-joined state — distinct from a generic error, offer a direct link if we have one.
   if (alreadyJoinedClassroom) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
+      <div className="flex h-full items-center justify-center bg-slate-50 px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
           <h2 className="mb-2 text-xl font-bold text-gray-900">
             Already enrolled
@@ -173,7 +173,7 @@ function JoinClassroom() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-transparent px-4 py-10">
+    <div className="flex items-center justify-center bg-transparent h-full px-4 py-10">
       <div className="w-full max-w-md">
         <Link
           to="/classrooms"

@@ -68,6 +68,8 @@ const StudentDashboard = () => {
         />
       </div>
 
+      <QuickActions />
+
       <div className="dashboard-split-section">
         <RecentClasses />
 
@@ -80,7 +82,6 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      <QuickActions />
     </div>
   );
 };

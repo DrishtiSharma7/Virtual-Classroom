@@ -110,17 +110,6 @@ function ClassroomHome() {
               <div className="classroom-card-header">
                 <h2 className="classroom-name">{room.name}</h2>
                 <span className="classroom-status">Active</span>
-
-                {/* Delete button sirf teacher ko dikhega */}
-                {isTeacher && (
-                  <button
-                    onClick={() => handleDelete(room._id)}
-                    className="delete-btn"
-                    title="Delete Classroom"
-                  >
-                    <Trash size={18} className="delete-icon" />
-                  </button>
-                )}
               </div>
 
               <p className="classroom-subject">{room.subject}</p>
@@ -148,6 +137,7 @@ function ClassroomHome() {
                 </div>
               </div>
 
+              <div className="classroom-enter-delete">
               <Link
                 to={`/classrooms/${room._id}`}
                 className="enter-classroom-btn"
@@ -155,6 +145,17 @@ function ClassroomHome() {
                 Enter Classroom
                 <ArrowRight size={18} />
               </Link>
+              {/* Delete button sirf teacher ko dikhega */}
+                {isTeacher && (
+                  <button
+                    onClick={() => handleDelete(room._id)}
+                    className="delete-btn"
+                    title="Delete Classroom"
+                  >
+                    <Trash size={24} className="delete-icon" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

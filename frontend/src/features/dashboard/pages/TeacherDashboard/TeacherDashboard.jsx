@@ -108,6 +108,8 @@ const TeacherDashboard = () => {
         />
       </div>
 
+      <QuickActions handleStartSession={handleStartSession} />
+
       {/* Recent Classes & Activity */}
       <div className="dashboard-split-section">
         <RecentClasses classes={dashboard?.recentClasses || []} />
@@ -127,7 +129,6 @@ const TeacherDashboard = () => {
         </div>
       </div>
 
-      <QuickActions handleStartSession={handleStartSession} />
     </div>
   );
 };
