@@ -1,5 +1,5 @@
 .classroom-page {
-  @apply min-h-screen bg-[#f4f3f3] px-4 py-5;
+  @apply min-h-screen bg-[#f4f3f3] p-8 pt-0;
 }
 
 .classroom-container {
@@ -94,7 +94,7 @@
 
 @media (max-width: 639px) {
   .classroom-page {
-    @apply px-3 py-4;
+    @apply p-4;
   }
 
   .classroom-header {
@@ -146,7 +146,7 @@
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .classroom-page {
-    @apply px-5 py-6;
+    @apply px-4 pt-2 pb-4;
   }
 
   .classroom-grid {
