@@ -288,13 +288,48 @@ exports.submitQuiz = async (req, res) => {
 
 exports.getResults = async (req, res) => {
   try {
+    const quiz = await Quiz.findById(req.params.id);
+
+    if (!quiz) {
+      return res.status(404).json({
+        message: "Quiz not found",
+      });
+    }
+
     const responses = await QuizResponse.find({
       quiz: req.params.id,
     })
 
       .populate("student", "name email");
 
-    res.json(responses);
+    // Per-question breakdown: correct / incorrect / unanswered, computed
+    // from every student's `answers` array against `quiz.questions`.
+    const questionStats = quiz.questions.map((q, index) => ({
+      questionId: q._id,
+      question: q.question,
+      correct: 0,
+      incorrect: 0,
+      unanswered: 0,
+    }));
+
+    responses.forEach((response) => {
+      quiz.questions.forEach((q, index) => {
+        const given = response.answers ? response.answers[index] : undefined;
+
+        if (given === undefined || given === null || given === -1) {
+          questionStats[index].unanswered += 1;
+        } else if (given === q.correctAnswer) {
+          questionStats[index].correct += 1;
+        } else {
+          questionStats[index].incorrect += 1;
+        }
+      });
+    });
+
+    res.json({
+      perStudent: responses,
+      perQuestion: questionStats,
+    });
   } catch (err) {
     res.status(500).json({
       message: err.message,

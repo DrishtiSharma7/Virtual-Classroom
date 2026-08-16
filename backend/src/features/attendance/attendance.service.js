@@ -28,18 +28,6 @@ exports.studentJoined = async ({ classroomId, sessionId, studentId }) => {
 // Student Leaves Session
 // =============================
 exports.studentLeft = async ({ sessionId, studentId }) => {
-  const session = await Session.findById(sessionId);
-
-  if (session && session.endTime) {
-    const sessionDuration = Math.floor(
-      (session.endTime - session.startTime) / 1000,
-    );
-
-    attendance.attendancePercentage =
-      (attendance.duration / sessionDuration) * 100;
-
-    attendance.isPresent = attendance.attendancePercentage >= 60;
-  }
   const attendance = await Attendance.findOne({
     session: sessionId,
     student: studentId,
@@ -54,6 +42,19 @@ exports.studentLeft = async ({ sessionId, studentId }) => {
   attendance.duration = Math.floor((leaveTime - attendance.joinTime) / 1000);
 
   attendance.status = "LEFT";
+
+  const session = await Session.findById(sessionId);
+
+  if (session && session.endTime) {
+    const sessionDuration = Math.floor(
+      (session.endTime - session.startTime) / 1000,
+    );
+
+    attendance.attendancePercentage =
+      sessionDuration > 0 ? (attendance.duration / sessionDuration) * 100 : 0;
+
+    attendance.isPresent = attendance.attendancePercentage >= 60;
+  }
 
   await attendance.save();
 

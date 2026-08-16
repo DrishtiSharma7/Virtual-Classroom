@@ -234,12 +234,12 @@ export default function TeacherQuizHome() {
   const handleExport = async (quiz) => {
     try {
       setExportingId(quiz._id);
-      const results = await getQuizResults(quiz._id);
-      if (results.length === 0) {
+      const { perStudent } = await getQuizResults(quiz._id);
+      if (perStudent.length === 0) {
         toast("No submissions to export yet.");
         return;
       }
-      exportResultsToExcel(results, quiz.title);
+      exportResultsToExcel(perStudent, quiz.title);
     } catch {
       toast.error("Could not export results.");
     } finally {
@@ -282,7 +282,7 @@ export default function TeacherQuizHome() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl py-4 sm:px-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">

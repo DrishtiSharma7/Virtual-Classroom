@@ -1,5 +1,7 @@
 const Session = require("./session.model");
 const Classroom = require("../classroom/classroom.model");
+const Chat = require("../chat/chat.model");
+const attendanceService = require("../attendance/attendance.service");
 
 exports.createSession = async (req, res) => {
   try {
@@ -187,6 +189,13 @@ exports.endSession = async (req, res) => {
     session.endTime = new Date();
 
     await session.save();
+
+    // Finalize attendance for anyone still marked IN_SESSION (students who
+    // never explicitly left before the teacher ended the session).
+    await attendanceService.completeSessionAttendance(session._id);
+
+    // Chat is session-scoped, not persisted beyond the live session.
+    await Chat.deleteMany({ session: session._id });
 
     res.json({
       message: "Session ended",

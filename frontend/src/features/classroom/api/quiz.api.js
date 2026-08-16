@@ -31,7 +31,7 @@ export const submitQuiz = async (quizId, answers, source = "live") => {
 export const getQuizResults = async (quizId) => {
   const response = await api.get(`/quizzes/results/${quizId}`);
 
-  return response.data; // array of QuizResponse populated with student {name, email}
+  return response.data; // { perStudent: [...], perQuestion: [...] } — was a bare array of QuizResponse
 };
 
 // ======================================

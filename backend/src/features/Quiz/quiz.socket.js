@@ -1,9 +1,24 @@
 const Quiz = require("../Quiz/quiz.model");
+const registry = require("../../sockets/roomRegistry");
 
 module.exports = (io, socket) => {
+  const requireTeacher = (sessionId, action) => {
+    if (registry.isTeacher(sessionId, socket.id)) return true;
+
+    socket.emit("action-denied", {
+      action,
+      message: "Only the host can control the quiz.",
+    });
+    return false;
+  };
+
   // Teacher launches a quiz to everyone in the session room.
   // Strip correctAnswer before broadcasting so students can't inspect it via devtools.
   socket.on("launch-quiz", async (data) => {
+    if (!data?.sessionId || !requireTeacher(data.sessionId, "launch-quiz")) {
+      return;
+    }
+
     // data: { sessionId, quiz } where quiz is the full Quiz doc from createQuiz's response
     const sanitizedQuestions = data.quiz.questions.map((q) => ({
       _id: q._id,
@@ -27,6 +42,10 @@ module.exports = (io, socket) => {
   // Teacher moves to / reveals a specific question index and its correct answer,
   // once that question's timer has ended.
   socket.on("reveal-answer", (data) => {
+    if (!data?.sessionId || !requireTeacher(data.sessionId, "reveal-answer")) {
+      return;
+    }
+
     // data: { sessionId, questionIndex, correctAnswer }
     io.to(data.sessionId).emit("answer-revealed", data);
   });
@@ -39,6 +58,10 @@ module.exports = (io, socket) => {
 
   // Teacher ends the quiz for everyone.
   socket.on("close-quiz", (data) => {
+    if (!data?.sessionId || !requireTeacher(data.sessionId, "close-quiz")) {
+      return;
+    }
+
     // data: { sessionId, quizId }
     io.to(data.sessionId).emit("quiz-closed", { quizId: data.quizId });
   });

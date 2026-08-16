@@ -67,7 +67,9 @@ export default function TeacherQuizPanel({
   const [liveAnswerCount, setLiveAnswerCount] = useState(0);
   const timerRef = useRef(null);
 
-  const [results, setResults] = useState([]);
+  // { perStudent: [...], perQuestion: [...] } — API shape changed when the
+  // per-question breakdown was added (previously a bare array).
+  const [results, setResults] = useState({ perStudent: [], perQuestion: [] });
   const [resultsLoading, setResultsLoading] = useState(false);
 
   /* ---------------- Saved quiz selection ---------------- */
@@ -276,7 +278,10 @@ export default function TeacherQuizPanel({
 
     try {
       const data = await getQuizResults(quiz._id);
-      setResults(data);
+      setResults({
+        perStudent: data?.perStudent || [],
+        perQuestion: data?.perQuestion || [],
+      });
     } catch (err) {
       setError(err?.response?.data?.message || "Could not load results.");
     } finally {
@@ -286,7 +291,7 @@ export default function TeacherQuizPanel({
 
   const handleExport = () => {
     exportResultsToExcel(
-      results,
+      results.perStudent,
       quiz?.questions?.[0]?.question ? "Quiz Results" : "Quiz Results"
     );
   };
@@ -573,13 +578,50 @@ export default function TeacherQuizPanel({
             </p>
           ) : (
             <>
+              {/* Bug #11: per-question correct/incorrect/unanswered
+                  breakdown, alongside the existing per-student totals. */}
+              {results.perQuestion.length > 0 && (
+                <div className="mb-3 max-h-[160px] space-y-1 overflow-y-auto rounded-lg border border-slate-100 p-2">
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    Per-question breakdown
+                  </p>
+                  {results.perQuestion.map((q, i) => (
+                    <div
+                      key={q.questionId || i}
+                      className="flex items-center justify-between gap-2 text-xs"
+                    >
+                      <span className="truncate text-slate-600">
+                        Q{i + 1}. {q.question}
+                      </span>
+                      <span className="shrink-0 whitespace-nowrap text-slate-500">
+                        <span className="text-emerald-600">
+                          {q.correct} correct
+                        </span>
+                        {" / "}
+                        <span className="text-red-500">
+                          {q.incorrect} incorrect
+                        </span>
+                        {q.unanswered > 0 && (
+                          <>
+                            {" / "}
+                            <span className="text-slate-400">
+                              {q.unanswered} unanswered
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="mb-2 max-h-[260px] space-y-1 overflow-y-auto">
-                {results.length === 0 ? (
+                {results.perStudent.length === 0 ? (
                   <p className="py-4 text-center text-sm text-slate-400">
                     No submissions yet.
                   </p>
                 ) : (
-                  results.map((r) => (
+                  results.perStudent.map((r) => (
                     <div
                       key={r._id}
                       className="flex items-center justify-between rounded-lg border border-slate-100 px-2 py-1.5 text-xs"
@@ -598,7 +640,7 @@ export default function TeacherQuizPanel({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleExport}
-                  disabled={results.length === 0}
+                  disabled={results.perStudent.length === 0}
                   className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                 >
                   <Download size={14} /> Export to Excel

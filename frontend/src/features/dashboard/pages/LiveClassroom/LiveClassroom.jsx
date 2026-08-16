@@ -201,8 +201,9 @@ const BottomControl = ({ Icon, label, active, danger, onClick }) => (
   </button>
 );
 
-const RemoteVideo = ({ stream, name }) => {
+const RemoteVideo = ({ stream, name, large }) => {
   const videoRef = useRef(null);
+  const hasVideo = !!stream && stream.getVideoTracks().length > 0;
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -211,14 +212,37 @@ const RemoteVideo = ({ stream, name }) => {
   }, [stream]);
 
   return (
-    <div className="overflow-hidden rounded-xl bg-black shadow-sm">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        className="h-24 w-full object-cover"
-      />
-      <div className="truncate bg-slate-900 p-1 text-[10px] text-white">
+    <div
+      className={`relative overflow-hidden rounded-xl bg-black shadow-sm ${
+        large ? "aspect-video w-full" : ""
+      }`}
+    >
+      {hasVideo ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          className={`w-full object-cover ${large ? "h-full" : "h-24"}`}
+        />
+      ) : (
+        // Students never send video (one-way-video model), so a student's
+        // tile — or the teacher's, before their offer/track has arrived —
+        // falls back to an avatar instead of a blank black box.
+        <div
+          className={`flex items-center justify-center bg-slate-800 ${
+            large ? "h-full" : "h-24"
+          }`}
+        >
+          <img
+            src={avatarFor(name)}
+            alt={name}
+            className={
+              large ? "h-16 w-16 rounded-full" : "h-10 w-10 rounded-full"
+            }
+          />
+        </div>
+      )}
+      <div className="absolute inset-x-0 bottom-0 truncate bg-slate-900/80 p-1 text-[10px] text-white">
         {name || "Participant"}
       </div>
     </div>
@@ -227,7 +251,7 @@ const RemoteVideo = ({ stream, name }) => {
 
 /* ---------------- Main Component ---------------- */
 
-export default function LiveClassroomTeacher() {
+export default function LiveClassroom() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
 
@@ -276,8 +300,13 @@ export default function LiveClassroomTeacher() {
   const drawStateRef = useRef({ isDrawing: false, current: null });
   const [tool, setTool] = useState("pen");
   const [color, setColor] = useState("#1e293b");
+  const [penSize, setPenSize] = useState(3); // bug #12: was hardcoded
   const [historyTick, setHistoryTick] = useState(0);
   const bumpHistory = useCallback(() => setHistoryTick((t) => t + 1), []);
+
+  const [removedNotice, setRemovedNotice] = useState("");
+  const [forceMuted, setForceMuted] = useState(false);
+  const [mutedParticipants, setMutedParticipants] = useState(() => new Set());
 
   const isHost =
     !!session &&
@@ -334,16 +363,22 @@ export default function LiveClassroomTeacher() {
     return () => clearInterval(interval);
   }, [session?.startTime]);
 
-  /* ---- Local camera / mic ---- */
+  /* ---- Local camera / mic ----
+     One-way video model: only the host's camera is ever captured or sent.
+     Students only ever request a microphone — no video track exists on
+     their side at all, so there's nothing for a modified client to turn
+     on even if the (removed) camera-toggle button were still reachable. */
   useEffect(() => {
+    if (sessionLoading) return; // wait until we actually know isHost
     let cancelled = false;
 
     const initMedia = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
+        const constraints = isHost
+          ? { video: true, audio: true }
+          : { video: false, audio: true };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
@@ -352,15 +387,25 @@ export default function LiveClassroomTeacher() {
 
         localStream.current = stream;
 
-        const [track] = stream.getVideoTracks();
-        if (track) setActiveCameraId(track.getSettings().deviceId || null);
+        if (isHost) {
+          const [track] = stream.getVideoTracks();
+          if (track) setActiveCameraId(track.getSettings().deviceId || null);
 
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+        } else {
+          setCameraEnabled(false);
         }
       } catch (err) {
         console.log(err);
-        if (!cancelled) setMediaError("Camera/microphone unavailable.");
+        if (!cancelled) {
+          setMediaError(
+            isHost
+              ? "Camera/microphone unavailable."
+              : "Microphone unavailable."
+          );
+        }
       } finally {
         if (!cancelled) setMediaReady(true);
       }
@@ -371,11 +416,13 @@ export default function LiveClassroomTeacher() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sessionLoading, isHost]);
 
-  /* ---- List available cameras (labels only show up once permission is granted) ---- */
+  /* ---- List available cameras (host only — students never capture video) ---- */
   useEffect(() => {
-    if (!mediaReady || !navigator.mediaDevices?.enumerateDevices) return;
+    if (!isHost || !mediaReady || !navigator.mediaDevices?.enumerateDevices) {
+      return;
+    }
 
     navigator.mediaDevices
       .enumerateDevices()
@@ -383,7 +430,7 @@ export default function LiveClassroomTeacher() {
         setCameraDevices(devices.filter((d) => d.kind === "videoinput"));
       })
       .catch((err) => console.log(err));
-  }, [mediaReady]);
+  }, [isHost, mediaReady]);
 
   /* ---- Peer connection factory, keyed by the remote socket id ---- */
   const createPeerConnection = useCallback(
@@ -480,16 +527,24 @@ export default function LiveClassroomTeacher() {
 
   const commitElement = useCallback(
     (el) => {
+      // Bug #3: this is the actual choke point for outgoing draw events —
+      // guarding it here (not just hiding the toolbar) means the socket
+      // emit is unreachable for a student even from a modified client,
+      // since the pointer handlers below are also never attached to the
+      // canvas for a non-host in the first place.
+      if (!isHost) return;
+
       elementsRef.current.push(el);
       redoRef.current = [];
       redrawCanvas();
       bumpHistory();
       socketRef.current?.emit("draw", { roomId: sessionId, element: el });
     },
-    [sessionId, redrawCanvas, bumpHistory]
+    [isHost, sessionId, redrawCanvas, bumpHistory]
   );
 
   const handlePointerDown = (e) => {
+    if (!isHost) return;
     const [x, y] = getCanvasPos(e);
 
     if (tool === "text") {
@@ -515,7 +570,7 @@ export default function LiveClassroomTeacher() {
         id: `${socketRef.current?.id || "local"}-${Date.now()}`,
         type: "path",
         color,
-        size: tool === "eraser" ? 22 : 3,
+        size: tool === "eraser" ? 22 : penSize,
         eraser: tool === "eraser",
         points: [[x, y]],
       };
@@ -524,7 +579,7 @@ export default function LiveClassroomTeacher() {
         id: `${socketRef.current?.id || "local"}-${Date.now()}`,
         type: tool, // rect | circle | arrow
         color,
-        size: 3,
+        size: penSize,
         x1: x,
         y1: y,
         x2: x,
@@ -534,6 +589,7 @@ export default function LiveClassroomTeacher() {
   };
 
   const handlePointerMove = (e) => {
+    if (!isHost) return;
     if (!drawStateRef.current.isDrawing || !drawStateRef.current.current)
       return;
 
@@ -552,6 +608,7 @@ export default function LiveClassroomTeacher() {
   };
 
   const handlePointerUp = () => {
+    if (!isHost) return;
     const current = drawStateRef.current.current;
     drawStateRef.current.isDrawing = false;
     drawStateRef.current.current = null;
@@ -579,11 +636,12 @@ export default function LiveClassroomTeacher() {
   };
 
   const handleClearBoard = () => {
+    if (!isHost) return;
     elementsRef.current = [];
     redoRef.current = [];
     redrawCanvas();
     bumpHistory();
-    socketRef.current?.emit("clear-board", sessionId);
+    socketRef.current?.emit("clear-board", { roomId: sessionId });
   };
 
   /* ---- Socket connection + signaling, scoped to this session's room ---- */
@@ -698,6 +756,42 @@ export default function LiveClassroomTeacher() {
       bumpHistory();
     });
 
+    // A late joiner gets the board's current state instead of a blank
+    // canvas — requested once right after we join (see the join effect
+    // below).
+    socket.on("board-sync", ({ elements }) => {
+      elementsRef.current = Array.isArray(elements) ? elements : [];
+      redoRef.current = [];
+      redrawCanvas();
+      bumpHistory();
+    });
+
+    // Teacher muted this student's outgoing audio.
+    socket.on("force-mute", () => {
+      const track = localStream.current?.getAudioTracks()[0];
+      if (track) track.enabled = false;
+      setMicEnabled(false);
+      setForceMuted(true);
+    });
+
+    // Reflects a muted participant in everyone's roster (used by the
+    // teacher's participant list to show "Muted" / disable the button so
+    // duplicate mute requests can't be sent indefinitely).
+    socket.on("student-muted", ({ socketId }) => {
+      setMutedParticipants((prev) => new Set(prev).add(socketId));
+    });
+
+    // Teacher removed this student from the session.
+    socket.on("removed-from-session", ({ message }) => {
+      setRemovedNotice(
+        message || "You have been removed from this session by the host."
+      );
+    });
+
+    socket.on("action-denied", ({ message }) => {
+      console.warn("Action denied:", message);
+    });
+
     return () => {
       socket.emit("leave-call", { roomId: sessionId });
       socket.emit("leave-room", { roomId: sessionId });
@@ -718,6 +812,9 @@ export default function LiveClassroomTeacher() {
       roomId: sessionId,
       user: currentUser,
     });
+    // Ask the server for whatever's already on the board so we don't start
+    // from a blank canvas if we're joining mid-session.
+    socketRef.current.emit("request-board-sync", sessionId);
   }, [connected, mediaReady, sessionId, currentUser]);
 
   /* ---- Cleanup local media + peer connections on unmount ---- */
@@ -729,6 +826,21 @@ export default function LiveClassroomTeacher() {
       screenStream.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
+
+  /* ---- Kicked: show the message, then leave the session ---- */
+  useEffect(() => {
+    if (!removedNotice) return;
+
+    const timer = setTimeout(() => {
+      navigate(
+        session?.classroom?._id
+          ? `/classrooms/${session.classroom._id}`
+          : "/classrooms"
+      );
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [removedNotice, navigate, session]);
 
   const toggleCamera = () => {
     const track = localStream.current?.getVideoTracks()[0];
@@ -742,6 +854,7 @@ export default function LiveClassroomTeacher() {
     if (!track) return;
     track.enabled = !track.enabled;
     setMicEnabled(track.enabled);
+    if (track.enabled) setForceMuted(false);
   };
 
   const replaceOutgoingVideoTrack = (track) => {
@@ -785,27 +898,31 @@ export default function LiveClassroomTeacher() {
   /* ---- Retry camera/mic permission after an earlier denial/error ---- */
   const retryCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      const stream = await navigator.mediaDevices.getUserMedia(
+        isHost ? { video: true, audio: true } : { video: false, audio: true }
+      );
 
       localStream.current = stream;
 
-      const [track] = stream.getVideoTracks();
-      if (track) setActiveCameraId(track.getSettings().deviceId || null);
+      if (isHost) {
+        const [track] = stream.getVideoTracks();
+        if (track) setActiveCameraId(track.getSettings().deviceId || null);
 
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+
+        replaceOutgoingVideoTrack(track);
+        setCameraEnabled(true);
       }
 
-      replaceOutgoingVideoTrack(track);
       setMediaError("");
-      setCameraEnabled(true);
       setMicEnabled(true);
     } catch (err) {
       console.log(err);
-      setMediaError("Camera/microphone unavailable.");
+      setMediaError(
+        isHost ? "Camera/microphone unavailable." : "Microphone unavailable."
+      );
     }
   };
 
@@ -824,6 +941,10 @@ export default function LiveClassroomTeacher() {
   }, []);
 
   const startScreenShare = async () => {
+    // Bug #4: this is the actual choke point, not just the button's
+    // visibility — a non-host reaching this function is a no-op.
+    if (!isHost) return;
+
     if (sharingScreen) {
       stopScreenShare();
       return;
@@ -866,6 +987,31 @@ export default function LiveClassroomTeacher() {
   const handleMessageChange = (e) => {
     setMessage(e.target.value);
     socketRef.current?.emit("typing", sessionId);
+  };
+
+  /* ---- Bug #5/#6: teacher-only participant controls ---- */
+  const handleMuteStudent = (targetSocketId) => {
+    if (!isHost || mutedParticipants.has(targetSocketId)) return;
+    socketRef.current?.emit("mute-student", {
+      roomId: sessionId,
+      targetSocketId,
+    });
+  };
+
+  const handleKickStudent = (targetSocketId) => {
+    if (!isHost) return;
+    if (!window.confirm("Remove this student from the session?")) return;
+
+    socketRef.current?.emit("kick-student", {
+      roomId: sessionId,
+      targetSocketId,
+    });
+
+    peerConnections.current[targetSocketId]?.close();
+    delete peerConnections.current[targetSocketId];
+    setParticipants((prev) =>
+      prev.filter((p) => p.socketId !== targetSocketId)
+    );
   };
 
   const handleEndOrLeave = async () => {
@@ -925,7 +1071,19 @@ export default function LiveClassroomTeacher() {
     : "";
 
   return (
-    <div className="flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
+    <div className="relative flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
+      {removedNotice && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/70">
+          <div className="max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
+            <p className="text-sm font-medium text-slate-700">
+              {removedNotice}
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              Redirecting you out of this session...
+            </p>
+          </div>
+        </div>
+      )}
       {/* ---------- Top Bar ---------- */}
       <header className="border-b border-slate-200 bg-white px-6 py-3">
         <div className="flex items-center justify-between">
@@ -1014,94 +1172,112 @@ export default function LiveClassroomTeacher() {
           <div className="flex flex-1 flex-col gap-4 overflow-hidden">
             {/* Whiteboard */}
             <section className="relative flex flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
-              {/* Toolbar */}
-              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-                <div className="flex items-center gap-1">
-                  <ToolbarButton
-                    Icon={Pencil}
-                    active={tool === "pen"}
-                    onClick={() => setTool("pen")}
-                    title="Pen"
-                  />
-                  <ToolbarButton
-                    Icon={Eraser}
-                    active={tool === "eraser"}
-                    onClick={() => setTool("eraser")}
-                    title="Eraser"
-                  />
-                  <ToolbarButton
-                    Icon={Square}
-                    active={tool === "rect"}
-                    onClick={() => setTool("rect")}
-                    title="Rectangle"
-                  />
-                  <ToolbarButton
-                    Icon={CircleIcon}
-                    active={tool === "circle"}
-                    onClick={() => setTool("circle")}
-                    title="Circle"
-                  />
-                  <ToolbarButton
-                    Icon={MoveUpRight}
-                    active={tool === "arrow"}
-                    onClick={() => setTool("arrow")}
-                    title="Arrow"
-                  />
-                  <ToolbarButton
-                    Icon={Type}
-                    active={tool === "text"}
-                    onClick={() => setTool("text")}
-                    title="Text"
-                  />
-                  <ToolbarButton
-                    colorDot="#1e293b"
-                    active={color === "#1e293b"}
-                    onClick={() => setColor("#1e293b")}
-                    title="Black"
-                  />
-                  <ToolbarButton
-                    colorDot="#22c55e"
-                    active={color === "#22c55e"}
-                    onClick={() => setColor("#22c55e")}
-                    title="Green"
-                  />
-                  <ToolbarButton
-                    colorDot="#a855f7"
-                    active={color === "#a855f7"}
-                    onClick={() => setColor("#a855f7")}
-                    title="Purple"
-                  />
-                  <ToolbarButton
-                    Icon={Pipette}
-                    onClick={() => colorInputRef.current?.click()}
-                    title="Custom color"
-                  />
-                  <input
-                    ref={colorInputRef}
-                    type="color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="hidden"
-                  />
-                  <ToolbarButton
-                    Icon={Undo2}
-                    onClick={handleUndo}
-                    disabled={elementsRef.current.length === 0}
-                    title="Undo"
-                  />
-                  <ToolbarButton
-                    Icon={Redo2}
-                    onClick={handleRedo}
-                    disabled={redoRef.current.length === 0}
-                    title="Redo"
-                  />
-                  <ToolbarButton
-                    Icon={Trash2}
-                    onClick={handleClearBoard}
-                    title="Clear board"
-                  />
+              {/* Toolbar — host only. Students never see drawing tools at
+                  all (bug #3), only ever receive whiteboard-sync. */}
+              {isHost && (
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+                  <div className="flex items-center gap-1">
+                    <ToolbarButton
+                      Icon={Pencil}
+                      active={tool === "pen"}
+                      onClick={() => setTool("pen")}
+                      title="Pen"
+                    />
+                    <ToolbarButton
+                      Icon={Eraser}
+                      active={tool === "eraser"}
+                      onClick={() => setTool("eraser")}
+                      title="Eraser"
+                    />
+                    <ToolbarButton
+                      Icon={Square}
+                      active={tool === "rect"}
+                      onClick={() => setTool("rect")}
+                      title="Rectangle"
+                    />
+                    <ToolbarButton
+                      Icon={CircleIcon}
+                      active={tool === "circle"}
+                      onClick={() => setTool("circle")}
+                      title="Circle"
+                    />
+                    <ToolbarButton
+                      Icon={MoveUpRight}
+                      active={tool === "arrow"}
+                      onClick={() => setTool("arrow")}
+                      title="Arrow"
+                    />
+                    <ToolbarButton
+                      Icon={Type}
+                      active={tool === "text"}
+                      onClick={() => setTool("text")}
+                      title="Text"
+                    />
+                    <ToolbarButton
+                      colorDot="#1e293b"
+                      active={color === "#1e293b"}
+                      onClick={() => setColor("#1e293b")}
+                      title="Black"
+                    />
+                    <ToolbarButton
+                      colorDot="#22c55e"
+                      active={color === "#22c55e"}
+                      onClick={() => setColor("#22c55e")}
+                      title="Green"
+                    />
+                    <ToolbarButton
+                      colorDot="#a855f7"
+                      active={color === "#a855f7"}
+                      onClick={() => setColor("#a855f7")}
+                      title="Purple"
+                    />
+                    <ToolbarButton
+                      Icon={Pipette}
+                      onClick={() => colorInputRef.current?.click()}
+                      title="Custom color"
+                    />
+                    <input
+                      ref={colorInputRef}
+                      type="color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="hidden"
+                    />
+                    <ToolbarButton
+                      Icon={Undo2}
+                      onClick={handleUndo}
+                      disabled={elementsRef.current.length === 0}
+                      title="Undo"
+                    />
+                    <ToolbarButton
+                      Icon={Redo2}
+                      onClick={handleRedo}
+                      disabled={redoRef.current.length === 0}
+                      title="Redo"
+                    />
+                    <ToolbarButton
+                      Icon={Trash2}
+                      onClick={handleClearBoard}
+                      title="Clear board"
+                    />
+                    {/* Bug #12: pen/shape stroke size, previously hardcoded */}
+                    <div className="ml-2 flex items-center gap-1.5 pl-2 border-l border-slate-200">
+                      <span className="text-[11px] font-medium text-slate-400">
+                        Size
+                      </span>
+                      <input
+                        type="range"
+                        min={1}
+                        max={12}
+                        value={penSize}
+                        onChange={(e) => setPenSize(Number(e.target.value))}
+                        className="h-1 w-16 accent-indigo-600"
+                        title={`Stroke size: ${penSize}`}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div
                 ref={canvasWrapRef}
@@ -1109,15 +1285,19 @@ export default function LiveClassroomTeacher() {
               >
                 <canvas
                   ref={canvasRef}
-                  onMouseDown={handlePointerDown}
-                  onMouseMove={handlePointerMove}
-                  onMouseUp={handlePointerUp}
-                  onMouseLeave={handlePointerUp}
-                  onTouchStart={handlePointerDown}
-                  onTouchMove={handlePointerMove}
-                  onTouchEnd={handlePointerUp}
+                  onMouseDown={isHost ? handlePointerDown : undefined}
+                  onMouseMove={isHost ? handlePointerMove : undefined}
+                  onMouseUp={isHost ? handlePointerUp : undefined}
+                  onMouseLeave={isHost ? handlePointerUp : undefined}
+                  onTouchStart={isHost ? handlePointerDown : undefined}
+                  onTouchMove={isHost ? handlePointerMove : undefined}
+                  onTouchEnd={isHost ? handlePointerUp : undefined}
                   className={`absolute inset-0 h-full w-full touch-none ${
-                    tool === "text" ? "cursor-text" : "cursor-crosshair"
+                    !isHost
+                      ? "cursor-default"
+                      : tool === "text"
+                        ? "cursor-text"
+                        : "cursor-crosshair"
                   }`}
                 />
                 {showQuizPanel && (
@@ -1140,23 +1320,32 @@ export default function LiveClassroomTeacher() {
                 <div className="flex flex-wrap items-center gap-6 rounded-2xl border border-slate-200 bg-white p-1">
                   <BottomControl
                     Icon={micEnabled ? Mic : MicOff}
-                    label="Mic"
+                    label={forceMuted && !micEnabled ? "Muted by host" : "Mic"}
                     active={micEnabled}
                     onClick={toggleMic}
                   />
-                  <BottomControl
-                    Icon={cameraEnabled ? Camera : VideoOff}
-                    label="Camera"
-                    active={cameraEnabled}
-                    onClick={toggleCamera}
-                  />
-                  <BottomControl
-                    Icon={ScreenShare}
-                    label={sharingScreen ? "Stop Sharing" : "Share Screen"}
-                    active={sharingScreen}
-                    onClick={startScreenShare}
-                  />
-                  <BottomControl Icon={PencilRuler} label="Tools" active />
+                  {/* Camera + Share Screen are host-only in the one-way-video
+                      model (bugs #4 and the new camera-off requirement) —
+                      students never see these controls at all. */}
+                  {isHost && (
+                    <BottomControl
+                      Icon={cameraEnabled ? Camera : VideoOff}
+                      label="Camera"
+                      active={cameraEnabled}
+                      onClick={toggleCamera}
+                    />
+                  )}
+                  {isHost && (
+                    <BottomControl
+                      Icon={ScreenShare}
+                      label={sharingScreen ? "Stop Sharing" : "Share Screen"}
+                      active={sharingScreen}
+                      onClick={startScreenShare}
+                    />
+                  )}
+                  {isHost && (
+                    <BottomControl Icon={PencilRuler} label="Tools" active />
+                  )}
                   <BottomControl Icon={Presentation} label="Materials" />
                   <BottomControl
                     Icon={Vote}
@@ -1248,11 +1437,15 @@ export default function LiveClassroomTeacher() {
                         ) : (
                           <MicOff size={16} className="text-red-400" />
                         )}
-                        {cameraEnabled ? (
-                          <Video size={16} className="text-slate-400" />
-                        ) : (
-                          <VideoOff size={16} className="text-red-400" />
-                        )}
+                        {/* Students never have a camera in this session
+                            model, so there's nothing meaningful to show
+                            here for their own row. */}
+                        {isHost &&
+                          (cameraEnabled ? (
+                            <Video size={16} className="text-slate-400" />
+                          ) : (
+                            <VideoOff size={16} className="text-red-400" />
+                          ))}
                       </div>
                     </div>
 
@@ -1296,12 +1489,41 @@ export default function LiveClassroomTeacher() {
                           </div>
                           <div className="flex items-center gap-2">
                             {isHost && !isRowHost && (
-                              <span className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500">
-                                Mute
-                              </span>
+                              <>
+                                {/* Bug #5: was a non-functional <span> stub —
+                                    now emits mute-student and disables itself
+                                    once muted, so the teacher can't send
+                                    duplicate requests indefinitely. */}
+                                <button
+                                  onClick={() => handleMuteStudent(p.socketId)}
+                                  disabled={mutedParticipants.has(p.socketId)}
+                                  className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {mutedParticipants.has(p.socketId)
+                                    ? "Muted"
+                                    : "Mute"}
+                                </button>
+                                {/* Bug #6: kick-student control, previously
+                                    entirely missing. */}
+                                <button
+                                  onClick={() => handleKickStudent(p.socketId)}
+                                  className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-200"
+                                >
+                                  Remove
+                                </button>
+                              </>
                             )}
-                            <Mic size={16} className="text-slate-400" />
-                            <Video size={16} className="text-slate-400" />
+                            {mutedParticipants.has(p.socketId) ? (
+                              <MicOff size={16} className="text-red-400" />
+                            ) : (
+                              <Mic size={16} className="text-slate-400" />
+                            )}
+                            {/* Students never send video in this session —
+                                only the host's own row (rendered above this
+                                map) has a real camera. */}
+                            {isRowHost && (
+                              <Video size={16} className="text-slate-400" />
+                            )}
                           </div>
                         </div>
                       );
@@ -1377,86 +1599,120 @@ export default function LiveClassroomTeacher() {
               )}
             </div>
 
-            {/* Camera panel - self + everyone else in THIS session's room */}
-            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-3 shadow-sm">
-              <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-800">
-                <Camera size={16} />
-                Camera
-              </h4>
-              <div className="grid flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto">
-                <div className="relative overflow-hidden rounded-xl bg-black shadow-sm">
-                  <video
-                    ref={localVideoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className={`h-24 w-full origin-center object-cover [transform:scaleX(-1)] ${
-                      cameraEnabled ? "" : "opacity-0"
-                    }`}
-                  />
+            {isHost ? (
+              /* Host view: self box + a small tile grid of everyone else.
+                 Student tiles will show the avatar fallback since students
+                 never send video. */
+              <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-3 shadow-sm">
+                <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-800">
+                  <Camera size={16} />
+                  Camera
+                </h4>
+                <div className="grid flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto">
+                  <div className="relative overflow-hidden rounded-xl bg-black shadow-sm">
+                    <video
+                      ref={localVideoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`h-24 w-full origin-center object-cover [transform:scaleX(-1)] ${
+                        cameraEnabled ? "" : "opacity-0"
+                      }`}
+                    />
 
-                  {!cameraEnabled && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                      <img
-                        src={avatarFor(currentUser?.name)}
-                        alt={currentUser?.name}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    </div>
-                  )}
+                    {!cameraEnabled && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                        <img
+                          src={avatarFor(currentUser?.name)}
+                          alt={currentUser?.name}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      </div>
+                    )}
 
-                  {mediaError && (
-                    <button
-                      onClick={retryCamera}
-                      className="absolute right-1 top-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600 hover:bg-white"
-                    >
-                      Retry
-                    </button>
-                  )}
-
-                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-slate-900/80 px-1.5 py-1 text-[10px] text-white">
-                    <span className="truncate">
-                      You {mediaError ? "(no camera)" : ""}
-                    </span>
-                    {cameraDevices.length > 1 && (
+                    {mediaError && (
                       <button
-                        onClick={() => setShowCameraMenu((v) => !v)}
-                        title="Switch camera"
-                        className="ml-1 shrink-0 rounded p-0.5 hover:bg-white/20"
+                        onClick={retryCamera}
+                        className="absolute right-1 top-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600 hover:bg-white"
                       >
-                        <RefreshCcw size={11} />
+                        Retry
                       </button>
+                    )}
+
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-slate-900/80 px-1.5 py-1 text-[10px] text-white">
+                      <span className="truncate">
+                        You {mediaError ? "(no camera)" : ""}
+                      </span>
+                      {cameraDevices.length > 1 && (
+                        <button
+                          onClick={() => setShowCameraMenu((v) => !v)}
+                          title="Switch camera"
+                          className="ml-1 shrink-0 rounded p-0.5 hover:bg-white/20"
+                        >
+                          <RefreshCcw size={11} />
+                        </button>
+                      )}
+                    </div>
+
+                    {showCameraMenu && cameraDevices.length > 1 && (
+                      <div className="absolute bottom-6 right-1 z-10 w-32 rounded-lg bg-white p-1 text-[11px] text-slate-700 shadow-lg">
+                        {cameraDevices.map((d, i) => (
+                          <button
+                            key={d.deviceId}
+                            onClick={() => switchCamera(d.deviceId)}
+                            className={`block w-full truncate rounded px-2 py-1 text-left hover:bg-slate-100 ${
+                              activeCameraId === d.deviceId
+                                ? "bg-indigo-50 text-indigo-600"
+                                : ""
+                            }`}
+                          >
+                            {d.label || `Camera ${i + 1}`}
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
 
-                  {showCameraMenu && cameraDevices.length > 1 && (
-                    <div className="absolute bottom-6 right-1 z-10 w-32 rounded-lg bg-white p-1 text-[11px] text-slate-700 shadow-lg">
-                      {cameraDevices.map((d, i) => (
-                        <button
-                          key={d.deviceId}
-                          onClick={() => switchCamera(d.deviceId)}
-                          className={`block w-full truncate rounded px-2 py-1 text-left hover:bg-slate-100 ${
-                            activeCameraId === d.deviceId
-                              ? "bg-indigo-50 text-indigo-600"
-                              : ""
-                          }`}
-                        >
-                          {d.label || `Camera ${i + 1}`}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {participants.map((p) => (
+                    <RemoteVideo
+                      key={p.socketId}
+                      stream={p.stream}
+                      name={p.user?.name}
+                    />
+                  ))}
                 </div>
-
-                {participants.map((p) => (
-                  <RemoteVideo
-                    key={p.socketId}
-                    stream={p.stream}
-                    name={p.user?.name}
-                  />
-                ))}
               </div>
-            </div>
+            ) : (
+              /* Student view: no self camera box, no grid of blank student
+                 tiles — the main stage is the teacher's feed, since the
+                 whiteboard is already the big central element. */
+              (() => {
+                const teacherParticipant = participants.find(
+                  (p) => p.user?.role === "teacher"
+                );
+                return (
+                  <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-3 shadow-sm">
+                    <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-800">
+                      <Camera size={16} />
+                      Teacher
+                    </h4>
+                    <div className="flex-1 overflow-hidden">
+                      {teacherParticipant ? (
+                        <RemoteVideo
+                          stream={teacherParticipant.stream}
+                          name={teacherParticipant.user?.name}
+                          large
+                        />
+                      ) : (
+                        <div className="flex h-full min-h-[9rem] items-center justify-center rounded-xl bg-slate-800 text-xs text-slate-400">
+                          Waiting for the host to join...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
           </aside>
         </main>
       </div>

@@ -29,7 +29,7 @@ export default function QuizDetail() {
   const { role } = useSelector((state) => state.auth);
 
   const [quiz, setQuiz] = useState(null);
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({ perStudent: [], perQuestion: [] });
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
@@ -46,7 +46,10 @@ export default function QuizDetail() {
 
       if (role === "teacher") {
         const r = await getQuizResults(quizId);
-        setResults(r);
+        setResults({
+          perStudent: r?.perStudent || [],
+          perQuestion: r?.perQuestion || [],
+        });
       }
     } catch (err) {
       setError(err?.response?.data?.message || "Could not load this quiz.");
@@ -63,13 +66,13 @@ export default function QuizDetail() {
   }, [quizId, role]);
 
   const handleExport = async () => {
-    if (results.length === 0) {
+    if (results.perStudent.length === 0) {
       toast("No submissions to export yet.");
       return;
     }
     setExporting(true);
     try {
-      exportResultsToExcel(results, quiz?.title || "Quiz Results");
+      exportResultsToExcel(results.perStudent, quiz?.title || "Quiz Results");
     } finally {
       setExporting(false);
     }
@@ -227,13 +230,13 @@ export default function QuizDetail() {
       {role === "teacher" && (
         <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-4">
           <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-            <Users size={15} /> Submissions ({results.length})
+            <Users size={15} /> Submissions ({results.perStudent.length})
           </p>
-          {results.length === 0 ? (
+          {results.perStudent.length === 0 ? (
             <p className="text-sm text-gray-400">No submissions yet.</p>
           ) : (
             <div className="divide-y divide-gray-100">
-              {results.map((r) => (
+              {results.perStudent.map((r) => (
                 <div
                   key={r._id}
                   className="flex items-center justify-between py-2 text-sm"
@@ -387,6 +390,26 @@ export default function QuizDetail() {
               <p className="mb-3 text-sm font-medium text-gray-800">
                 {index + 1}. {q.question}
               </p>
+
+              {role === "teacher" && results.perQuestion[index] && (
+                <p className="mb-3 text-xs font-medium text-gray-500">
+                  <span className="text-emerald-600">
+                    {results.perQuestion[index].correct} correct
+                  </span>
+                  {" · "}
+                  <span className="text-red-500">
+                    {results.perQuestion[index].incorrect} incorrect
+                  </span>
+                  {results.perQuestion[index].unanswered > 0 && (
+                    <>
+                      {" · "}
+                      <span className="text-gray-400">
+                        {results.perQuestion[index].unanswered} unanswered
+                      </span>
+                    </>
+                  )}
+                </p>
+              )}
 
               <div className="grid gap-2 sm:grid-cols-2">
                 {q.options.map((opt, oi) => {

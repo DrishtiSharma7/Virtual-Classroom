@@ -12,13 +12,14 @@ import CreateClassroom from "../features/classroom/pages/CreateClassroom/CreateC
 import JoinClassroom from "../features/classroom/pages/JoinClassroom/JoinClassroom";
 import AttendanceHome from "../features/classroom/pages/AttendanceHome/AttendanceHome";
 import TeacherAssignmentHome from "../features/classroom/pages/AssignmentHome/TeacherAssignmentHome";
-import LiveClassroomTeacher from "../features/dashboard/pages/LiveClassroom/LiveClassroomTeacher";
+import LiveClassroom from "../features/dashboard/pages/LiveClassroom/LiveClassroom";
 import QuizHome from "../features/classroom/pages/QuizHome/QuizHome";
 import QuizDetail from "../features/classroom/pages/QuizHome/QuizDetail";
 
 import Dashboard from "../features/dashboard/Dashboard";
 
 import ProtectedRoute from "./ProtectedRoute";
+import RoleRoute from "./RoleRoute";
 
 import SettingsPage from "../features/settings/pages/SettingsPage/SettingsPage";
 
@@ -39,7 +40,12 @@ function AppRouter() {
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout showNavbar={true} />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/classrooms/create" element={<CreateClassroom />} />
+            <Route path="/classrooms/create" element={
+                <RoleRoute allow={["teacher"]}>
+                  <CreateClassroom />
+                </RoleRoute>
+              }
+            />
             <Route path="/classrooms/join" element={<JoinClassroom />} />
           </Route>
         </Route>
@@ -57,7 +63,9 @@ function AppRouter() {
           </Route>
         </Route>
 
-        <Route path="/live/:sessionId" element={<LiveClassroomTeacher />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/live/:sessionId" element={<LiveClassroom />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -10,10 +10,22 @@ import {
   Video,
   ChartColumn,
   Settings,
+  LogOut,
 } from "lucide-react";
+import useAuth from "../../../auth/hooks/useAuth";
 import "./Sidebar.css";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  // Bug #13: signOut() existed in useAuth/authSlice but nothing called it.
+  const handleLogout = () => {
+    setSidebarOpen(false);
+    signOut();
+    navigate("/login", { replace: true });
+  };
+
   const menuItems = [
     {
       icon: <LayoutDashboard />,
@@ -78,6 +90,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </NavLink>
         ))}
       </nav>
+      <div className="border-t border-gray-100 px-4 py-4">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="sidebar-link w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+        >
+          <span className="sidebar-icon">
+            <LogOut />
+          </span>
+          <span className="sidebar-label">Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };
