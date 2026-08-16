@@ -9,7 +9,12 @@ module.exports = (io) => {
   io.use(socketAuth);
 
   io.on("connection", (socket) => {
-    console.log("User Connected :", socket.id, socket.user?.name, socket.user?.role);
+    console.log(
+      "User Connected :",
+      socket.id,
+      socket.user?.name,
+      socket.user?.role,
+    );
 
     // Bug #2 fix: this is the single real "join" handshake. It joins the
     // Socket.IO room, registers the participant (with their authenticated

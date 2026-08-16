@@ -1,4 +1,4 @@
-const registry = require("../../sockets/Roomregistry");
+const registry = require("../../sockets/roomRegistry");
 
 module.exports = (io, socket) => {
   // NOTE: room join / "existing-participants" / "user-joined" / "user-left"
