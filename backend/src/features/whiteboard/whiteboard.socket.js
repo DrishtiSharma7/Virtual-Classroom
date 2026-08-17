@@ -1,10 +1,7 @@
 const registry = require("../../sockets/roomRegistry");
+const Whiteboard = require("./whiteboard.model");
 
 module.exports = (io, socket) => {
-  // A student's client should never be able to reach these, since the
-  // draw toolbar/handlers are removed from the student UI entirely — but
-  // the check here is what actually enforces it if a modified client
-  // tries anyway.
   const requireTeacher = (roomId) => {
     if (registry.isTeacher(roomId, socket.id)) return true;
 
@@ -15,11 +12,19 @@ module.exports = (io, socket) => {
     return false;
   };
 
-  socket.on("draw", (data) => {
+  socket.on("draw", async (data) => {
     if (!data?.roomId || !requireTeacher(data.roomId)) return;
 
     if (data.element) {
-      registry.pushBoardElement(data.roomId, data.element);
+      try {
+        await Whiteboard.findOneAndUpdate(
+          { session: data.roomId },
+          { $push: { elements: data.element } },
+          { upsert: true, setDefaultsOnInsert: true },
+        );
+      } catch (err) {
+        console.log("Whiteboard persist error:", err.message);
+      }
     }
 
     socket.to(data.roomId).emit("draw", data);
@@ -27,24 +32,38 @@ module.exports = (io, socket) => {
 
   socket.on("erase", (data) => {
     if (!data?.roomId || !requireTeacher(data.roomId)) return;
-
     socket.to(data.roomId).emit("erase", data);
   });
 
-  socket.on("clear-board", (payload) => {
+  socket.on("clear-board", async (payload) => {
     const roomId = typeof payload === "string" ? payload : payload?.roomId;
     if (!roomId || !requireTeacher(roomId)) return;
 
-    registry.clearBoard(roomId);
+    try {
+      await Whiteboard.findOneAndUpdate(
+        { session: roomId },
+        { $set: { elements: [] } },
+        { upsert: true },
+      );
+    } catch (err) {
+      console.log("Whiteboard clear error:", err.message);
+    }
+
     io.to(roomId).emit("clear-board");
   });
 
-  // A newly-joined client (typically a student, but works for anyone)
-  // asks for the current board state instead of starting from a blank
-  // canvas. Server replies only to that socket with the full committed
-  // element list built up from the teacher's "draw" events so far.
-  socket.on("request-board-sync", (roomId) => {
+  // Reconnect / late-join: read straight from the DB, so a dropped
+  // connection, page refresh, or even a fresh server instance all
+  // return the same board — not whatever happened to still be in memory.
+  socket.on("request-board-sync", async (roomId) => {
     if (!roomId) return;
-    socket.emit("board-sync", { elements: registry.getBoard(roomId) });
+
+    try {
+      const board = await Whiteboard.findOne({ session: roomId });
+      socket.emit("board-sync", { elements: board?.elements || [] });
+    } catch (err) {
+      console.log("Whiteboard sync error:", err.message);
+      socket.emit("board-sync", { elements: [] });
+    }
   });
 };

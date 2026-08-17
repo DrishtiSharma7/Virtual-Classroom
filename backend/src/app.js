@@ -14,6 +14,7 @@ const chatRoutes = require("./features/chat/chat.routes");
 const materialRoutes = require("./features/material/material.routes");
 const dashboardRoutes = require("./features/dashboard/dashboard.routes");
 const settingsRoutes = require("./features/settings/settings.routes");
+const whiteboardRoutes = require("./features/whiteboard/whiteboard.routes");
 const app = express();
 
 app.use(cors());
@@ -54,5 +55,6 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/material", materialRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/whiteboard", whiteboardRoutes);
 
 module.exports = app;

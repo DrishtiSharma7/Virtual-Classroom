@@ -48,6 +48,7 @@ import {
 import { getSession, endSession } from "../../../auth/api/session.api";
 import { getChatHistory } from "../../../classroom/api/chat.api";
 import TeacherQuizPanel from "../../../classroom/components/QuizPanel/TeacherQuizPanel";
+import { getWhiteboard } from "../../../classroom/api/whiteboard.api";
 
 /* ---------------- Helpers ---------------- */
 
@@ -517,6 +518,19 @@ export default function LiveClassroom() {
     ro.observe(wrap);
     return () => ro.disconnect();
   }, [redrawCanvas]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    getWhiteboard(sessionId)
+      .then(({ elements }) => {
+        elementsRef.current = Array.isArray(elements) ? elements : [];
+        // guard in case the canvas hasn't sized yet
+        if (ctxRef.current) redrawCanvas();
+        bumpHistory();
+      })
+      .catch((err) => console.log("Whiteboard history error:", err));
+  }, [sessionId, redrawCanvas, bumpHistory]);
 
   const getCanvasPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
