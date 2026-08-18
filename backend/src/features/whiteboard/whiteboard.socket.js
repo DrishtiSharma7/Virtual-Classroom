@@ -66,6 +66,24 @@ module.exports = (io, socket) => {
     socket.to(data.roomId).emit("draw", data);
   });
 
+  // Live, not-yet-committed strokes — purely ephemeral so there's nothing
+  // to persist here; the eventual "draw" event still saves the final
+  // version. This is what makes a stroke visible to everyone else while
+  // it's actually being dragged, instead of only appearing once the
+  // drawer releases the mouse.
+  socket.on("draw-preview", (data) => {
+    if (!data?.roomId || !data.element) return;
+    if (!registry.canDraw(data.roomId, socket.id)) return;
+    socket.to(data.roomId).emit("draw-preview", data);
+  });
+
+  // Marks a live stroke as finished so other clients can drop their
+  // temporary overlay for it (the "draw" broadcast supplies the final one).
+  socket.on("draw-preview-end", (data) => {
+    if (!data?.roomId) return;
+    socket.to(data.roomId).emit("draw-preview-end", data);
+  });
+
   // Legacy/explicit erase event, kept for any client that emits it
   // directly instead of a white-stroke "draw" path. Same permission gate.
   socket.on("erase", (data) => {

@@ -322,6 +322,10 @@ export default function LiveClassroom() {
   // shared by every participant.
   const hasRedoRef = useRef(false);
   const drawStateRef = useRef({ isDrawing: false, current: null });
+  // Other participants' strokes that are still being dragged (not yet
+  // committed on mouse-up). Keyed by element id so each remote pointer's
+  // in-progress line renders and updates independently.
+  const remoteLiveRef = useRef({});
   const [tool, setTool] = useState("pen");
   const [color, setColor] = useState("#1e293b");
   const [penSize, setPenSize] = useState(3); // bug #12: was hardcoded
@@ -539,6 +543,9 @@ export default function LiveClassroom() {
     const ratio = window.devicePixelRatio || 1;
     ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     elementsRef.current.forEach((el) => drawElement(ctx, el));
+    // Live strokes other people are still dragging get painted on top,
+    // so they're visible while moving instead of only after they let go.
+    Object.values(remoteLiveRef.current).forEach((el) => drawElement(ctx, el));
   }, []);
 
   useEffect(() => {
@@ -680,6 +687,15 @@ export default function LiveClassroom() {
 
     redrawCanvas();
     if (ctxRef.current) drawElement(ctxRef.current, current);
+
+    // Stream the in-progress stroke to everyone else in the room so it's
+    // visible while it's being drawn, not just once it's released. This
+    // is fire-and-forget — losing an intermediate frame is harmless since
+    // the final "draw" commit on pointer-up always lands the full stroke.
+    socketRef.current?.emit("draw-preview", {
+      roomId: sessionId,
+      element: current,
+    });
   };
 
   const handlePointerUp = () => {
@@ -689,6 +705,14 @@ export default function LiveClassroom() {
     drawStateRef.current.current = null;
 
     if (!current) return;
+
+    // Tell everyone else this stroke is no longer "live" — the commit
+    // below (or the resulting "draw" broadcast) supplies the final version.
+    socketRef.current?.emit("draw-preview-end", {
+      roomId: sessionId,
+      id: current.id,
+    });
+
     if (current.type === "path" && current.points.length < 2) return;
 
     commitElement(current);
@@ -890,6 +914,8 @@ export default function LiveClassroom() {
     socket.on("draw", ({ element }) => {
       if (!element) return;
       try {
+        // The final version has landed — it no longer needs a live overlay.
+        if (element.id) delete remoteLiveRef.current[element.id];
         elementsRef.current.push(element);
         redrawCanvas();
         bumpHistory();
@@ -901,8 +927,22 @@ export default function LiveClassroom() {
       }
     });
 
+    // Someone else's stroke, still being dragged — render it live instead
+    // of waiting for them to release the mouse.
+    socket.on("draw-preview", ({ element }) => {
+      if (!element?.id) return;
+      remoteLiveRef.current[element.id] = element;
+      redrawCanvas();
+    });
+
+    socket.on("draw-preview-end", ({ id }) => {
+      if (id) delete remoteLiveRef.current[id];
+      redrawCanvas();
+    });
+
     socket.on("clear-board", () => {
       elementsRef.current = [];
+      remoteLiveRef.current = {};
       hasRedoRef.current = false;
       redrawCanvas();
       bumpHistory();
@@ -915,6 +955,7 @@ export default function LiveClassroom() {
     // missed individual events while disconnected still ends up correct.
     socket.on("board-sync", ({ elements, allowStudentDraw: allow }) => {
       elementsRef.current = Array.isArray(elements) ? elements : [];
+      remoteLiveRef.current = {};
       // We don't know the exact depth of the server's redo stack from this
       // payload alone, so err on the side of letting Redo be clickable;
       // a redo with nothing queued is a harmless server-side no-op.
