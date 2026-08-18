@@ -43,6 +43,14 @@ import {
   Wifi,
   WifiOff,
   RefreshCcw,
+  Highlighter,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Minimize,
+  Lock,
+  Unlock,
+  Loader2,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
@@ -56,9 +64,17 @@ const drawElement = (ctx, el) => {
   if (!el) return;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
+  // Highlighter strokes (and any element carrying an explicit opacity)
+  // render semi-transparent; everything else stays fully opaque. Reset
+  // afterwards so one translucent stroke can't bleed into the next
+  // element drawn on the same context.
+  ctx.globalAlpha = el.opacity != null ? el.opacity : el.highlighter ? 0.35 : 1;
 
   if (el.type === "path") {
-    if (!el.points || el.points.length < 2) return;
+    if (!el.points || el.points.length < 2) {
+      ctx.globalAlpha = 1;
+      return;
+    }
     ctx.strokeStyle = el.eraser ? "#ffffff" : el.color;
     ctx.lineWidth = el.size;
     ctx.beginPath();
@@ -67,6 +83,7 @@ const drawElement = (ctx, el) => {
       ctx.lineTo(el.points[i][0], el.points[i][1]);
     }
     ctx.stroke();
+    ctx.globalAlpha = 1;
   } else if (el.type === "rect") {
     ctx.strokeStyle = el.color;
     ctx.lineWidth = el.size;
@@ -115,6 +132,7 @@ const drawElement = (ctx, el) => {
     ctx.font = "18px sans-serif";
     ctx.fillText(el.text, el.x1, el.y1);
   }
+  ctx.globalAlpha = 1;
 };
 const avatarFor = (name = "?") =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
@@ -294,16 +312,41 @@ export default function LiveClassroom() {
 
   const canvasRef = useRef(null);
   const canvasWrapRef = useRef(null);
+  const whiteboardSectionRef = useRef(null);
   const ctxRef = useRef(null);
   const colorInputRef = useRef(null);
   const elementsRef = useRef([]);
-  const redoRef = useRef([]);
+  // Redo is now server-authoritative (see the "redo" socket handler), so
+  // this only tracks *whether* a redo is plausible for disabling the
+  // button — the actual stack of undone elements lives on the backend,
+  // shared by every participant.
+  const hasRedoRef = useRef(false);
   const drawStateRef = useRef({ isDrawing: false, current: null });
   const [tool, setTool] = useState("pen");
   const [color, setColor] = useState("#1e293b");
   const [penSize, setPenSize] = useState(3); // bug #12: was hardcoded
+  const [opacity, setOpacity] = useState(1);
   const [historyTick, setHistoryTick] = useState(0);
   const bumpHistory = useCallback(() => setHistoryTick((t) => t + 1), []);
+  // Undo/Redo button enabled-state, derived from the refs *after* render
+  // (in the effect below) rather than read directly during render, which
+  // React flags as unsafe since ref mutations don't trigger re-renders on
+  // their own.
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  useEffect(() => {
+    setCanUndo(elementsRef.current.length > 0);
+    setCanRedo(hasRedoRef.current);
+  }, [historyTick]);
+
+  // Whiteboard-specific state: kept deliberately separate from call state
+  // (see the "connected" flag used for signaling) so a whiteboard hiccup
+  // never gets confused in the UI with the video/audio call itself.
+  const [allowStudentDraw, setAllowStudentDraw] = useState(false);
+  const [wbZoom, setWbZoom] = useState(1);
+  const [wbFullscreen, setWbFullscreen] = useState(false);
+  const [wbError, setWbError] = useState("");
 
   const [removedNotice, setRemovedNotice] = useState("");
   const [forceMuted, setForceMuted] = useState(false);
@@ -314,6 +357,12 @@ export default function LiveClassroom() {
     !!currentUser &&
     (session.createdBy?._id === currentUser.id ||
       session.createdBy === currentUser.id);
+
+  // Single source of truth for "can this participant currently draw":
+  // the host always can; a student can only while the teacher has turned
+  // on student annotation. The backend enforces the exact same rule
+  // independently (see whiteboard.socket.js) — this is only for the UI.
+  const canDraw = isHost || allowStudentDraw;
 
   /* ---- Load the session tied to this classroom (never a hardcoded room) ---- */
   useEffect(() => {
@@ -532,33 +581,42 @@ export default function LiveClassroom() {
       .catch((err) => console.log("Whiteboard history error:", err));
   }, [sessionId, redrawCanvas, bumpHistory]);
 
+  // Divides out the current CSS zoom so drawing coordinates always map
+  // back into the canvas's real (unscaled) pixel space, regardless of
+  // what wbZoom the viewer currently has dialed in.
   const getCanvasPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return [clientX - rect.left, clientY - rect.top];
+    return [(clientX - rect.left) / wbZoom, (clientY - rect.top) / wbZoom];
   };
 
   const commitElement = useCallback(
     (el) => {
-      // Bug #3: this is the actual choke point for outgoing draw events —
-      // guarding it here (not just hiding the toolbar) means the socket
-      // emit is unreachable for a student even from a modified client,
-      // since the pointer handlers below are also never attached to the
-      // canvas for a non-host in the first place.
-      if (!isHost) return;
+      // This is the actual choke point for outgoing draw events — guarding
+      // it here (not just hiding the toolbar) means the socket emit is
+      // unreachable for an unauthorized student even from a modified
+      // client, since the pointer handlers below are also never attached
+      // to the canvas for a non-permitted participant in the first place.
+      // The backend re-checks the exact same permission independently.
+      if (!canDraw) return;
 
-      elementsRef.current.push(el);
-      redoRef.current = [];
-      redrawCanvas();
-      bumpHistory();
-      socketRef.current?.emit("draw", { roomId: sessionId, element: el });
+      try {
+        elementsRef.current.push(el);
+        hasRedoRef.current = false; // a fresh action clears redo, everywhere
+        redrawCanvas();
+        bumpHistory();
+        socketRef.current?.emit("draw", { roomId: sessionId, element: el });
+      } catch (err) {
+        console.error("Whiteboard draw error:", err);
+        setWbError("Couldn't send that drawing action. Retrying...");
+      }
     },
-    [isHost, sessionId, redrawCanvas, bumpHistory]
+    [canDraw, sessionId, redrawCanvas, bumpHistory]
   );
 
   const handlePointerDown = (e) => {
-    if (!isHost) return;
+    if (!canDraw) return;
     const [x, y] = getCanvasPos(e);
 
     if (tool === "text") {
@@ -579,13 +637,15 @@ export default function LiveClassroom() {
 
     drawStateRef.current.isDrawing = true;
 
-    if (tool === "pen" || tool === "eraser") {
+    if (tool === "pen" || tool === "eraser" || tool === "highlighter") {
       drawStateRef.current.current = {
         id: `${socketRef.current?.id || "local"}-${Date.now()}`,
         type: "path",
         color,
-        size: tool === "eraser" ? 22 : penSize,
+        size: tool === "eraser" ? 22 : tool === "highlighter" ? 18 : penSize,
         eraser: tool === "eraser",
+        highlighter: tool === "highlighter",
+        opacity: tool === "highlighter" ? 0.35 : opacity,
         points: [[x, y]],
       };
     } else {
@@ -594,6 +654,7 @@ export default function LiveClassroom() {
         type: tool, // rect | circle | arrow
         color,
         size: penSize,
+        opacity,
         x1: x,
         y1: y,
         x2: x,
@@ -603,7 +664,7 @@ export default function LiveClassroom() {
   };
 
   const handlePointerMove = (e) => {
-    if (!isHost) return;
+    if (!canDraw) return;
     if (!drawStateRef.current.isDrawing || !drawStateRef.current.current)
       return;
 
@@ -622,7 +683,7 @@ export default function LiveClassroom() {
   };
 
   const handlePointerUp = () => {
-    if (!isHost) return;
+    if (!canDraw) return;
     const current = drawStateRef.current.current;
     drawStateRef.current.isDrawing = false;
     drawStateRef.current.current = null;
@@ -633,30 +694,80 @@ export default function LiveClassroom() {
     commitElement(current);
   };
 
+  // Undo/redo are shared, server-authoritative actions: the client just
+  // asks the server to pop/restore the last element on the room's board,
+  // and the resulting full board comes back over "board-sync" to every
+  // participant (including this one) so everyone stays in lockstep even
+  // when both teacher and students have been drawing.
   const handleUndo = () => {
-    const last = elementsRef.current.pop();
-    if (!last) return;
-    redoRef.current.push(last);
-    redrawCanvas();
-    bumpHistory();
+    if (!canDraw || !canUndo) return;
+    try {
+      socketRef.current?.emit("undo", { roomId: sessionId });
+    } catch (err) {
+      console.error("Whiteboard undo error:", err);
+    }
   };
 
   const handleRedo = () => {
-    const el = redoRef.current.pop();
-    if (!el) return;
-    elementsRef.current.push(el);
-    redrawCanvas();
-    bumpHistory();
+    if (!canDraw) return;
+    try {
+      socketRef.current?.emit("redo", { roomId: sessionId });
+    } catch (err) {
+      console.error("Whiteboard redo error:", err);
+    }
   };
 
   const handleClearBoard = () => {
     if (!isHost) return;
-    elementsRef.current = [];
-    redoRef.current = [];
-    redrawCanvas();
-    bumpHistory();
-    socketRef.current?.emit("clear-board", { roomId: sessionId });
+    if (!window.confirm("Are you sure you want to clear the whiteboard?")) {
+      return;
+    }
+    try {
+      elementsRef.current = [];
+      hasRedoRef.current = false;
+      redrawCanvas();
+      bumpHistory();
+      socketRef.current?.emit("clear-board", { roomId: sessionId });
+    } catch (err) {
+      console.error("Whiteboard clear error:", err);
+    }
   };
+
+  const toggleStudentDraw = () => {
+    if (!isHost) return;
+    const next = !allowStudentDraw;
+    socketRef.current?.emit("set-draw-permission", {
+      roomId: sessionId,
+      allow: next,
+    });
+    // Optimistic — the authoritative "draw-permission-changed" broadcast
+    // (which the teacher also receives) will confirm/correct this.
+    setAllowStudentDraw(next);
+  };
+
+  const zoomIn = () => setWbZoom((z) => Math.min(2.5, +(z + 0.25).toFixed(2)));
+  const zoomOut = () => setWbZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)));
+  const resetZoom = () => setWbZoom(1);
+
+  const toggleFullscreen = () => {
+    const el = whiteboardSectionRef.current;
+    if (!el) return;
+
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().catch((err) => console.error(err));
+    } else {
+      document.exitFullscreen?.().catch((err) => console.error(err));
+    }
+  };
+
+  useEffect(() => {
+    const onFsChange = () =>
+      setWbFullscreen(
+        document.fullscreenElement === whiteboardSectionRef.current
+      );
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   /* ---- Socket connection + signaling, scoped to this session's room ---- */
   useEffect(() => {
@@ -665,18 +776,38 @@ export default function LiveClassroom() {
     const socketUrl =
       import.meta.env.VITE_SOCKET_URL || "http://localhost:8000";
 
+    // NOTE on reliability: this one socket carries call signaling (offer/
+    // answer/ICE), chat, and whiteboard events. Once two peers have an
+    // established RTCPeerConnection, their actual audio/video keeps
+    // flowing directly, peer-to-peer — it does NOT run through this
+    // socket. So if this connection drops mid-call, the video/audio a
+    // participant is already seeing and hearing is unaffected; only
+    // whiteboard sync and *new* participants joining are paused until it
+    // reconnects. Socket.IO reconnects with backoff automatically (config
+    // below), and the "connected" flip back to true re-runs the join
+    // effect, which re-requests the latest whiteboard state.
     const socket = io(socketUrl, {
       transports: ["websocket"],
       auth: { token },
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
 
     socketRef.current = socket;
 
-    socket.on("connect", () => setConnected(true));
+    socket.on("connect", () => {
+      setConnected(true);
+      setWbError("");
+    });
     socket.on("connect_error", (err) =>
       console.error("Socket error:", err.message)
     );
     socket.on("disconnect", () => setConnected(false));
+    socket.on("reconnect_attempt", () =>
+      setWbError("Reconnecting whiteboard...")
+    );
 
     // The server tells us who's already in this session's room; we initiate
     // the offer to each of them.
@@ -758,26 +889,46 @@ export default function LiveClassroom() {
 
     socket.on("draw", ({ element }) => {
       if (!element) return;
-      elementsRef.current.push(element);
-      redrawCanvas();
-      bumpHistory();
+      try {
+        elementsRef.current.push(element);
+        redrawCanvas();
+        bumpHistory();
+      } catch (err) {
+        // Isolated on purpose: a bad incoming whiteboard element must
+        // never crash the classroom page, the call, or any other panel.
+        console.error("Whiteboard render error:", err);
+        setWbError("Had trouble rendering the last whiteboard update.");
+      }
     });
 
     socket.on("clear-board", () => {
       elementsRef.current = [];
-      redoRef.current = [];
+      hasRedoRef.current = false;
       redrawCanvas();
       bumpHistory();
     });
 
-    // A late joiner gets the board's current state instead of a blank
-    // canvas — requested once right after we join (see the join effect
-    // below).
-    socket.on("board-sync", ({ elements }) => {
+    // Full-board replacement — used for the initial sync on join/reconnect,
+    // and again after every shared undo/redo. The server is always the
+    // source of truth here: we never merge this with whatever stale local
+    // state we already had, we replace it outright, so a client that
+    // missed individual events while disconnected still ends up correct.
+    socket.on("board-sync", ({ elements, allowStudentDraw: allow }) => {
       elementsRef.current = Array.isArray(elements) ? elements : [];
-      redoRef.current = [];
+      // We don't know the exact depth of the server's redo stack from this
+      // payload alone, so err on the side of letting Redo be clickable;
+      // a redo with nothing queued is a harmless server-side no-op.
+      hasRedoRef.current = true;
+      if (typeof allow === "boolean") setAllowStudentDraw(allow);
       redrawCanvas();
       bumpHistory();
+      setWbError("");
+    });
+
+    // Teacher toggled "Allow Students to Draw" — update every client's
+    // toolbar/permissions immediately.
+    socket.on("draw-permission-changed", ({ allowStudentDraw: allow }) => {
+      setAllowStudentDraw(!!allow);
     });
 
     // Teacher muted this student's outgoing audio.
@@ -802,8 +953,11 @@ export default function LiveClassroom() {
       );
     });
 
-    socket.on("action-denied", ({ message }) => {
-      console.warn("Action denied:", message);
+    socket.on("action-denied", ({ action, message }) => {
+      console.warn("Action denied:", action, message);
+      if (typeof action === "string" && action.startsWith("whiteboard")) {
+        setWbError(message || "That whiteboard action isn't allowed.");
+      }
     });
 
     return () => {
@@ -1185,17 +1339,30 @@ export default function LiveClassroom() {
           {/* Board column: whiteboard + controls stacked underneath it */}
           <div className="flex flex-1 flex-col gap-4 overflow-hidden">
             {/* Whiteboard */}
-            <section className="relative flex flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
-              {/* Toolbar — host only. Students never see drawing tools at
-                  all (bug #3), only ever receive whiteboard-sync. */}
-              {isHost && (
-                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-                  <div className="flex items-center gap-1">
+            <section
+              ref={whiteboardSectionRef}
+              className={`relative flex flex-1 flex-col overflow-hidden bg-white shadow-sm ${
+                wbFullscreen ? "" : "rounded-2xl"
+              }`}
+            >
+              {/* Toolbar — visible to the host always, and to a student
+                  only while the teacher has annotation turned on. It
+                  wraps instead of disappearing on narrow/tablet widths
+                  (never hides tools behind overflow). */}
+              {canDraw && (
+                <div className="flex flex-wrap items-center gap-y-2 justify-between border-b border-slate-100 px-4 py-2.5">
+                  <div className="flex flex-wrap items-center gap-1">
                     <ToolbarButton
                       Icon={Pencil}
                       active={tool === "pen"}
                       onClick={() => setTool("pen")}
-                      title="Pen"
+                      title="Pencil"
+                    />
+                    <ToolbarButton
+                      Icon={Highlighter}
+                      active={tool === "highlighter"}
+                      onClick={() => setTool("highlighter")}
+                      title="Highlighter"
                     />
                     <ToolbarButton
                       Icon={Eraser}
@@ -1227,69 +1394,185 @@ export default function LiveClassroom() {
                       onClick={() => setTool("text")}
                       title="Text"
                     />
-                    <ToolbarButton
-                      colorDot="#1e293b"
-                      active={color === "#1e293b"}
-                      onClick={() => setColor("#1e293b")}
-                      title="Black"
-                    />
-                    <ToolbarButton
-                      colorDot="#22c55e"
-                      active={color === "#22c55e"}
-                      onClick={() => setColor("#22c55e")}
-                      title="Green"
-                    />
-                    <ToolbarButton
-                      colorDot="#a855f7"
-                      active={color === "#a855f7"}
-                      onClick={() => setColor("#a855f7")}
-                      title="Purple"
-                    />
-                    <ToolbarButton
-                      Icon={Pipette}
-                      onClick={() => colorInputRef.current?.click()}
-                      title="Custom color"
-                    />
-                    <input
-                      ref={colorInputRef}
-                      type="color"
-                      value={color}
-                      onChange={(e) => setColor(e.target.value)}
-                      className="hidden"
-                    />
-                    <ToolbarButton
-                      Icon={Undo2}
-                      onClick={handleUndo}
-                      disabled={elementsRef.current.length === 0}
-                      title="Undo"
-                    />
-                    <ToolbarButton
-                      Icon={Redo2}
-                      onClick={handleRedo}
-                      disabled={redoRef.current.length === 0}
-                      title="Redo"
-                    />
-                    <ToolbarButton
-                      Icon={Trash2}
-                      onClick={handleClearBoard}
-                      title="Clear board"
-                    />
-                    {/* Bug #12: pen/shape stroke size, previously hardcoded */}
-                    <div className="ml-2 flex items-center gap-1.5 pl-2 border-l border-slate-200">
+
+                    <div className="ml-1 flex items-center gap-1 border-l border-slate-200 pl-2">
+                      {[
+                        ["#1e293b", "Black"],
+                        ["#ef4444", "Red"],
+                        ["#3b82f6", "Blue"],
+                        ["#22c55e", "Green"],
+                        ["#eab308", "Yellow"],
+                        ["#a855f7", "Purple"],
+                        ["#ffffff", "White"],
+                      ].map(([hex, label]) => (
+                        <ToolbarButton
+                          key={hex}
+                          colorDot={hex}
+                          active={color === hex}
+                          onClick={() => setColor(hex)}
+                          title={label}
+                        />
+                      ))}
+                      <ToolbarButton
+                        Icon={Pipette}
+                        onClick={() => colorInputRef.current?.click()}
+                        title="Custom color"
+                      />
+                      <input
+                        ref={colorInputRef}
+                        type="color"
+                        value={color}
+                        onChange={(e) => setColor(e.target.value)}
+                        className="hidden"
+                      />
+                    </div>
+
+                    <div className="ml-1 flex items-center gap-1 border-l border-slate-200 pl-2">
+                      <ToolbarButton
+                        Icon={Undo2}
+                        onClick={handleUndo}
+                        disabled={!canUndo}
+                        title="Undo"
+                      />
+                      <ToolbarButton
+                        Icon={Redo2}
+                        onClick={handleRedo}
+                        disabled={!canRedo}
+                        title="Redo"
+                      />
+                      {isHost && (
+                        <ToolbarButton
+                          Icon={Trash2}
+                          onClick={handleClearBoard}
+                          title="Clear board"
+                        />
+                      )}
+                    </div>
+
+                    {/* Stroke size: quick presets + fine slider */}
+                    <div className="ml-1 flex items-center gap-1.5 border-l border-slate-200 pl-2">
                       <span className="text-[11px] font-medium text-slate-400">
                         Size
                       </span>
+                      {[2, 4, 6, 10, 15, 20].map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setPenSize(s)}
+                          title={`${s}px`}
+                          className={`flex h-7 w-7 items-center justify-center rounded-md text-[10px] font-medium transition-colors ${
+                            penSize === s
+                              ? "bg-indigo-600 text-white"
+                              : "text-slate-500 hover:bg-slate-100"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
                       <input
                         type="range"
                         min={1}
-                        max={12}
+                        max={30}
                         value={penSize}
                         onChange={(e) => setPenSize(Number(e.target.value))}
                         className="h-1 w-16 accent-indigo-600"
                         title={`Stroke size: ${penSize}`}
                       />
                     </div>
+
+                    {/* Opacity — also drives highlighter transparency */}
+                    <div className="ml-1 flex items-center gap-1.5 border-l border-slate-200 pl-2">
+                      <span className="text-[11px] font-medium text-slate-400">
+                        Opacity
+                      </span>
+                      <input
+                        type="range"
+                        min={0.1}
+                        max={1}
+                        step={0.05}
+                        value={opacity}
+                        onChange={(e) => setOpacity(Number(e.target.value))}
+                        className="h-1 w-16 accent-indigo-600"
+                        title={`Opacity: ${Math.round(opacity * 100)}%`}
+                      />
+                    </div>
                   </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Teacher-only student-annotation permission switch */}
+                    {isHost && (
+                      <button
+                        onClick={toggleStudentDraw}
+                        title="Allow Students to Draw"
+                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                          allowStudentDraw
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {allowStudentDraw ? (
+                          <Unlock size={14} />
+                        ) : (
+                          <Lock size={14} />
+                        )}
+                        Students Draw: {allowStudentDraw ? "ON" : "OFF"}
+                      </button>
+                    )}
+
+                    <div className="flex items-center gap-0.5 border-l border-slate-200 pl-2">
+                      <ToolbarButton
+                        Icon={ZoomOut}
+                        onClick={zoomOut}
+                        title="Zoom out"
+                      />
+                      <button
+                        onClick={resetZoom}
+                        title="Reset zoom"
+                        className="w-10 rounded-md py-1 text-[11px] font-medium text-slate-500 hover:bg-slate-100"
+                      >
+                        {Math.round(wbZoom * 100)}%
+                      </button>
+                      <ToolbarButton
+                        Icon={ZoomIn}
+                        onClick={zoomIn}
+                        title="Zoom in"
+                      />
+                      <ToolbarButton
+                        Icon={wbFullscreen ? Minimize : Maximize}
+                        onClick={toggleFullscreen}
+                        title="Fullscreen"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Read-only banner for a student without draw permission —
+                  never a full-screen error, the classroom stays usable. */}
+              {!canDraw && (
+                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5">
+                    <Lock size={13} /> View only — the host hasn&apos;t enabled
+                    student drawing.
+                  </span>
+                  {!connected && (
+                    <span className="flex items-center gap-1.5 text-amber-500">
+                      <Loader2 size={13} className="animate-spin" />
+                      Reconnecting whiteboard...
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Small non-blocking whiteboard status strip. Shown whenever
+                  the underlying socket is down or a whiteboard error was
+                  reported — never a full-screen error, and it never
+                  touches the call/video/audio controls. */}
+              {canDraw && (!connected || wbError) && (
+                <div className="flex items-center gap-1.5 border-b border-amber-100 bg-amber-50 px-4 py-1.5 text-xs text-amber-600">
+                  <Loader2 size={13} className="animate-spin" />
+                  {!connected
+                    ? "Reconnecting whiteboard... your video/audio call is unaffected."
+                    : wbError}
                 </div>
               )}
 
@@ -1299,15 +1582,19 @@ export default function LiveClassroom() {
               >
                 <canvas
                   ref={canvasRef}
-                  onMouseDown={isHost ? handlePointerDown : undefined}
-                  onMouseMove={isHost ? handlePointerMove : undefined}
-                  onMouseUp={isHost ? handlePointerUp : undefined}
-                  onMouseLeave={isHost ? handlePointerUp : undefined}
-                  onTouchStart={isHost ? handlePointerDown : undefined}
-                  onTouchMove={isHost ? handlePointerMove : undefined}
-                  onTouchEnd={isHost ? handlePointerUp : undefined}
+                  onMouseDown={canDraw ? handlePointerDown : undefined}
+                  onMouseMove={canDraw ? handlePointerMove : undefined}
+                  onMouseUp={canDraw ? handlePointerUp : undefined}
+                  onMouseLeave={canDraw ? handlePointerUp : undefined}
+                  onTouchStart={canDraw ? handlePointerDown : undefined}
+                  onTouchMove={canDraw ? handlePointerMove : undefined}
+                  onTouchEnd={canDraw ? handlePointerUp : undefined}
+                  style={{
+                    transform: `scale(${wbZoom})`,
+                    transformOrigin: "top left",
+                  }}
                   className={`absolute inset-0 h-full w-full touch-none ${
-                    !isHost
+                    !canDraw
                       ? "cursor-default"
                       : tool === "text"
                         ? "cursor-text"
