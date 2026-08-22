@@ -6,6 +6,7 @@ const socketAuth = require("./socketAuth.middleware");
 const registry = require("./roomRegistry");
 const sessionLifecycle = require("./sessionLifecycle");
 const { getAuthorizedSession } = require("../features/session/session.service");
+const attendanceService = require("../features/attendance/attendance.service");
 
 module.exports = (io) => {
   io.use(socketAuth);
@@ -40,8 +41,13 @@ module.exports = (io) => {
       if (socket.rooms.has(roomId)) return; // already joined, don't re-announce
 
       let isHost = false;
+      let session;
+      let classroom;
       try {
-        ({ isHost } = await getAuthorizedSession(roomId, socket.user));
+        ({ isHost, session, classroom } = await getAuthorizedSession(
+          roomId,
+          socket.user,
+        ));
       } catch (err) {
         socket.emit("session-error", {
           message: err.message || "Unable to join this session.",
@@ -67,6 +73,21 @@ module.exports = (io) => {
           socketId: stale.socketId,
           user: stale.user,
         });
+
+        // The stale entry's own disconnect may not fire for a while (or
+        // ever, if it's a genuinely stuck tab) — close its attendance
+        // interval now so a fast refresh/reconnect never leaves two open
+        // intervals for the same student.
+        if (!stale.isHost) {
+          try {
+            await attendanceService.recordDisconnect({
+              sessionId: roomId,
+              studentId: stale.user.id,
+            });
+          } catch (err) {
+            console.error("Attendance recordDisconnect (stale) error:", err.message);
+          }
+        }
       }
 
       const existing = registry.listParticipants(roomId, socket.id);
@@ -77,6 +98,23 @@ module.exports = (io) => {
       // Host reconnected/rejoined before the inactivity grace period
       // elapsed — the session survives.
       if (isHost) sessionLifecycle.cancelAutoEnd(roomId);
+
+      // Attendance is tracked for students only, and only ever as a side
+      // effect of this server-verified join — never from anything the
+      // client sends directly (see attendance.service.recordConnect). A
+      // failure here must never block the student from actually joining
+      // the class.
+      if (!isHost) {
+        try {
+          await attendanceService.recordConnect({
+            session,
+            classroomId: classroom._id,
+            studentId: socket.user.id,
+          });
+        } catch (err) {
+          console.error("Attendance recordConnect error:", err.message);
+        }
+      }
 
       socket.emit("existing-participants", existing);
 
@@ -104,7 +142,7 @@ module.exports = (io) => {
       console.log(socket.id, "joined room", roomId);
     });
 
-    socket.on("leave-room", (payload) => {
+    socket.on("leave-room", async (payload) => {
       const roomId = typeof payload === "string" ? payload : payload?.roomId;
       if (!roomId || !socket.rooms.has(roomId)) return;
 
@@ -112,6 +150,17 @@ module.exports = (io) => {
 
       socket.leave(roomId);
       registry.removeParticipant(roomId, socket.id);
+
+      if (participant && !participant.isHost) {
+        try {
+          await attendanceService.recordDisconnect({
+            sessionId: roomId,
+            studentId: participant.user.id,
+          });
+        } catch (err) {
+          console.error("Attendance recordDisconnect error:", err.message);
+        }
+      }
 
       // The host just left and no other host socket is holding the room —
       // arm the auto-end timer instead of leaving the session "live"
@@ -147,15 +196,26 @@ module.exports = (io) => {
     registerWebRTCEvents(io, socket);
     registerQuizEvents(io, socket);
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       // socket.rooms is already cleared by Socket.IO by the time
       // "disconnect" fires, so use the registry (not socket.rooms) to find
       // which rooms this socket needs to be cleaned out of.
       const rooms = registry.findRoomsForSocket(socket.id);
 
-      rooms.forEach((roomId) => {
+      for (const roomId of rooms) {
         const participant = registry.findParticipant(roomId, socket.id);
         registry.removeParticipant(roomId, socket.id);
+
+        if (participant && !participant.isHost) {
+          try {
+            await attendanceService.recordDisconnect({
+              sessionId: roomId,
+              studentId: participant.user.id,
+            });
+          } catch (err) {
+            console.error("Attendance recordDisconnect error:", err.message);
+          }
+        }
 
         if (participant?.isHost && !registry.hasActiveHost(roomId)) {
           sessionLifecycle.scheduleAutoEnd(roomId, io);
@@ -175,7 +235,7 @@ module.exports = (io) => {
           socketId: socket.id,
           user: socket.user,
         });
-      });
+      }
 
       console.log("User Disconnected :", socket.id);
     });

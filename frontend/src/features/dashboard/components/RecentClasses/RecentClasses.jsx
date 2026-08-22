@@ -1,58 +1,39 @@
 import React from "react";
 import "./RecentClasses.css";
 
-const RecentClasses = () => {
-  const classes = [
-    {
-      name: "Data Structures",
-      subject: "Computer Science",
-      students: "35 Students",
-      status: "Active",
-      statusStyle: "status-active",
-    },
-    {
-      name: "Web Development",
-      subject: "Computer Science",
-      students: "42 Students",
-      status: "Upcoming",
-      statusStyle: "status-upcoming",
-    },
-    {
-      name: "Operating Systems",
-      subject: "Computer Science",
-      students: "30 Students",
-      status: "Completed",
-      statusStyle: "status-completed",
-    },
-  ];
-
+// Backend only ever selects name/subject/createdAt (+ teacher.name for the
+// student variant) for this list — see dashboard.service.js's
+// `recentClasses`/`myClasses` queries — so those are the only columns shown.
+const RecentClasses = ({ classes = [] }) => {
   return (
     <div className="recent-classes-container">
       <h3 className="section-title">Recent Classes</h3>
-      <table className="classes-table">
-        <thead>
-          <tr>
-            <th>Class Name</th>
-            <th>Subject</th>
-            <th>Students</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {classes.map((cls, idx) => (
-            <tr key={idx}>
-              <td className="font-semibold text-gray-800">{cls.name}</td>
-              <td className="text-gray-500">{cls.subject}</td>
-              <td className="text-gray-600">{cls.students}</td>
-              <td>
-                <span className={`status-badge ${cls.statusStyle}`}>
-                  {cls.status}
-                </span>
-              </td>
+      {classes.length === 0 ? (
+        <p className="text-sm text-gray-500">No classes yet.</p>
+      ) : (
+        <table className="classes-table">
+          <thead>
+            <tr>
+              <th scope="col">Class Name</th>
+              <th scope="col">Subject</th>
+              <th scope="col">Created</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {classes.map((cls) => (
+              <tr key={cls._id}>
+                <td className="font-semibold text-gray-800">{cls.name}</td>
+                <td className="text-gray-500">{cls.subject}</td>
+                <td className="text-gray-600">
+                  {cls.createdAt
+                    ? new Date(cls.createdAt).toLocaleDateString()
+                    : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

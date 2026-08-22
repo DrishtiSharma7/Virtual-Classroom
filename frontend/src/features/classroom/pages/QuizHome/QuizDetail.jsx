@@ -348,7 +348,7 @@ export default function QuizDetail() {
                     <input
                       type="radio"
                       name={`q-${index}`}
-                      className="hidden"
+                      className="sr-only"
                       checked={draftAnswers[index] === oi}
                       onChange={() => selectAnswer(index, oi)}
                     />

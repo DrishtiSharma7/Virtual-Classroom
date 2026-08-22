@@ -1,0 +1,205 @@
+/* Mirrors QuizHome.css / AttendanceHome.css's design system so Recordings
+   reads as the same page family — page chrome, stat cards, filter bar,
+   table, and status badges all follow the same recipe. */
+
+.recordings-page {
+  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+}
+
+.recordings-container {
+  @apply max-w-7xl mx-auto;
+}
+
+/* Header */
+
+.recordings-header {
+  @apply flex justify-between items-center mb-6 flex-wrap gap-4;
+}
+
+.recordings-title {
+  @apply flex items-center gap-2 text-2xl font-bold text-slate-800;
+}
+
+.recordings-subtitle {
+  @apply text-slate-500;
+}
+
+.header-buttons {
+  @apply flex flex-wrap gap-3;
+}
+
+.export-btn {
+  @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl transition;
+}
+
+.export-btn:disabled {
+  @apply bg-gray-300 hover:bg-gray-300 text-gray-500 cursor-not-allowed;
+}
+
+/* Statistics Cards */
+
+.stats-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4;
+}
+
+.stat-card {
+  @apply bg-white rounded-2xl shadow p-6;
+}
+
+.stat-header {
+  @apply flex items-center gap-2 mb-2;
+}
+
+.stat-icon-indigo {
+  @apply text-indigo-600;
+}
+
+.stat-icon-blue {
+  @apply text-blue-600;
+}
+
+.stat-label {
+  @apply text-gray-500;
+}
+
+.stat-value {
+  @apply text-2xl font-bold mt-2;
+}
+
+/* Filters */
+
+.filter-card {
+  @apply bg-white rounded-xl shadow p-3 mb-4 flex flex-wrap items-center gap-3;
+}
+
+.filter-label {
+  @apply text-sm font-medium text-gray-600;
+}
+
+.classroom-select {
+  @apply border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+/* Table */
+
+.table-wrapper {
+  @apply bg-white rounded-2xl shadow overflow-x-auto;
+}
+
+.recordings-table {
+  @apply min-w-full text-left;
+}
+
+.table-head {
+  @apply bg-gray-200;
+}
+
+.table-heading {
+  @apply px-6 py-4 text-left;
+}
+
+.table-cell {
+  @apply px-6 py-2;
+}
+
+.table-row {
+  @apply border-t hover:bg-gray-50;
+}
+
+.entity-name {
+  @apply font-semibold;
+}
+
+/* Actions */
+
+.action-buttons {
+  @apply flex justify-center gap-2;
+}
+
+.view-btn {
+  @apply p-2 rounded-lg hover:bg-blue-100;
+}
+
+.view-icon {
+  @apply text-blue-600;
+}
+
+.delete-btn {
+  @apply p-2 rounded-lg hover:bg-red-100;
+}
+
+.delete-icon {
+  @apply text-red-600;
+}
+
+/* Empty / loading state */
+
+.no-data {
+  @apply text-center py-12 text-gray-500 rounded-2xl border border-dashed border-gray-300 bg-white;
+}
+
+.loading-text {
+  @apply text-sm text-gray-400;
+}
+
+/* Modal (upload form / video player) */
+
+.modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4;
+}
+
+.modal-card {
+  @apply w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl;
+}
+
+.modal-card-wide {
+  @apply w-full max-w-3xl rounded-2xl bg-white p-4 shadow-xl;
+}
+
+.modal-header {
+  @apply mb-4 flex items-center justify-between;
+}
+
+.modal-title {
+  @apply text-lg font-bold text-gray-900;
+}
+
+.form-field {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply mb-1 block text-xs font-medium text-gray-600;
+}
+
+.form-input {
+  @apply w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500;
+}
+
+.form-error {
+  @apply mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .recordings-page {
+    @apply p-4;
+  }
+
+  .recordings-header {
+    @apply flex-col items-start gap-4;
+  }
+
+  .header-buttons {
+    @apply w-full flex-col;
+  }
+
+  .export-btn {
+    @apply justify-center w-full;
+  }
+
+  .stats-grid {
+    @apply grid-cols-1;
+  }
+}

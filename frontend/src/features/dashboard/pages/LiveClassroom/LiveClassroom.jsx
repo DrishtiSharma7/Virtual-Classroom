@@ -27,7 +27,6 @@ import {
   Video,
   VideoOff,
   Users,
-  ClipboardList,
   Edit3,
   MessageCircle,
   FileText,
@@ -60,12 +59,14 @@ import {
   BadgeQuestionMark,
   Hand,
   Turtle,
+  CalendarCheck,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
 import { getChatHistory } from "../../../classroom/api/chat.api";
 import TeacherQuizPanel from "../../../classroom/components/QuizPanel/TeacherQuizPanel";
 import StudentQuizPanel from "../../../classroom/components/QuizPanel/StudentQuizPanel";
+import LiveAttendancePanel from "../../../classroom/components/AttendancePanel/LiveAttendancePanel";
 import { getWhiteboard } from "../../../classroom/api/whiteboard.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 
@@ -192,9 +193,11 @@ const REACTIONS = [
 
 /* ---------------- Reusable Pieces ---------------- */
 
-const SidebarIcon = ({ Icon, active, onClick }) => (
+const SidebarIcon = ({ Icon, active, onClick, label }) => (
   <button
     onClick={onClick}
+    aria-label={label}
+    aria-pressed={active}
     className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
       active
         ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/30"
@@ -408,6 +411,7 @@ export default function LiveClassroom() {
 
   const [rightTab, setRightTab] = useState("participants");
   const [showQuizPanel, setShowQuizPanel] = useState(false);
+  const [showAttendancePanel, setShowAttendancePanel] = useState(false);
 
   const localVideoRef = useRef(null);
   const socketRef = useRef(null);
@@ -584,6 +588,19 @@ export default function LiveClassroom() {
     (session.createdBy?._id === currentUser.id ||
       session.createdBy === currentUser.id);
 
+  // Mirrors `isHost` for createPeerConnection to read without depending on
+  // it directly (see that callback's own comment) — session loads
+  // asynchronously, so isHost flips false -> true shortly after mount for
+  // the host specifically; closing over it directly would change
+  // createPeerConnection's identity at that moment, which — since the main
+  // socket effect depends on createPeerConnection — tore down and
+  // recreated the entire socket connection right as the host's session
+  // became ready, exactly when students might be joining.
+  const isHostRef = useRef(false);
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
+
   // Single source of truth for "can this participant currently draw":
   // the host always can; a student can only while the teacher has turned
   // on student annotation. The backend enforces the exact same rule
@@ -708,6 +725,12 @@ export default function LiveClassroom() {
   /* ---- Peer connection factory, keyed by the remote socket id ---- */
   const createPeerConnection = useCallback(
     (targetId) => {
+      // Defensive: a reconnect (Socket.IO's automatic reconnection, or any
+      // other path that re-runs "existing-participants") would otherwise
+      // silently overwrite this entry with a fresh RTCPeerConnection while
+      // the old one — never closed — leaks.
+      peerConnections.current[targetId]?.close();
+
       const pc = new RTCPeerConnection(rtcConfig);
       peerConnections.current[targetId] = pc;
 
@@ -733,7 +756,7 @@ export default function LiveClassroom() {
         );
       }
 
-      if (isHost) {
+      if (isHostRef.current) {
         const scrTrack = screenStream.current?.getVideoTracks()[0];
         if (scrTrack) {
           screenSenders.current[targetId] = pc.addTrack(
@@ -810,7 +833,7 @@ export default function LiveClassroom() {
 
       return pc;
     },
-    [sessionId, isHost]
+    [sessionId]
   );
 
   const flushQueuedCandidates = async (peerId, pc) => {
@@ -2294,22 +2317,23 @@ export default function LiveClassroom() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left icon rail */}
         <nav className="flex w-[72px] flex-col items-center gap-4 bg-slate-900 py-5">
-          <SidebarIcon Icon={Edit3} active />
-          <SidebarIcon Icon={Video} />
+          <SidebarIcon Icon={Edit3} active label="Whiteboard" />
+          <SidebarIcon Icon={Video} label="Video" />
           <SidebarIcon
             Icon={Users}
             onClick={() => setRightTab("participants")}
+            label="Participants"
           />
-          <SidebarIcon Icon={ClipboardList} />
-          <SidebarIcon Icon={FileText} />
+          <SidebarIcon Icon={FileText} label="Files" />
           <SidebarIcon
             Icon={MessageCircle}
             onClick={() => setRightTab("chat")}
+            label="Chat"
           />
-          <SidebarIcon Icon={FileText} />
-          <SidebarIcon Icon={BarChart3} />
+          <SidebarIcon Icon={FileText} label="Recordings" />
+          <SidebarIcon Icon={BarChart3} label="Analytics" />
           <div className="mt-auto">
-            <SidebarIcon Icon={Settings} />
+            <SidebarIcon Icon={Settings} label="Settings" />
           </div>
         </nav>
 
@@ -2723,6 +2747,15 @@ export default function LiveClassroom() {
                   </div>
                 )}
 
+                {isHost && showAttendancePanel && (
+                  <div className="absolute left-[68%] top-[8%]">
+                    <LiveAttendancePanel
+                      sessionId={sessionId}
+                      onClose={() => setShowAttendancePanel(false)}
+                    />
+                  </div>
+                )}
+
                 {/* Student side: no manual toggle — this mounts
                     unconditionally and stays invisible (StudentQuizPanel
                     itself renders null) until the teacher actually
@@ -2870,6 +2903,17 @@ export default function LiveClassroom() {
                   onClick={() => setShowQuizPanel((v) => !v)}
                 />
               )}
+              {/* Read-only, best-effort snapshot for the teacher during the
+                  live session — the actual attendance record is computed
+                  and saved automatically when the session ends. */}
+              {isHost && (
+                <BottomControl
+                  Icon={CalendarCheck}
+                  label="Attendance"
+                  active={showAttendancePanel}
+                  onClick={() => setShowAttendancePanel((v) => !v)}
+                />
+              )}
               <BottomControl Icon={DoorOpen} label="Breakout" />
               {/* Feedback is a student-facing action (rating/reacting to
                   the class) — doesn't make sense on the host's own
@@ -2998,14 +3042,34 @@ export default function LiveClassroom() {
                           </span>
                         )}
                         {micEnabled ? (
-                          <Mic size={16} className="text-slate-400" />
+                          <Mic
+                            size={16}
+                            className="text-slate-400"
+                            role="img"
+                            aria-label="Microphone on"
+                          />
                         ) : (
-                          <MicOff size={16} className="text-red-400" />
+                          <MicOff
+                            size={16}
+                            className="text-red-400"
+                            role="img"
+                            aria-label="Microphone off"
+                          />
                         )}
                         {cameraEnabled ? (
-                          <Video size={16} className="text-slate-400" />
+                          <Video
+                            size={16}
+                            className="text-slate-400"
+                            role="img"
+                            aria-label="Camera on"
+                          />
                         ) : (
-                          <VideoOff size={16} className="text-red-400" />
+                          <VideoOff
+                            size={16}
+                            className="text-red-400"
+                            role="img"
+                            aria-label="Camera off"
+                          />
                         )}
                       </div>
                     </div>
@@ -3096,14 +3160,34 @@ export default function LiveClassroom() {
                               </>
                             )}
                             {mutedParticipants.has(p.socketId) ? (
-                              <MicOff size={16} className="text-red-400" />
+                              <MicOff
+                                size={16}
+                                className="text-red-400"
+                                role="img"
+                                aria-label="Microphone off"
+                              />
                             ) : (
-                              <Mic size={16} className="text-slate-400" />
+                              <Mic
+                                size={16}
+                                className="text-slate-400"
+                                role="img"
+                                aria-label="Microphone on"
+                              />
                             )}
                             {p.cameraEnabled ? (
-                              <Video size={16} className="text-slate-400" />
+                              <Video
+                                size={16}
+                                className="text-slate-400"
+                                role="img"
+                                aria-label="Camera on"
+                              />
                             ) : (
-                              <VideoOff size={16} className="text-red-400" />
+                              <VideoOff
+                                size={16}
+                                className="text-red-400"
+                                role="img"
+                                aria-label="Camera off"
+                              />
                             )}
                           </div>
                         </div>
@@ -3158,7 +3242,11 @@ export default function LiveClassroom() {
                   </div>
                   <div className="flex items-center gap-2 border-t border-slate-100 p-3">
                     <Smile size={18} className="text-slate-400" />
+                    <label htmlFor="live-chat-input" className="sr-only">
+                      Chat message
+                    </label>
                     <input
+                      id="live-chat-input"
                       type="text"
                       value={message}
                       onChange={handleMessageChange}
@@ -3171,6 +3259,7 @@ export default function LiveClassroom() {
                     <Paperclip size={18} className="text-slate-400" />
                     <button
                       onClick={handleSendMessage}
+                      aria-label="Send message"
                       className="rounded-lg bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700"
                     >
                       <Send size={16} />

@@ -3,7 +3,6 @@ import { getDashboard } from "../../api/dashboard.api";
 import WelcomeBanner from "../../components/WelcomeBanner/WelcomeBanner";
 import StatCard from "../../components/StatCard/StatCard";
 import RecentClasses from "../../components/RecentClasses/RecentClasses";
-import RecentActivity from "../../components/RecentActivity/RecentActivity";
 import QuickActions from "../../components/QuickActions/QuickActions";
 import { useNavigate } from "react-router-dom";
 import { createSession, startSession } from "../../../auth/api/session.api";
@@ -23,13 +22,9 @@ const TeacherDashboard = () => {
   const loadDashboard = async () => {
     try {
       const response = await getDashboard();
-
-      console.log("API Response:", response);
-
-      // YEH LINE IMPORTANT HAI
       setDashboard(response.data);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -43,9 +38,6 @@ const TeacherDashboard = () => {
     try {
       const classroom = dashboard?.recentClasses?.[0];
 
-      console.log("Dashboard:", dashboard);
-      console.log("Classroom:", classroom);
-
       const createResponse = await createSession({
         classroom: classroom._id,
         title: `${classroom.name} Live Session`,
@@ -53,28 +45,20 @@ const TeacherDashboard = () => {
         startTime: new Date(),
       });
 
-      console.log("Create Response:", createResponse.data);
-
       const sessionId = createResponse.data.session._id;
 
-      const startResponse = await startSession(sessionId);
-
-      console.log("Start Response:", startResponse.data);
+      await startSession(sessionId);
 
       navigate(`/live/${sessionId}`);
     } catch (err) {
-      console.log("========== ERROR ==========");
-      console.log(err);
-      console.log("Status:", err.response?.status);
-      console.log("Data:", err.response?.data);
-      console.log("===========================");
-
+      console.error(err);
       alert(err.response?.data?.message || err.message);
     }
   };
 
   return (
     <div className="dashboard-viewport">
+      <h1 className="sr-only">Teacher Dashboard</h1>
       <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
       {/* Stats Grid */}

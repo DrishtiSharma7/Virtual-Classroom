@@ -8,6 +8,7 @@ import {
   Plus,
   Trash2,
   Users,
+  CalendarDays,
   FileQuestion,
   Eye,
   X,
@@ -16,6 +17,7 @@ import {
   RadioTower,
 } from "lucide-react";
 
+import "./QuizHome.css";
 import { getMyClassrooms } from "../../api/classroom.api";
 import { getSessionsByClassroom } from "../../../auth/api/session.api";
 import {
@@ -282,215 +284,225 @@ export default function TeacherQuizHome() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl py-4 sm:px-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-            <ClipboardList className="text-[#4f46e5]" size={26} />
-            Quizzes
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Build quizzes with Excel import, launch them live, and export
-            results.
-          </p>
-        </div>
+    <div className="quiz-page">
+      <div className="quiz-container">
+        <div className="quiz-header">
+          <div>
+            <h1 className="quiz-title">
+              <ClipboardList className="text-indigo-600" size={26} />
+              Quizzes
+            </h1>
+            <p className="quiz-subtitle">
+              Build quizzes with Excel import, launch them live, and export
+              results.
+            </p>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={downloadQuizTemplate}
-            title="Download the Excel template"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-slate-50"
-          >
-            <Download size={16} /> Download Template
-          </button>
-          <button
-            onClick={handleQuickImportClick}
-            disabled={loadingClassrooms || classrooms.length === 0}
-            title="Import questions from an Excel file"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Upload size={16} /> Import Excel
-          </button>
-          <button
-            onClick={openBuilder}
-            disabled={loadingClassrooms || classrooms.length === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Plus size={16} /> New Quiz
-          </button>
-        </div>
-      </div>
-
-      {/* Hidden file input shared by the top-level Import Excel button and
-          the one inside the builder modal — always mounted so it works
-          whether or not the modal is open. */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".xlsx,.xls"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-
-      {/* Classroom picker */}
-      {loadingClassrooms ? (
-        <p className="text-sm text-gray-400">Loading classrooms...</p>
-      ) : classrooms.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-          You don't have any classrooms yet. Create one to start adding quizzes.
-        </div>
-      ) : (
-        <>
-          <div className="mb-5 flex flex-wrap items-center gap-3">
-            <label className="text-sm font-medium text-gray-600">
-              Classroom
-            </label>
-            <select
-              value={classroomId}
-              onChange={(e) => setClassroomId(e.target.value)}
-              className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#4f46e5]"
+          <div className="header-buttons">
+            <button
+              onClick={downloadQuizTemplate}
+              title="Download the Excel template"
+              className="secondary-btn"
             >
-              {classrooms.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name} — {c.subject}
-                </option>
-              ))}
-            </select>
+              <Download size={18} /> Download Template
+            </button>
+            <button
+              onClick={handleQuickImportClick}
+              disabled={loadingClassrooms || classrooms.length === 0}
+              title="Import questions from an Excel file"
+              className="secondary-btn"
+            >
+              <Upload size={18} /> Import Excel
+            </button>
+            <button
+              onClick={openBuilder}
+              disabled={loadingClassrooms || classrooms.length === 0}
+              className="export-btn"
+            >
+              <Plus size={18} /> New Quiz
+            </button>
           </div>
+        </div>
 
-          {/* Stats */}
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <p className="text-xs font-medium text-gray-400">Total Quizzes</p>
-              <p className="mt-1 text-xl font-bold text-gray-900">
-                {quizzes.length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <p className="text-xs font-medium text-gray-400">
-                Total Submissions
-              </p>
-              <p className="mt-1 text-xl font-bold text-gray-900">
-                {totalResponses}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <p className="text-xs font-medium text-gray-400">
-                Class Sessions
-              </p>
-              <p className="mt-1 text-xl font-bold text-gray-900">
-                {sessions.length}
-              </p>
-            </div>
+        {/* Hidden file input shared by the top-level Import Excel button and
+            the one inside the builder modal — always mounted so it works
+            whether or not the modal is open. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        {/* Classroom picker */}
+        {loadingClassrooms ? (
+          <p className="loading-text">Loading classrooms...</p>
+        ) : classrooms.length === 0 ? (
+          <div className="no-data">
+            You don't have any classrooms yet. Create one to start adding
+            quizzes.
           </div>
-
-          {/* Quiz list */}
-          {loadingQuizzes ? (
-            <p className="text-sm text-gray-400">Loading quizzes...</p>
-          ) : quizzes.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-              No quizzes created for this classroom yet.
+        ) : (
+          <>
+            <div className="filter-card">
+              <label className="filter-label">Classroom</label>
+              <select
+                value={classroomId}
+                onChange={(e) => setClassroomId(e.target.value)}
+                className="classroom-select"
+              >
+                {classrooms.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name} — {c.subject}
+                  </option>
+                ))}
+              </select>
             </div>
-          ) : (
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  <tr>
-                    <th className="px-4 py-3">Quiz</th>
-                    <th className="px-4 py-3">Session</th>
-                    <th className="px-4 py-3">Questions</th>
-                    <th className="px-4 py-3">Submissions</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {quizzes.map((q) => (
-                    <tr key={q._id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium text-gray-800">
-                        {q.title}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {q.session?.title || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        <span className="inline-flex items-center gap-1">
-                          <FileQuestion size={14} /> {q.questionCount}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        <span className="inline-flex items-center gap-1">
-                          <Users size={14} /> {q.responseCount}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {q.openForRetake ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                            <RadioTower size={12} /> Open for retake
-                          </span>
-                        ) : q.launched ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
-                            Launched
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                            Not launched yet
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleToggleRetake(q)}
-                            title={
-                              q.openForRetake
-                                ? "Close retake"
-                                : "Open for students to self-attempt"
-                            }
-                            className={`rounded-lg border p-1.5 hover:bg-slate-50 ${
-                              q.openForRetake
-                                ? "border-emerald-300 text-emerald-600"
-                                : "border-gray-200 text-gray-500"
-                            }`}
-                          >
-                            <Radio size={15} />
-                          </button>
-                          <button
-                            onClick={() => navigate(`/quizzes/${q._id}`)}
-                            title="View quiz"
-                            className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-slate-50"
-                          >
-                            <Eye size={15} />
-                          </button>
-                          <button
-                            onClick={() => handleExport(q)}
-                            disabled={exportingId === q._id}
-                            title="Export results to Excel"
-                            className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-slate-50 disabled:opacity-50"
-                          >
-                            {exportingId === q._id ? (
-                              <Loader2 size={15} className="animate-spin" />
-                            ) : (
-                              <Download size={15} />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(q._id)}
-                            title="Delete quiz"
-                            className="rounded-lg border border-red-200 p-1.5 text-red-500 hover:bg-red-50"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
+
+            {/* Stats */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-header">
+                  <ClipboardList className="stat-icon-indigo" size={24} />
+                  <p className="stat-label">Total Quizzes</p>
+                </div>
+                <h2 className="stat-value">{quizzes.length}</h2>
+              </div>
+              <div className="stat-card">
+                <div className="stat-header">
+                  <Users className="stat-icon-green" size={24} />
+                  <p className="stat-label">Total Submissions</p>
+                </div>
+                <h2 className="stat-value">{totalResponses}</h2>
+              </div>
+              <div className="stat-card">
+                <div className="stat-header">
+                  <CalendarDays className="stat-icon-blue" size={24} />
+                  <p className="stat-label">Class Sessions</p>
+                </div>
+                <h2 className="stat-value">{sessions.length}</h2>
+              </div>
+            </div>
+
+            {/* Quiz list */}
+            {loadingQuizzes ? (
+              <p className="loading-text">Loading quizzes...</p>
+            ) : quizzes.length === 0 ? (
+              <div className="no-data">
+                No quizzes created for this classroom yet.
+              </div>
+            ) : (
+              <div className="table-wrapper">
+                <table className="quiz-table">
+                  <thead className="table-head">
+                    <tr>
+                      <th className="table-heading">Quiz</th>
+                      <th className="table-heading">Session</th>
+                      <th className="table-heading">Questions</th>
+                      <th className="table-heading">Submissions</th>
+                      <th className="table-heading">Status</th>
+                      <th className="table-heading text-center">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
+                  </thead>
+                  <tbody>
+                    {quizzes.map((q) => (
+                      <tr key={q._id} className="table-row">
+                        <td className="table-cell">
+                          <p className="entity-name">{q.title}</p>
+                        </td>
+                        <td className="table-cell">
+                          {q.session?.title || "—"}
+                        </td>
+                        <td className="table-cell">
+                          <span className="inline-flex items-center gap-1">
+                            <FileQuestion size={14} /> {q.questionCount}
+                          </span>
+                        </td>
+                        <td className="table-cell">
+                          <span className="inline-flex items-center gap-1">
+                            <Users size={14} /> {q.responseCount}
+                          </span>
+                        </td>
+                        <td className="table-cell">
+                          {q.openForRetake ? (
+                            <span className="status-live">
+                              <RadioTower
+                                size={12}
+                                className="mr-1 inline-block"
+                              />
+                              Open for retake
+                            </span>
+                          ) : q.launched ? (
+                            <span className="status-neutral">Launched</span>
+                          ) : (
+                            <span className="status-absent">
+                              Not launched yet
+                            </span>
+                          )}
+                        </td>
+                        <td className="table-cell">
+                          <div className="action-buttons">
+                            <button
+                              onClick={() => handleToggleRetake(q)}
+                              title={
+                                q.openForRetake
+                                  ? "Close retake"
+                                  : "Open for students to self-attempt"
+                              }
+                              className="toggle-btn"
+                            >
+                              <Radio
+                                size={18}
+                                className={
+                                  q.openForRetake
+                                    ? "text-emerald-600"
+                                    : "text-gray-500"
+                                }
+                              />
+                            </button>
+                            <button
+                              onClick={() => navigate(`/quizzes/${q._id}`)}
+                              title="View quiz"
+                              className="view-btn"
+                            >
+                              <Eye size={18} className="view-icon" />
+                            </button>
+                            <button
+                              onClick={() => handleExport(q)}
+                              disabled={exportingId === q._id}
+                              title="Export results to Excel"
+                              className="download-btn"
+                            >
+                              {exportingId === q._id ? (
+                                <Loader2
+                                  size={18}
+                                  className="animate-spin text-gray-500"
+                                />
+                              ) : (
+                                <Download
+                                  size={18}
+                                  className="text-gray-500"
+                                />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(q._id)}
+                              title="Delete quiz"
+                              className="delete-btn"
+                            >
+                              <Trash2 size={18} className="delete-icon" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
 
       {/* Builder modal */}
       {showBuilder && (
@@ -657,7 +669,7 @@ export default function TeacherQuizHome() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] py-2.5 text-sm font-semibold text-white shadow-md disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:opacity-60"
               >
                 {saving ? (
                   <>
@@ -671,6 +683,7 @@ export default function TeacherQuizHome() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

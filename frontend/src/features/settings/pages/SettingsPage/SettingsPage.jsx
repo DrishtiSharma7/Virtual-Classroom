@@ -167,22 +167,31 @@ const SettingsPage = () => {
       >
         <form onSubmit={handleProfileSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="settings-profile-name"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Full name
             </label>
             <input
+              id="settings-profile-name"
               type="text"
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+              autoComplete="name"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="settings-profile-email"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Email
             </label>
             <input
+              id="settings-profile-email"
               type="email"
               value={profile.email}
               disabled
@@ -190,10 +199,14 @@ const SettingsPage = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="settings-profile-role"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Role
             </label>
             <input
+              id="settings-profile-role"
               type="text"
               value={profile.role === "teacher" ? "Teacher" : "Student"}
               disabled
@@ -222,46 +235,61 @@ const SettingsPage = () => {
       >
         <form onSubmit={handlePasswordSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label
+              htmlFor="settings-current-password"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
               Current password
             </label>
             <input
+              id="settings-current-password"
               type="password"
               value={passwordForm.currentPassword}
               onChange={(e) =>
                 setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
               }
+              autoComplete="current-password"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label
+                htmlFor="settings-new-password"
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
                 New password
               </label>
               <input
+                id="settings-new-password"
                 type="password"
                 value={passwordForm.newPassword}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                 }
                 minLength={6}
+                autoComplete="new-password"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label
+                htmlFor="settings-confirm-password"
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
                 Confirm new password
               </label>
               <input
+                id="settings-confirm-password"
                 type="password"
                 value={passwordForm.confirmPassword}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                 }
                 minLength={6}
+                autoComplete="new-password"
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />

@@ -153,6 +153,7 @@ function ClassroomHome() {
                     onClick={() => handleDelete(room._id)}
                     className="delete-btn"
                     title="Delete Classroom"
+                    aria-label={`Delete ${room.name}`}
                   >
                     <Trash size={24} className="delete-icon" />
                   </button>

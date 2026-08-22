@@ -1,5 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   GraduationCap,
   Video,
@@ -28,7 +27,7 @@ const FEATURES = [
   },
   {
     Icon: ClipboardList,
-    title: "Quizzes & assignments",
+    title: "Live quizzes",
     description:
       "Launch quizzes mid-class, collect submissions, and track results — all without leaving the session.",
   },
@@ -41,18 +40,10 @@ const FEATURES = [
 ];
 
 function LandingPage() {
-  const token = useSelector((state) => state.auth.token);
-
   usePageMeta(
     "Live Online Classes, Whiteboard & Quizzes",
-    "Virtual Classroom is a live online teaching platform — video classes, a real-time collaborative whiteboard, quizzes, attendance, and assignments in one place for teachers and students."
+    "Virtual Classroom is a live online teaching platform — video classes, a real-time collaborative whiteboard, quizzes, and attendance in one place for teachers and students."
   );
-
-  // Already signed in — the marketing page isn't for them, send them
-  // straight to what they actually came back for.
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f8faff]">

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { registerUser } from "../../api/auth.api";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RegisterIllustration from "../../../../assets/Register.png";
+import RegisterIllustrationWebp from "../../../../assets/Register.webp";
 import { GraduationCap, User, Eye, EyeOff } from "lucide-react";
 import "./RegisterForm.css";
 
@@ -99,16 +100,23 @@ function RegisterForm() {
               </h1>
               <p className="hidden max-w-[420px] text-sm leading-[1.6] text-[#404244] md:block lg:text-base lg:leading-[1.7]">
                 Create your account to join virtual classrooms, attend live
-                sessions, complete assignments, and collaborate with teachers
+                sessions, take quizzes, and collaborate with teachers
                 and classmates.
               </p>
             </div>
 
-            <img
-              src={RegisterIllustration}
-              alt="Virtual Classroom Illustration"
-              className="w-2/5 max-w-[170px] flex-shrink-0 md:order-1 md:w-3/5 md:max-w-full md:pb-8 lg:w-full"
-            />
+            <picture>
+              <source srcSet={RegisterIllustrationWebp} type="image/webp" />
+              <img
+                src={RegisterIllustration}
+                alt="Virtual Classroom Illustration"
+                width={620}
+                height={403}
+                decoding="async"
+                fetchPriority="high"
+                className="w-2/5 max-w-[170px] flex-shrink-0 md:order-1 md:w-3/5 md:max-w-full md:pb-8 lg:w-full"
+              />
+            </picture>
           </div>
 
           {/* -------- Right panel -------- */}
@@ -289,12 +297,12 @@ function RegisterForm() {
 
             <p className="mt-[18px] text-center text-sm text-[#444]">
               Already have an account?{" "}
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="font-semibold text-[#4f46e5] no-underline hover:underline"
               >
                 Login
-              </a>
+              </Link>
             </p>
           </div>
         </div>

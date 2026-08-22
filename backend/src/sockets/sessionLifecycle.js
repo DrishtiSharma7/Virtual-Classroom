@@ -3,7 +3,7 @@ const Chat = require("../features/chat/chat.model");
 const attendanceService = require("../features/attendance/attendance.service");
 
 const TEACHER_INACTIVITY_TIMEOUT_MS =
-  Number(process.env.TEACHER_INACTIVITY_TIMEOUT_MS) || 5 * 60 * 1000;
+  Number(process.env.TEACHER_INACTIVITY_TIMEOUT_MS) || 20 * 60 * 1000;
 
 // roomId -> pending setTimeout handle. If the host's last socket in a room
 // disconnects (tab closed, crash, lost internet) without ever calling the

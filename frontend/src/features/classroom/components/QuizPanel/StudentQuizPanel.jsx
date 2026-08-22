@@ -209,7 +209,6 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
               return (
                 <label
                   key={oi}
-                  onClick={() => handleSelect(oi)}
                   className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
                     isCorrect
                       ? "border-emerald-300 bg-emerald-50 text-emerald-700"
@@ -220,6 +219,14 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
                           : "border-slate-200 text-slate-600"
                   } ${locked ? "cursor-not-allowed opacity-90" : ""}`}
                 >
+                  <input
+                    type="radio"
+                    name={`quiz-question-${questionIndex}`}
+                    className="sr-only"
+                    checked={selected === oi}
+                    disabled={locked}
+                    onChange={() => handleSelect(oi)}
+                  />
                   <span
                     className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                       selected === oi

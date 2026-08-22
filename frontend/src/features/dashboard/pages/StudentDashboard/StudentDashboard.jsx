@@ -6,7 +6,7 @@ import StatCard from "../../components/StatCard/StatCard";
 import RecentClasses from "../../components/RecentClasses/RecentClasses";
 import QuickActions from "../../components/QuickActions/QuickActions";
 
-import { Layers, FilePenLine, Goal, CheckSquare } from "lucide-react";
+import { Layers, Goal, CheckSquare } from "lucide-react";
 
 import "./StudentDashboard.css";
 
@@ -35,6 +35,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="dashboard-viewport">
+      <h1 className="sr-only">Student Dashboard</h1>
       <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
       {/* Stats Grid */}
@@ -44,13 +45,6 @@ const StudentDashboard = () => {
           label="Enrolled Classes"
           value={dashboard?.stats?.enrolledClasses || 0}
           colorClass="bg-blue-soft"
-        />
-
-        <StatCard
-          icon={<FilePenLine />}
-          label="Pending Assignments"
-          value={0}
-          colorClass="bg-orange-soft"
         />
 
         <StatCard
@@ -71,7 +65,7 @@ const StudentDashboard = () => {
       <QuickActions />
 
       <div className="dashboard-split-section">
-        <RecentClasses />
+        <RecentClasses classes={dashboard?.myClasses || []} />
 
         <div className="activity-card">
           <h3 className="section-title">Recent Activity</h3>

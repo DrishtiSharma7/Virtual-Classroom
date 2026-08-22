@@ -4,7 +4,6 @@ import {
   GraduationCap,
   LayoutDashboard,
   CalendarCheck,
-  FileText,
   ClipboardCheck,
   Users,
   Video,
@@ -41,11 +40,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: <CalendarCheck />,
       label: "Attendance",
       path: "/attendance",
-    },
-    {
-      icon: <FileText />,
-      label: "Assignments",
-      path: "/assignments",
     },
     {
       icon: <ClipboardCheck />,

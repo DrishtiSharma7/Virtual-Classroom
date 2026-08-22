@@ -4,21 +4,9 @@ const auth = require("../../middleware/auth.middleware");
 const roleMiddleware = require("../../middleware/role.middleware");
 const attendanceController = require("./attendance.controller");
 
-// Student joins live session
-router.post(
-  "/join",
-  auth,
-  roleMiddleware("student"),
-  attendanceController.joinSession,
-);
-
-// Student leaves live session
-router.post(
-  "/leave",
-  auth,
-  roleMiddleware("student"),
-  attendanceController.leaveSession,
-);
+// Attendance join/leave are recorded automatically from the socket
+// "join-room"/"leave-room"/"disconnect" events (see sockets/socket.js) —
+// there is deliberately no client-callable join/leave endpoint here.
 
 // Teacher ends session
 router.put(
@@ -42,6 +30,30 @@ router.get(
   auth,
   roleMiddleware("student"),
   attendanceController.getMyAttendance,
+);
+
+// Teacher views attendance dashboard across all their classrooms
+router.get(
+  "/dashboard",
+  auth,
+  roleMiddleware("teacher"),
+  attendanceController.getAttendanceDashboard,
+);
+
+// Teacher views attendance dashboard for one classroom
+router.get(
+  "/classroom/:classroomId",
+  auth,
+  roleMiddleware("teacher"),
+  attendanceController.getClassroomAttendance,
+);
+
+// Teacher views live (in-progress) attendance for a session
+router.get(
+  "/session/:sessionId/live",
+  auth,
+  roleMiddleware("teacher"),
+  attendanceController.getLiveSessionAttendance,
 );
 
 module.exports = router;

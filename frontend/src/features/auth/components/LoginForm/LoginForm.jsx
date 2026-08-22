@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap, Eye, EyeOff, User } from "lucide-react";
 import LoginIllustration from "../../../../assets/Login.png";
+import LoginIllustrationWebp from "../../../../assets/Login.webp";
 import "./LoginForm.css";
 
 import { loginUser } from "../../api/auth.api";
@@ -63,24 +64,31 @@ function LoginForm() {
       {/* Main container */}
       <main className="relative z-10 flex min-h-[calc(100vh-100px)] items-center justify-center px-4 py-6 sm:px-5">
         <div className="animate-card-fade-in flex w-full max-w-[1050px] flex-col overflow-hidden rounded-[18px] bg-[#e5e9f9] shadow-[0_20px_50px_rgba(0,0,0,0.08)] sm:rounded-3xl md:min-h-[560px] md:flex-row">
-          {/* LEFT PANEL */}
-          <section className="flex flex-1 flex-row items-center justify-between gap-3 bg-[#e5e9f9] px-5 py-5 text-left sm:flex-col sm:items-center sm:justify-center sm:gap-0 sm:px-8 sm:py-9 sm:text-center md:px-5 md:py-12">
+          {/* LEFT PANEL — hidden on mobile/tablet, shown from desktop (lg) up */}
+          <section className="hidden flex-1 flex-row items-center justify-between gap-3 bg-[#e5e9f9] px-5 py-5 text-left sm:flex-col sm:items-center sm:justify-center sm:gap-0 sm:px-8 sm:py-9 sm:text-center md:px-5 md:py-12 lg:flex">
             <div className="flex flex-col sm:order-2 sm:items-center">
               <h2 className="mb-1.5 text-lg font-bold leading-tight text-gray-900 sm:mb-3.5 sm:text-2xl md:text-[28px]">
                 Learn, Teach and Collaborate
               </h2>
 
               <p className="hidden max-w-[420px] text-base leading-[1.7] text-[#404244] sm:block">
-                Manage your virtual classrooms, attend live sessions, submit
-                assignments, and stay connected from anywhere.
+                Manage your virtual classrooms, attend live sessions, take
+                quizzes, and stay connected from anywhere.
               </p>
             </div>
 
-            <img
-              src={LoginIllustration}
-              alt="Virtual Classroom Illustration"
-              className="w-2/5 max-w-[170px] flex-shrink-0 sm:order-1 sm:w-3/5 sm:max-w-full sm:pb-8 md:w-full"
-            />
+            <picture>
+              <source srcSet={LoginIllustrationWebp} type="image/webp" />
+              <img
+                src={LoginIllustration}
+                alt="Virtual Classroom Illustration"
+                width={620}
+                height={403}
+                decoding="async"
+                fetchPriority="high"
+                className="w-2/5 max-w-[170px] flex-shrink-0 sm:order-1 sm:w-3/5 sm:max-w-full sm:pb-8 md:w-full"
+              />
+            </picture>
           </section>
 
           {/* RIGHT PANEL */}

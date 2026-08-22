@@ -1,50 +1,67 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Search,
   Download,
-  Upload,
   Users,
   UserCheck,
   UserX,
   CalendarDays,
+  CalendarCheck,
   Trash2,
-  Eye,
-  Pencil,
 } from "lucide-react";
 import "./AttendanceHome.css";
-import { getClassroomAttendance } from "../../api/attendance.api";
+import {
+  getClassroomAttendance,
+  getAttendanceDashboard,
+  getMyAttendance,
+} from "../../api/attendance.api";
+import { getClassroomById } from "../../api/classroom.api";
+import {
+  exportTeacherAttendanceToExcel,
+  exportMyAttendanceToExcel,
+} from "../../utils/attendanceExcel";
 import usePageMeta from "../../../../hooks/usePageMeta";
+
+function formatDuration(seconds) {
+  if (!seconds || seconds <= 0) return "0m";
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+}
 
 function AttendanceHome() {
   usePageMeta("Attendance");
+  const { role, user } = useSelector((state) => state.auth);
+  const isStudent = role === "student";
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { classroomId } = useParams();
+  const [classroomLabel, setClassroomLabel] = useState("");
+  const { id: classroomId } = useParams();
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [dateFilter, setDateFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const rowsPerPage = 5;
 
   const filteredData = useMemo(() => {
-    return attendance.filter((student) => {
-      const matchesSearch =
-        student.name.toLowerCase().includes(search.toLowerCase()) ||
-        student.rollNo.toLowerCase().includes(search.toLowerCase()) ||
-        student.email.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
 
-      const matchesStatus =
-        statusFilter === "All" || student.status === statusFilter;
+    return attendance.filter((row) => {
+      if (isStudent) {
+        return (
+          row.classroomName.toLowerCase().includes(q) ||
+          row.sessionTitle.toLowerCase().includes(q)
+        );
+      }
 
-      const matchesDate = !dateFilter || student.date === dateFilter;
-
-      return matchesSearch && matchesStatus && matchesDate;
+      return (
+        row.name.toLowerCase().includes(q) || row.email.toLowerCase().includes(q)
+      );
     });
-  }, [attendance, search, statusFilter, dateFilter]);
+  }, [attendance, search, isStudent]);
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
@@ -55,47 +72,284 @@ function AttendanceHome() {
 
   const totalStudents = attendance.length;
 
-  const presentStudents = attendance.filter(
-    (s) => s.status === "Present"
-  ).length;
+  const presentSessions = attendance.reduce(
+    (sum, s) => sum + (s.presentSessions || 0),
+    0
+  );
 
-  const absentStudents = attendance.filter((s) => s.status === "Absent").length;
+  const absentSessions = attendance.reduce(
+    (sum, s) => sum + (s.absentSessions || 0),
+    0
+  );
 
-  const attendancePercentage = (
-    (presentStudents / totalStudents) *
-    100
-  ).toFixed(1);
+  const attendancePercentage =
+    totalStudents === 0
+      ? "0.0"
+      : (
+          attendance.reduce((sum, s) => sum + (s.attendancePercentage || 0), 0) /
+          totalStudents
+        ).toFixed(1);
 
-  const handleDelete = (id) => {
+  const handleDelete = (key) => {
     if (!window.confirm("Delete attendance record?")) return;
 
-    setAttendance((prev) => prev.filter((student) => student.id !== id));
+    setAttendance((prev) => prev.filter((student) => student.key !== key));
   };
 
   const exportExcel = () => {
-    alert("Export Excel API will be called.");
-  };
+    if (filteredData.length === 0) return;
 
-  const importExcel = () => {
-    alert("Import Excel API will be called.");
+    if (isStudent) {
+      exportMyAttendanceToExcel(filteredData, user?.name);
+    } else {
+      exportTeacherAttendanceToExcel(filteredData, classroomLabel);
+    }
   };
 
   const fetchAttendance = async () => {
+    setLoading(true);
+
     try {
-      const data = await getClassroomAttendance(classroomId);
-      setAttendance(data.attendance);
+      if (isStudent) {
+        const data = await getMyAttendance();
+
+        const normalized = (data.attendance || []).map((record) => ({
+          key: record._id,
+          classroomName: record.classroom?.name || "—",
+          sessionTitle: record.session?.title || "—",
+          sessionDate: record.session?.startTime || null,
+          sessionDurationSeconds:
+            record.session?.startTime && record.session?.endTime
+              ? Math.max(
+                  0,
+                  Math.floor(
+                    (new Date(record.session.endTime) -
+                      new Date(record.session.startTime)) /
+                      1000
+                  )
+                )
+              : null,
+          timeAttendedSeconds: record.duration || 0,
+          attendancePercentage: record.attendancePercentage || 0,
+          isPresent: !!record.isPresent,
+        }));
+
+        setAttendance(normalized);
+        return;
+      }
+
+      const data = classroomId
+        ? await getClassroomAttendance(classroomId)
+        : await getAttendanceDashboard();
+
+      // getClassroomAttendance's rows don't carry a classroom name (they're
+      // already scoped to one), but the table always shows a Classroom
+      // column regardless of how this page was reached — so it never
+      // changes shape when navigating between the scoped and dashboard
+      // views. Fill it in from the classroom itself in that case.
+      const classroomName = classroomId
+        ? (await getClassroomById(classroomId)).name
+        : null;
+
+      setClassroomLabel(classroomName || "all-classrooms");
+
+      const normalized = (data.attendance || []).map((student) => ({
+        ...student,
+        classroom: student.classroom || classroomName,
+        key: student.id || student.studentId,
+      }));
+
+      setAttendance(normalized);
     } catch (err) {
-      console.log(err);
-      setError("Failed to load attendance");
+      console.error(err);
+      setError("Failed to load attendance. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    if (classroomId) {
-      fetchAttendance();
-    }
-  }, [classroomId]);
+    fetchAttendance();
+  }, [classroomId, isStudent]);
+
+  if (loading) {
+    return (
+      <div className="attendance-page">
+        <div className="attendance-container">
+          <p role="status">Loading attendance…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="attendance-page">
+        <div className="attendance-container">
+          <p role="alert" className="text-red-600">
+            {error}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isStudent) {
+    return (
+      <div className="attendance-page">
+        <div className="attendance-container">
+          <div className="attendance-header">
+            <div>
+              <h1 className="attendance-title">
+                <CalendarCheck className="text-indigo-600" size={26} />
+                My Attendance
+              </h1>
+              <p className="attendance-subtitle">
+                Your attendance record across every session.
+              </p>
+            </div>
+
+            <div className="header-buttons">
+              <button
+                onClick={exportExcel}
+                className="export-btn"
+                disabled={filteredData.length === 0}
+                title={
+                  filteredData.length === 0
+                    ? "No attendance to export yet"
+                    : "Export the attendance shown below"
+                }
+              >
+                <Download size={18} />
+                Export Excel
+              </button>
+            </div>
+          </div>
+
+          <div className="filter-card">
+            <div className="filter-grid">
+              <div className="search-wrapper">
+                <Search size={16} className="search-icon" />
+                <input
+                  className="search-input"
+                  type="text"
+                  placeholder="Search by Class or Session..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="table-wrapper">
+            <table className="attendance-table">
+              <thead className="table-head">
+                <tr>
+                  <th scope="col" className="table-heading">Class</th>
+                  <th scope="col" className="table-heading">Session Date</th>
+                  <th scope="col" className="table-heading">Session Duration</th>
+                  <th scope="col" className="table-heading">Time Attended</th>
+                  <th scope="col" className="table-heading">Attendance %</th>
+                  <th scope="col" className="table-heading">Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="no-data">
+                      No attendance found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((row) => (
+                    <tr key={row.key} className="table-row">
+                      <td className="table-cell">
+                        <p className="student-name">{row.classroomName}</p>
+                        <p>{row.sessionTitle}</p>
+                      </td>
+                      <td className="table-cell">
+                        {row.sessionDate
+                          ? new Date(row.sessionDate).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td className="table-cell">
+                        {row.sessionDurationSeconds !== null
+                          ? formatDuration(row.sessionDurationSeconds)
+                          : "—"}
+                      </td>
+                      <td className="table-cell">
+                        {formatDuration(row.timeAttendedSeconds)}
+                      </td>
+                      <td className="table-cell attendance-value">
+                        {row.attendancePercentage.toFixed(1)}%
+                      </td>
+                      <td className="table-cell">
+                        {row.isPresent ? (
+                          <span className="status-present">Present</span>
+                        ) : (
+                          <span className="status-absent">Absent</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`pagination-btn ${
+                  currentPage === 1
+                    ? "pagination-btn-disabled"
+                    : "pagination-btn-active"
+                }`}
+              >
+                Previous
+              </button>
+
+              <div className="pagination-pages">
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`page-btn ${
+                      currentPage === index + 1
+                        ? "page-btn-active"
+                        : "page-btn-inactive"
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className={`pagination-btn ${
+                  currentPage === totalPages
+                    ? "pagination-btn-disabled"
+                    : "pagination-btn-active"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="attendance-page">
@@ -104,7 +358,10 @@ function AttendanceHome() {
 
         <div className="attendance-header">
           <div>
-            <h1 className="attendance-title">Attendance Dashboard</h1>
+            <h1 className="attendance-title">
+              <CalendarCheck className="text-indigo-600" size={26} />
+              Attendance Dashboard
+            </h1>
 
             <p className="attendance-subtitle">
               Manage student attendance records.
@@ -112,12 +369,16 @@ function AttendanceHome() {
           </div>
 
           <div className="header-buttons">
-            <button onClick={importExcel} className="import-btn">
-              <Upload size={18} />
-              Import Excel
-            </button>
-
-            <button onClick={exportExcel} className="export-btn">
+            <button
+              onClick={exportExcel}
+              className="export-btn"
+              disabled={filteredData.length === 0}
+              title={
+                filteredData.length === 0
+                  ? "No attendance to export yet"
+                  : "Export the attendance shown below"
+              }
+            >
               <Download size={18} />
               Export Excel
             </button>
@@ -135,20 +396,20 @@ function AttendanceHome() {
 
           <div className="stat-card">
             <UserCheck className="stat-icon-green" />
-            <p className="stat-label">Present</p>
-            <h2 className="stat-value">{presentStudents}</h2>
+            <p className="stat-label">Present Sessions</p>
+            <h2 className="stat-value">{presentSessions}</h2>
           </div>
 
           <div className="stat-card">
             <UserX className="stat-icon-red" />
-            <p className="stat-label">Absent</p>
-            <h2 className="stat-value">{absentStudents}</h2>
+            <p className="stat-label">Absent Sessions</p>
+            <h2 className="stat-value">{absentSessions}</h2>
           </div>
 
           <div className="stat-card">
             <CalendarDays className="stat-icon-blue" />
             <p className="stat-label">Attendance</p>
-            <h2 className="stat-value">{attendancePercentage}%</h2>
+            <h3 className="stat-value">{attendancePercentage}%</h3>
           </div>
         </div>
 
@@ -162,7 +423,7 @@ function AttendanceHome() {
               <input
                 className="search-input"
                 type="text"
-                placeholder="Search by Name, Roll No or Email..."
+                placeholder="Search by Name or Email..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -170,30 +431,6 @@ function AttendanceHome() {
                 }}
               />
             </div>
-
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => {
-                setDateFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="date-input"
-            />
-
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="status-select"
-            >
-              <option>All</option>
-              <option>Present</option>
-              <option>Absent</option>
-              <option>Leave</option>
-            </select>
           </div>
         </div>
         {/* Attendance Table */}
@@ -202,13 +439,14 @@ function AttendanceHome() {
           <table className="attendance-table">
             <thead className="table-head">
               <tr>
-                <th className="table-heading">Student</th>
-                <th className="table-heading">Roll No</th>
-                <th className="table-heading">Email</th>
-                <th className="table-heading">Date</th>
-                <th className="table-heading">Status</th>
-                <th className="table-heading">Attendance %</th>
-                <th className="table-heading text-center">Actions</th>
+                <th scope="col" className="table-heading">Student</th>
+                <th scope="col" className="table-heading">Email</th>
+                <th scope="col" className="table-heading">Classroom</th>
+                <th scope="col" className="table-heading">Total Sessions</th>
+                <th scope="col" className="table-heading">Present</th>
+                <th scope="col" className="table-heading">Absent</th>
+                <th scope="col" className="table-heading">Attendance %</th>
+                <th scope="col" className="table-heading text-center">Actions</th>
               </tr>
             </thead>
 
@@ -221,46 +459,28 @@ function AttendanceHome() {
                 </tr>
               ) : (
                 paginatedData.map((student) => (
-                  <tr key={student.id} className="table-row">
+                  <tr key={student.key} className="table-row">
                     <td className="table-cell">
                       <div>
                         <p className="student-name">{student.name}</p>
                       </div>
                     </td>
-                    <td className="table-cell">{student.rollNo}</td>
                     <td className="table-cell">{student.email}</td>
-                    <td className="table-cell">{student.date}</td>
-                    <td className="table-cell">
-                      {student.status === "Present" && (
-                        <span className="status-present">Present</span>
-                      )}
-
-                      {student.status === "Absent" && (
-                        <span className="status-absent">Absent</span>
-                      )}
-
-                      {student.status === "Leave" && (
-                        <span className="status-leave">Leave</span>
-                      )}
-                    </td>
+                    <td className="table-cell">{student.classroom}</td>
+                    <td className="table-cell">{student.totalSessions}</td>
+                    <td className="table-cell">{student.presentSessions}</td>
+                    <td className="table-cell">{student.absentSessions}</td>
 
                     <td className="table-cell attendance-value">
-                      {student.percentage}%
+                      {student.attendancePercentage}%
                     </td>
 
                     <td className="table-cell">
                       <div className="action-buttons">
-                        <button className="view-btn">
-                          <Eye size={18} className="view-icon" />
-                        </button>
-
-                        <button className="edit-btn">
-                          <Pencil size={18} className="edit-icon" />
-                        </button>
-
                         <button
-                          onClick={() => handleDelete(student.id)}
+                          onClick={() => handleDelete(student.key)}
                           className="delete-btn"
+                          aria-label={`Delete ${student.name}'s attendance record`}
                         >
                           <Trash2 size={18} className="delete-icon" />
                         </button>

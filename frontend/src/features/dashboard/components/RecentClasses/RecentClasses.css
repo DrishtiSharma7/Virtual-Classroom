@@ -11,11 +11,11 @@
 }
 
 .classes-table th {
-  @apply pb-3 text-sm font-semibold text-gray-600 border-b border-gray-50;
+  @apply pb-2 text-sm font-semibold text-gray-600 border-b border-gray-50;
 }
 
 .classes-table td {
-  @apply py-3 text-sm border-b border-gray-50;
+  @apply py-2 text-sm border-b border-gray-50;
 }
 
 .status-badge {

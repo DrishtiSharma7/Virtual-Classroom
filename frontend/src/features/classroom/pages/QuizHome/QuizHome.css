@@ -1,0 +1,226 @@
+/* Mirrors AttendanceHome.css's design system so Quizzes reads as the same
+   page family as Attendance — page chrome, stat cards, filter bar, table,
+   and status badges all follow the same recipe. */
+
+.quiz-page {
+  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+}
+
+.quiz-container {
+  @apply max-w-7xl mx-auto;
+}
+
+/* Header */
+
+.quiz-header {
+  @apply flex justify-between items-center mb-6 flex-wrap gap-4;
+}
+
+.quiz-title {
+  @apply flex items-center gap-2 text-2xl font-bold text-slate-800;
+}
+
+.quiz-subtitle {
+  @apply text-slate-500;
+}
+
+.header-buttons {
+  @apply flex flex-wrap gap-3;
+}
+
+.export-btn {
+  @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl transition;
+}
+
+.export-btn:disabled {
+  @apply bg-gray-300 hover:bg-gray-300 text-gray-500 cursor-not-allowed;
+}
+
+.secondary-btn {
+  @apply flex items-center gap-2 border border-gray-300 bg-white hover:bg-slate-50 text-gray-700 px-4 py-3 rounded-xl transition;
+}
+
+.secondary-btn:disabled {
+  @apply bg-gray-100 hover:bg-gray-100 text-gray-400 cursor-not-allowed;
+}
+
+/* Statistics Cards */
+
+.stats-grid {
+  @apply grid grid-cols-1 sm:grid-cols-3 gap-5 mb-4;
+}
+
+.stat-card {
+  @apply bg-white rounded-2xl shadow p-6;
+}
+
+.stat-header {
+  @apply flex items-center gap-2 mb-2;
+}
+
+.stat-icon-indigo {
+  @apply text-indigo-600;
+}
+
+.stat-icon-green {
+  @apply text-green-600;
+}
+
+.stat-icon-red {
+  @apply text-red-600;
+}
+
+.stat-icon-blue {
+  @apply text-blue-600;
+}
+
+.stat-icon-amber {
+  @apply text-amber-600;
+}
+
+.stat-label {
+  @apply text-gray-500;
+}
+
+.stat-value {
+  @apply text-2xl font-bold mt-2;
+}
+
+/* Filters */
+
+.filter-card {
+  @apply bg-white rounded-xl shadow p-3 mb-4 flex flex-wrap items-center gap-3;
+}
+
+.filter-label {
+  @apply text-sm font-medium text-gray-600;
+}
+
+.classroom-select {
+  @apply border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+.filter-tabs {
+  @apply inline-flex rounded-xl bg-gray-100 p-1 text-sm gap-1;
+}
+
+.filter-tab {
+  @apply rounded-lg px-3 py-1.5 font-medium transition text-gray-500;
+}
+
+.filter-tab-active {
+  @apply bg-indigo-600 text-white;
+}
+
+/* Table */
+
+.table-wrapper {
+  @apply bg-white rounded-2xl shadow overflow-x-auto;
+}
+
+.quiz-table {
+  @apply min-w-full text-left;
+}
+
+.table-head {
+  @apply bg-gray-200;
+}
+
+.table-heading {
+  @apply px-6 py-4 text-left;
+}
+
+.table-cell {
+  @apply px-6 py-2;
+}
+
+.table-row {
+  @apply border-t hover:bg-gray-50;
+}
+
+.entity-name {
+  @apply font-semibold;
+}
+
+/* Status Badges */
+
+.status-present {
+  @apply bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm;
+}
+
+.status-absent {
+  @apply bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm;
+}
+
+.status-neutral {
+  @apply bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm;
+}
+
+.status-live {
+  @apply bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm;
+}
+
+/* Actions */
+
+.action-buttons {
+  @apply flex justify-center gap-2;
+}
+
+.view-btn {
+  @apply p-2 rounded-lg hover:bg-blue-100;
+}
+
+.view-icon {
+  @apply text-blue-600;
+}
+
+.toggle-btn {
+  @apply p-2 rounded-lg hover:bg-emerald-100;
+}
+
+.download-btn {
+  @apply p-2 rounded-lg hover:bg-slate-100;
+}
+
+.delete-btn {
+  @apply p-2 rounded-lg hover:bg-red-100;
+}
+
+.delete-icon {
+  @apply text-red-600;
+}
+
+/* Empty / loading state */
+
+.no-data {
+  @apply text-center py-12 text-gray-500 rounded-2xl border border-dashed border-gray-300 bg-white;
+}
+
+.loading-text {
+  @apply text-sm text-gray-400;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .quiz-page {
+    @apply p-4;
+  }
+
+  .quiz-header {
+    @apply flex-col items-start gap-4;
+  }
+
+  .header-buttons {
+    @apply w-full flex-col;
+  }
+
+  .export-btn,
+  .secondary-btn {
+    @apply justify-center w-full;
+  }
+
+  .stats-grid {
+    @apply grid-cols-1;
+  }
+}

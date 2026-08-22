@@ -1,63 +1,11 @@
-const Attendance = require("./attendance.model");
 const attendanceService = require("./attendance.service");
 
-// =========================================
-// Student joins a live session
-// =========================================
-exports.joinSession = async (req, res) => {
-  try {
-    const { classroomId, sessionId } = req.body;
-
-    const attendance = await attendanceService.studentJoined({
-      classroomId,
-      sessionId,
-      studentId: req.user.id,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Attendance started",
-      attendance,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-// =========================================
-// Student leaves a live session
-// =========================================
-exports.leaveSession = async (req, res) => {
-  try {
-    const { sessionId } = req.body;
-
-    const attendance = await attendanceService.studentLeft({
-      sessionId,
-      studentId: req.user.id,
-    });
-
-    if (!attendance) {
-      return res.status(404).json({
-        success: false,
-        message: "Attendance not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Attendance updated",
-      attendance,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
+// Join/leave are no longer client-callable endpoints — attendance is
+// recorded automatically as a side effect of the server-verified socket
+// "join-room"/"leave-room"/"disconnect" events (see sockets/socket.js and
+// attendance.service.js's recordConnect/recordDisconnect). This keeps
+// attendance impossible for a student to self-report: there is no request
+// they can send that writes an attendance record.
 
 // =========================================
 // Teacher ends session
@@ -107,6 +55,72 @@ exports.getMyAttendance = async (req, res) => {
   try {
     const attendance = await attendanceService.getStudentAttendance(
       req.user.id,
+    );
+
+    res.json({
+      success: true,
+      count: attendance.length,
+      attendance,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// =========================================
+// Teacher views attendance dashboard for one classroom
+// =========================================
+exports.getClassroomAttendance = async (req, res) => {
+  try {
+    const attendance = await attendanceService.getClassroomAttendance(
+      req.params.classroomId,
+    );
+
+    res.json({
+      success: true,
+      count: attendance.length,
+      attendance,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// =========================================
+// Teacher views attendance dashboard across all their classrooms
+// =========================================
+exports.getAttendanceDashboard = async (req, res) => {
+  try {
+    const attendance = await attendanceService.getAttendanceDashboard(
+      req.user.id,
+    );
+
+    res.json({
+      success: true,
+      count: attendance.length,
+      attendance,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// =========================================
+// Teacher views live (in-progress) attendance for a session
+// =========================================
+exports.getLiveSessionAttendance = async (req, res) => {
+  try {
+    const attendance = await attendanceService.getLiveSessionAttendance(
+      req.params.sessionId,
     );
 
     res.json({

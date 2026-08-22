@@ -7,7 +7,7 @@
 }
 
 .dashboard-viewport {
-  @apply pt-4 pb-4 p-8 flex-1 space-y-6 max-w-7xl w-full mx-auto;
+  @apply p-8 pt-4 pb-4 flex-1 space-y-6 max-w-7xl w-full mx-auto;
 }
 
 .stats-grid {

@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   ClipboardList,
+  ClipboardCheck,
   CheckCircle2,
   Circle,
+  Hourglass,
   FileQuestion,
   ChevronRight,
 } from "lucide-react";
 
+import "./QuizHome.css";
 import { getMyClassrooms } from "../../api/classroom.api";
 import { getClassroomQuizzes } from "../../api/quiz.api";
 
@@ -63,143 +66,165 @@ export default function StudentQuizHome() {
   });
 
   return (
-    <div className="max-w-8xl px-8 py-3">
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-          <ClipboardList className="text-[#4f46e5]" size={26} />
-          Quizzes
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          See how you did on quizzes you've taken, and which ones are still
-          pending.
-        </p>
-      </div>
-
-      {loadingClassrooms ? (
-        <p className="text-sm text-gray-400">Loading classrooms...</p>
-      ) : classrooms.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-          You haven't joined a classroom yet. Join one to see its quizzes.
+    <div className="quiz-page">
+      <div className="quiz-container">
+        <div className="quiz-header">
+          <div>
+            <h1 className="quiz-title">
+              <ClipboardList className="text-indigo-600" size={26} />
+              Quizzes
+            </h1>
+            <p className="quiz-subtitle">
+              See how you did on quizzes you've taken, and which ones are
+              still pending.
+            </p>
+          </div>
         </div>
-      ) : (
-        <>
-          <div className="mb-5 flex flex-wrap items-center gap-3">
-            <label className="text-sm font-medium text-gray-600">
-              Classroom
-            </label>
-            <select
-              value={classroomId}
-              onChange={(e) => setClassroomId(e.target.value)}
-              className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#4f46e5]"
-            >
-              {classrooms.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name} — {c.subject}
-                </option>
-              ))}
-            </select>
-          </div>
 
-          {/* Stats */}
-          <div className="mb-6 grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <p className="text-xs font-medium text-gray-400">Total</p>
-              <p className="mt-1 text-xl font-bold text-gray-900">
-                {quizzes.length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <p className="text-xs font-medium text-gray-400">Attempted</p>
-              <p className="mt-1 text-xl font-bold text-emerald-600">
-                {attemptedCount}
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
-              <p className="text-xs font-medium text-gray-400">Pending</p>
-              <p className="mt-1 text-xl font-bold text-amber-600">
-                {pendingCount}
-              </p>
-            </div>
+        {loadingClassrooms ? (
+          <p className="loading-text">Loading classrooms...</p>
+        ) : classrooms.length === 0 ? (
+          <div className="no-data">
+            You haven't joined a classroom yet. Join one to see its quizzes.
           </div>
-
-          {/* Filter tabs */}
-          <div className="mb-4 inline-flex rounded-xl border border-gray-200 bg-white p-1 text-sm">
-            {[
-              { key: "all", label: "All" },
-              { key: "attempted", label: "Attempted" },
-              { key: "pending", label: "Not attempted" },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setFilter(tab.key)}
-                className={`rounded-lg px-3 py-1.5 font-medium transition ${
-                  filter === tab.key
-                    ? "bg-[#4f46e5] text-white"
-                    : "text-gray-500 hover:bg-slate-50"
-                }`}
+        ) : (
+          <>
+            <div className="filter-card">
+              <label className="filter-label">Classroom</label>
+              <select
+                value={classroomId}
+                onChange={(e) => setClassroomId(e.target.value)}
+                className="classroom-select"
               >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+                {classrooms.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name} — {c.subject}
+                  </option>
+                ))}
+              </select>
 
-          {loadingQuizzes ? (
-            <p className="text-sm text-gray-400">Loading quizzes...</p>
-          ) : visibleQuizzes.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-              No quizzes here yet.
+              <div className="filter-tabs">
+                {[
+                  { key: "all", label: "All" },
+                  { key: "attempted", label: "Attempted" },
+                  { key: "pending", label: "Not attempted" },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setFilter(tab.key)}
+                    className={`filter-tab ${
+                      filter === tab.key ? "filter-tab-active" : ""
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {visibleQuizzes.map((q) => (
-                <button
-                  key={q._id}
-                  onClick={() => navigate(`/quizzes/${q._id}`)}
-                  className="flex w-full items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 text-left transition hover:border-[#4f46e5]/40 hover:shadow-sm"
-                >
-                  <div className="flex items-center gap-3">
-                    {q.attempted ? (
-                      <CheckCircle2
-                        className="shrink-0 text-emerald-500"
-                        size={22}
-                      />
-                    ) : (
-                      <Circle className="shrink-0 text-gray-300" size={22} />
-                    )}
-                    <div>
-                      <p className="font-medium text-gray-800">{q.title}</p>
-                      <p className="flex items-center gap-1 text-xs text-gray-500">
-                        <FileQuestion size={12} />
-                        {q.questionCount} question
-                        {q.questionCount === 1 ? "" : "s"}
-                        {q.session?.title ? ` · ${q.session.title}` : ""}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-2">
-                    {q.attempted ? (
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                        Score {q.score}/{q.questionCount}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                        Not attempted
-                      </span>
-                    )}
-                    {q.openForRetake && (
-                      <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-[#4f46e5]">
-                        {q.attempted ? "Retake open" : "Open now"}
-                      </span>
-                    )}
-                    <ChevronRight size={16} className="text-gray-300" />
-                  </div>
-                </button>
-              ))}
+            {/* Stats */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-header">
+                  <ClipboardList className="stat-icon-indigo" size={24} />
+                  <p className="stat-label">Total</p>
+                </div>
+                <h2 className="stat-value">{quizzes.length}</h2>
+              </div>
+              <div className="stat-card">
+                <div className="stat-header">
+                  <ClipboardCheck className="stat-icon-green" size={24} />
+                  <p className="stat-label">Attempted</p>
+                </div>
+                <h2 className="stat-value">{attemptedCount}</h2>
+              </div>
+              <div className="stat-card">
+                <div className="stat-header">
+                  <Hourglass className="stat-icon-amber" size={24} />
+                  <p className="stat-label">Pending</p>
+                </div>
+                <h2 className="stat-value">{pendingCount}</h2>
+              </div>
             </div>
-          )}
-        </>
-      )}
+
+            {loadingQuizzes ? (
+              <p className="loading-text">Loading quizzes...</p>
+            ) : visibleQuizzes.length === 0 ? (
+              <div className="no-data">No quizzes here yet.</div>
+            ) : (
+              <div className="table-wrapper">
+                <table className="quiz-table">
+                  <thead className="table-head">
+                    <tr>
+                      <th className="table-heading">Quiz</th>
+                      <th className="table-heading">Session</th>
+                      <th className="table-heading">Questions</th>
+                      <th className="table-heading">Status</th>
+                      <th className="table-heading text-center">Open</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleQuizzes.map((q) => (
+                      <tr
+                        key={q._id}
+                        className="table-row cursor-pointer"
+                        onClick={() => navigate(`/quizzes/${q._id}`)}
+                      >
+                        <td className="table-cell">
+                          <div className="flex items-center gap-2">
+                            {q.attempted ? (
+                              <CheckCircle2
+                                className="shrink-0 text-emerald-500"
+                                size={18}
+                              />
+                            ) : (
+                              <Circle
+                                className="shrink-0 text-gray-300"
+                                size={18}
+                              />
+                            )}
+                            <p className="entity-name">{q.title}</p>
+                          </div>
+                        </td>
+                        <td className="table-cell">
+                          {q.session?.title || "—"}
+                        </td>
+                        <td className="table-cell">
+                          <span className="inline-flex items-center gap-1">
+                            <FileQuestion size={14} /> {q.questionCount}
+                          </span>
+                        </td>
+                        <td className="table-cell">
+                          {q.attempted ? (
+                            <span className="status-present">
+                              Score {q.score}/{q.questionCount}
+                            </span>
+                          ) : (
+                            <span className="status-absent">
+                              Not attempted
+                            </span>
+                          )}
+                          {q.openForRetake && (
+                            <span className="status-live ml-2">
+                              {q.attempted ? "Retake open" : "Open now"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="table-cell text-center">
+                          <ChevronRight
+                            size={18}
+                            className="inline-block text-gray-300"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

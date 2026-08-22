@@ -4,9 +4,7 @@ import {
   ArrowLeft,
   Video,
   Users,
-  ClipboardList,
   CalendarDays,
-  BookOpen,
   Bell,
   PlayCircle,
   ArrowRight,
@@ -15,7 +13,6 @@ import {
   Plus,
   Trash2,
   UploadCloud,
-  CheckCircle2,
 } from "lucide-react";
 
 import "./ClassroomDetails.css";
@@ -117,10 +114,6 @@ function ClassroomDetails() {
 };
 
   // --- TEACHER-ONLY ACTIONS (stubbed handlers — wire up to your API) ---
-  const handleAddAssignment = () => {
-    navigate(`/classrooms/${classroom._id}/assignments/new`);
-  };
-
   const handlePostAnnouncement = () => {
     navigate(`/classrooms/${classroom._id}/announcements/new`);
   };
@@ -135,14 +128,7 @@ function ClassroomDetails() {
     console.log("Remove student:", studentId);
   };
 
-  // --- STUDENT-ONLY ACTIONS ---------------------------------------------
-  const handleSubmitAssignment = (assignmentId) => {
-    navigate(`/classrooms/${classroom._id}/assignments/${assignmentId}/submit`);
-  };
-  // -----------------------------------------------------------------------
-
   const students = classroom.students || [];
-  const assignments = classroom.assignments || [];
   const recordings = classroom.recordings || [];
   const announcements = classroom.announcements || [];
 
@@ -188,12 +174,6 @@ function ClassroomDetails() {
             <Users size={26} className="stat-icon indigo" />
             <p>Total Students</p>
             <h2>{students.length}</h2>
-          </div>
-
-          <div className="stat-card">
-            <ClipboardList size={26} className="stat-icon green" />
-            <p>Assignments</p>
-            <h2>{assignments.length}</h2>
           </div>
 
           <Link to={`/attendance/${classroom._id}`} className="stat-card">
@@ -283,58 +263,6 @@ function ClassroomDetails() {
               )}
             </div>
 
-            {/* Assignments */}
-
-            <div className="section-card">
-              <div className="section-title">
-                <span className="section-title-left">
-                  <BookOpen size={20} />
-                  Assignments
-                </span>
-                {isTeacher && (
-                  <button
-                    className="inline-add-btn"
-                    onClick={handleAddAssignment}
-                    title="Add Assignment"
-                  >
-                    <Plus size={16} />
-                    New
-                  </button>
-                )}
-              </div>
-
-              {assignments.length === 0 ? (
-                <p className="empty-text">No assignments uploaded.</p>
-              ) : (
-                assignments.slice(0, 5).map((assignment) => (
-                  <div key={assignment._id} className="assignment-item">
-                    <div>
-                      <h4>{assignment.title}</h4>
-
-                      <p>Due : {assignment.dueDate || "Not Available"}</p>
-                    </div>
-
-                    {/* Students submit; teachers view submissions */}
-                    {isStudent ? (
-                      <button
-                        className="view-btn"
-                        onClick={() => handleSubmitAssignment(assignment._id)}
-                      >
-                        {assignment.submitted ? (
-                          <>
-                            <CheckCircle2 size={16} /> Submitted
-                          </>
-                        ) : (
-                          "Submit"
-                        )}
-                      </button>
-                    ) : (
-                      <button className="view-btn">View Submissions</button>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
           </div>
 
           {/* RIGHT */}
@@ -371,6 +299,7 @@ function ClassroomDetails() {
                           className="remove-btn"
                           onClick={() => handleRemoveStudent(student._id)}
                           title="Remove student"
+                          aria-label={`Remove ${student.name} from classroom`}
                         >
                           <Trash2 size={16} />
                         </button>
