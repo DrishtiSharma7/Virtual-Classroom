@@ -57,12 +57,12 @@ const TeacherDashboard = () => {
   };
 
   return (
-    <div className="dashboard-viewport">
+    <div className="teacher-dashboard-viewport">
       <h1 className="sr-only">Teacher Dashboard</h1>
       <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
 
-      <div className="stats-grid">
+      <div className="teacher-stats-grid">
         <StatCard
           icon={<LayoutDashboard />}
           label="Total Classrooms"
@@ -98,7 +98,7 @@ const TeacherDashboard = () => {
       <div className="dashboard-split-section">
         <RecentClasses classes={dashboard?.recentClasses || []} />
 
-        <div className="activity-card">
+        <div className="teacher-activity-card">
           <h3 className="section-title">Recent Activity</h3>
 
           {dashboard?.recentActivity?.length > 0 ? (

@@ -1,0 +1,75 @@
+/* Shared table chrome reused by every analytics section with a data table
+   (Attendance ranking, Session history, Quiz ranking) — mirrors
+   AttendanceHome.css's table conventions for visual consistency. */
+
+.analytics-table-toolbar {
+  @apply mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+}
+
+.analytics-search-wrapper {
+  @apply relative w-full sm:max-w-xs;
+}
+
+.analytics-search-input {
+  @apply w-full rounded-xl border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-[#5b5fef];
+}
+
+.analytics-search-icon {
+  @apply pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400;
+}
+
+.analytics-table-wrapper {
+  @apply overflow-x-auto rounded-xl border border-gray-100;
+}
+
+.analytics-table {
+  @apply w-full min-w-[560px] text-left text-sm;
+}
+
+.analytics-table-head {
+  @apply bg-gray-50;
+}
+
+.analytics-table-heading {
+  @apply cursor-pointer select-none whitespace-nowrap px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-700;
+}
+
+.analytics-table-heading.non-sortable {
+  @apply cursor-default hover:text-gray-500;
+}
+
+.analytics-table-row {
+  @apply border-t border-gray-100 hover:bg-gray-50;
+}
+
+.analytics-table-cell {
+  @apply whitespace-nowrap px-4 py-2.5 text-gray-700;
+}
+
+.analytics-no-data {
+  @apply py-10 text-center text-gray-400;
+}
+
+.analytics-pagination {
+  @apply mt-3 flex items-center justify-between text-sm text-gray-500;
+}
+
+.analytics-pagination-btn {
+  @apply rounded-lg border border-gray-200 px-3 py-1.5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.analytics-status-badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.analytics-status-good {
+  @apply bg-green-50 text-green-700;
+}
+
+.analytics-status-warning {
+  @apply bg-amber-50 text-amber-700;
+}
+
+.analytics-status-critical {
+  @apply bg-red-50 text-red-700;
+}

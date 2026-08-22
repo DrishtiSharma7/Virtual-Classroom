@@ -18,6 +18,7 @@ const QuizHome = lazy(() => import("../features/classroom/pages/QuizHome/QuizHom
 const QuizDetail = lazy(() => import("../features/classroom/pages/QuizHome/QuizDetail"));
 const RecordingsHome = lazy(() => import("../features/classroom/pages/RecordingsHome/RecordingsHome"));
 const Dashboard = lazy(() => import("../features/dashboard/Dashboard"));
+const AnalyticsDashboard = lazy(() => import("../features/analytics/pages/AnalyticsDashboard/AnalyticsDashboard"));
 const SettingsPage = lazy(() => import("../features/settings/pages/SettingsPage/SettingsPage"));
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -66,6 +67,7 @@ function AppRouter() {
               <Route path="/quizzes" element={<QuizHome />} />
               <Route path="/quizzes/:quizId" element={<QuizDetail />} />
               <Route path="/recordings" element={<RecordingsHome />} />
+              <Route path="/analytics" element={<AnalyticsDashboard />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

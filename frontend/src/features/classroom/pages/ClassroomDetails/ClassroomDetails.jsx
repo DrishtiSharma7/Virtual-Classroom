@@ -161,7 +161,7 @@ function ClassroomDetails() {
 
 
 
-        <div className="stats-grid">
+        <div className="classroom-details-stats-grid">
           <div className="stat-card">
             <Users size={26} className="stat-icon indigo" />
             <p>Total Students</p>

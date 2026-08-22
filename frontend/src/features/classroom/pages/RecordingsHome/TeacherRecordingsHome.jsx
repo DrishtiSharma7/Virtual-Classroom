@@ -180,7 +180,7 @@ export default function TeacherRecordingsHome() {
               </select>
             </div>
 
-            <div className="stats-grid">
+            <div className="recordings-stats-grid">
               <div className="stat-card">
                 <div className="stat-header">
                   <Film className="stat-icon-indigo" size={24} />

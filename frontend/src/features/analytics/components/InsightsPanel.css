@@ -1,0 +1,31 @@
+.insights-panel {
+  @apply rounded-2xl border border-gray-100 bg-white p-4 shadow-md sm:p-5;
+}
+
+.insights-title {
+  @apply mb-3 text-sm font-semibold text-gray-800;
+}
+
+.insights-empty {
+  @apply text-sm text-gray-400;
+}
+
+.insights-list {
+  @apply space-y-2;
+}
+
+.insight-item {
+  @apply flex items-start gap-2 rounded-xl px-3 py-2 text-sm;
+}
+
+.insight-positive {
+  @apply bg-green-50 text-green-700;
+}
+
+.insight-warning {
+  @apply bg-amber-50 text-amber-700;
+}
+
+.insight-info {
+  @apply bg-blue-50 text-blue-700;
+}

@@ -382,7 +382,7 @@ function AttendanceHome() {
 
 
 
-        <div className="stats-grid">
+        <div className="attendance-stats-grid">
           <div className="stat-card">
             <Users className="stat-icon-indigo" />
             <p className="stat-label">Total Students</p>

@@ -34,12 +34,12 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="dashboard-viewport">
+    <div className="student-dashboard-viewport">
       <h1 className="sr-only">Student Dashboard</h1>
       <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
 
-      <div className="stats-grid">
+      <div className="student-stats-grid">
         <StatCard
           icon={<Layers />}
           label="Enrolled Classes"
@@ -67,7 +67,7 @@ const StudentDashboard = () => {
       <div className="dashboard-split-section">
         <RecentClasses classes={dashboard?.myClasses || []} />
 
-        <div className="activity-card">
+        <div className="student-activity-card">
           <h3 className="section-title">Recent Activity</h3>
 
           <ul className="activity-list">

@@ -6,20 +6,20 @@
   @apply flex-1 pl-64 flex flex-col;
 }
 
-.dashboard-viewport {
-  @apply p-8 pt-4 pb-4 flex-1 space-y-6 max-w-7xl w-full mx-auto;
+.student-dashboard-viewport {
+  @apply p-8 pt-0 pb-4 flex-1 space-y-6 max-w-7xl w-full mx-auto;
 }
 
-.stats-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+.student-stats-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-4;
 }
 
 .dashboard-split-section {
   @apply flex flex-col lg:flex-row gap-4;
 }
 
-.activity-card {
-  @apply bg-white p-6 rounded-2xl border border-gray-100 shadow-md lg:w-80;
+.student-activity-card {
+  @apply bg-white p-6 rounded-2xl border border-gray-100 shadow-md w-full lg:w-80;
 }
 
 .activity-list {

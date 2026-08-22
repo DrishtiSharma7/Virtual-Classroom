@@ -1,0 +1,33 @@
+.chart-card {
+  @apply rounded-2xl border border-gray-100 bg-white p-4 shadow-md sm:p-5;
+}
+
+.chart-card-header {
+  @apply mb-3 flex items-center justify-between gap-2;
+}
+
+.chart-card-title {
+  @apply text-sm font-semibold text-gray-800;
+}
+
+.chart-card-tooltip-wrapper {
+  @apply relative inline-flex cursor-help text-gray-300 hover:text-gray-500;
+}
+
+.chart-card-tooltip-bubble {
+  @apply pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 w-56 -translate-x-1/2 rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] font-normal text-white opacity-0 shadow-lg transition-opacity duration-150;
+}
+
+.chart-card-tooltip-wrapper:hover .chart-card-tooltip-bubble,
+.chart-card-tooltip-wrapper:focus .chart-card-tooltip-bubble,
+.chart-card-tooltip-wrapper:focus-visible .chart-card-tooltip-bubble {
+  @apply opacity-100;
+}
+
+.chart-card-skeleton {
+  @apply flex animate-pulse items-center justify-center rounded-xl bg-gray-50;
+}
+
+.chart-card-empty {
+  @apply flex flex-col items-center justify-center rounded-xl bg-gray-50 px-4 text-center text-sm text-gray-400;
+}

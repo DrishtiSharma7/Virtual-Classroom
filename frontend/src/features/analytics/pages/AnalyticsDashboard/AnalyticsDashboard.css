@@ -1,0 +1,31 @@
+.analytics-page {
+  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+}
+
+.analytics-container {
+  @apply mx-auto max-w-7xl;
+}
+
+.analytics-header {
+  @apply mb-6 flex flex-wrap items-center justify-between gap-3;
+}
+
+.analytics-title {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+.analytics-subtitle {
+  @apply mt-1 max-w-2xl text-sm text-slate-500;
+}
+
+.analytics-error {
+  @apply mb-6 flex items-center justify-between gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-600;
+}
+
+.analytics-error-retry {
+  @apply rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold hover:bg-red-100;
+}
+
+.analytics-empty-state {
+  @apply flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center;
+}

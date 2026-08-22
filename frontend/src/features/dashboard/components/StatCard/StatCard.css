@@ -26,3 +26,37 @@
 .bg-green-soft {
   @apply bg-green-50 text-green-600;
 }
+
+.stat-description {
+  @apply mt-0.5 truncate text-xs text-gray-400;
+}
+
+.stat-trend {
+  @apply flex items-center gap-0.5 text-xs font-semibold;
+}
+
+.stat-trend-up {
+  @apply text-green-600;
+}
+
+.stat-trend-down {
+  @apply text-red-500;
+}
+
+.stat-trend-flat {
+  @apply text-gray-400;
+}
+
+.stat-tooltip-wrapper {
+  @apply relative inline-flex cursor-help text-gray-300 hover:text-gray-500;
+}
+
+.stat-tooltip-bubble {
+  @apply pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 w-48 -translate-x-1/2 rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] font-normal normal-case tracking-normal text-white opacity-0 shadow-lg transition-opacity duration-150;
+}
+
+.stat-tooltip-wrapper:hover .stat-tooltip-bubble,
+.stat-tooltip-wrapper:focus .stat-tooltip-bubble,
+.stat-tooltip-wrapper:focus-visible .stat-tooltip-bubble {
+  @apply opacity-100;
+}

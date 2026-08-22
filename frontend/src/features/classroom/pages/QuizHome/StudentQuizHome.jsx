@@ -123,7 +123,7 @@ export default function StudentQuizHome() {
             </div>
 
 
-            <div className="stats-grid">
+            <div className="quiz-stats-grid">
               <div className="stat-card">
                 <div className="stat-header">
                   <ClipboardList className="stat-icon-indigo" size={24} />

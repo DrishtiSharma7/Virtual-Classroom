@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import jsPDF from "jspdf";
 import {
@@ -27,9 +27,6 @@ import {
   Video,
   VideoOff,
   Users,
-  Edit3,
-  MessageCircle,
-  FileText,
   Camera,
   ScreenShare,
   PencilRuler,
@@ -60,6 +57,10 @@ import {
   Hand,
   Turtle,
   CalendarCheck,
+  LayoutDashboard,
+  ClipboardCheck,
+  ChartColumn,
+  LogOut,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
@@ -69,6 +70,7 @@ import StudentQuizPanel from "../../../classroom/components/QuizPanel/StudentQui
 import LiveAttendancePanel from "../../../classroom/components/AttendancePanel/LiveAttendancePanel";
 import { getWhiteboard } from "../../../classroom/api/whiteboard.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
+import useAuth from "../../../auth/hooks/useAuth";
 
 const drawElement = (ctx, el) => {
   if (!el) return;
@@ -168,16 +170,32 @@ const REACTIONS = [
   { id: "slow-down", Icon: Turtle, label: "Slow down" },
 ];
 
-const SidebarIcon = ({ Icon, active, onClick, label }) => (
+// Same destinations as the main app's Sidebar (dashboard/components/Sidebar),
+// icon-only since the in-session rail has no room for labels.
+const NAV_RAIL_ITEMS = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Users, label: "Classrooms", path: "/classrooms" },
+  { icon: CalendarCheck, label: "Attendance", path: "/attendance" },
+  { icon: ClipboardCheck, label: "Quizzes", path: "/quizzes" },
+  { icon: Video, label: "Recordings", path: "/recordings" },
+  { icon: ChartColumn, label: "Analytics", path: "/analytics" },
+  { icon: Settings, label: "Settings", path: "/settings" },
+];
+
+const navRailIconClass = (active) =>
+  `flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
+    active
+      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/30"
+      : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+  }`;
+
+const NavRailIcon = ({ Icon, active, onClick, label }) => (
   <button
+    type="button"
     onClick={onClick}
     aria-label={label}
-    aria-pressed={active}
-    className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
-      active
-        ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/30"
-        : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-    }`}
+    title={label}
+    className={navRailIconClass(active)}
   >
     <Icon size={20} />
   </button>
@@ -343,6 +361,7 @@ const ScreenShareStage = ({ stream }) => {
 export default function LiveClassroom() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const currentUser = useSelector((state) => state.auth.user);
   const token = useSelector((state) => state.auth.token);
@@ -1827,23 +1846,26 @@ export default function LiveClassroom() {
       <div className="flex flex-1 overflow-hidden">
 
         <nav className="flex w-[72px] flex-col items-center gap-4 bg-slate-900 py-5">
-          <SidebarIcon Icon={Edit3} active label="Whiteboard" />
-          <SidebarIcon Icon={Video} label="Video" />
-          <SidebarIcon
-            Icon={Users}
-            onClick={() => setRightTab("participants")}
-            label="Participants"
-          />
-          <SidebarIcon Icon={FileText} label="Files" />
-          <SidebarIcon
-            Icon={MessageCircle}
-            onClick={() => setRightTab("chat")}
-            label="Chat"
-          />
-          <SidebarIcon Icon={FileText} label="Recordings" />
-          <SidebarIcon Icon={BarChart3} label="Analytics" />
+          {NAV_RAIL_ITEMS.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              aria-label={item.label}
+              title={item.label}
+              className={({ isActive }) => navRailIconClass(isActive)}
+            >
+              <item.icon size={20} />
+            </NavLink>
+          ))}
           <div className="mt-auto">
-            <SidebarIcon Icon={Settings} label="Settings" />
+            <NavRailIcon
+              Icon={LogOut}
+              label="Logout"
+              onClick={() => {
+                signOut();
+                navigate("/login", { replace: true });
+              }}
+            />
           </div>
         </nav>
 
