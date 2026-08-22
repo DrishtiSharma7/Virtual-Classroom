@@ -1,6 +1,6 @@
 const { getAuthorizedSession } = require("../session/session.service");
 const { getOrInitBoard } = require("./whiteboard.service");
-const registry = require("../../sockets/roomregistry");
+const registry = require("../../sockets/roomRegistry");
 
 exports.getBoardBySession = async (req, res) => {
   try {
