@@ -10,8 +10,10 @@ import {
   KeyRound,
 } from "lucide-react";
 import "./ClassroomHome.css";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 function ClassroomHome() {
+  usePageMeta("My Classrooms");
   const [classrooms, setClassrooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

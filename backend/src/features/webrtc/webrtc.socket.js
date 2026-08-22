@@ -40,6 +40,83 @@ module.exports = (io, socket) => {
     // intentionally empty — see sockets/socket.js "leave-room"
   });
 
+  // Teacher toggled screen sharing on/off. The video track itself already
+  // reaches students through the existing peer connection — camera and
+  // screen now ride as two independent tracks/senders (see
+  // createPeerConnection/pushScreenTrack on the frontend), so this signal's
+  // job is telling a student's UI *which* incoming track is the screen:
+  // streamId is the screen MediaStream's id, which WebRTC's msid mechanism
+  // preserves end-to-end, so the receiver can match it against
+  // event.streams[0].id in its ontrack handler and route that track to the
+  // whiteboard overlay instead of the camera tile. Stored in the registry
+  // too so a student who joins mid-share is told immediately on
+  // "join-room", not just students who were already connected when sharing
+  // started.
+  socket.on("screen-share-status", ({ roomId, sharing, streamId } = {}) => {
+    if (!roomId) return;
+
+    if (!registry.isTeacher(roomId, socket.id)) {
+      socket.emit("action-denied", {
+        action: "screen-share-status",
+        message: "Only the host can share their screen.",
+      });
+      return;
+    }
+
+    registry.setScreenSharing(roomId, sharing);
+    registry.setScreenStreamId(roomId, sharing ? streamId : null);
+    socket.to(roomId).emit("screen-share-status", {
+      sharing: !!sharing,
+      streamId: sharing ? streamId : null,
+    });
+  });
+
+  // Any participant (host or student — everyone can have a camera now)
+  // turned their own camera on/off. A disabled MediaStreamTrack still
+  // arrives at a receiver as a live track (WebRTC sends black frames, not
+  // "no track") — there's no way to tell "camera off" apart from "camera
+  // on but black" just from the track itself, so this explicit signal,
+  // tagged with who it's about, is what lets every other client show the
+  // avatar fallback instead of a black box for that specific participant.
+  // Stored on their participant record so a late joiner sees the current
+  // state immediately via "existing-participants", not just future
+  // toggles.
+  socket.on("camera-status", ({ roomId, enabled } = {}) => {
+    if (!roomId) return;
+    if (!registry.findParticipant(roomId, socket.id)) return;
+
+    registry.setParticipantCameraEnabled(roomId, socket.id, enabled);
+    socket.to(roomId).emit("camera-status", {
+      sender: socket.id,
+      enabled: !!enabled,
+    });
+  });
+
+  // Teacher forces a specific participant's camera off — mirrors
+  // "mute-student" below. The target's own client is what actually flips
+  // its local track off (see "force-camera-off" handled client-side); this
+  // just delivers that instruction and updates the shared roster/registry
+  // the same way a normal "camera-status" toggle would, so every other
+  // client's view of that participant's camera state stays correct too.
+  socket.on("force-camera-off", ({ roomId, targetSocketId } = {}) => {
+    if (!roomId || !targetSocketId) return;
+
+    if (!registry.isTeacher(roomId, socket.id)) {
+      socket.emit("action-denied", {
+        action: "force-camera-off",
+        message: "Only the host can turn off a participant's camera.",
+      });
+      return;
+    }
+
+    registry.setParticipantCameraEnabled(roomId, targetSocketId, false);
+    io.to(targetSocketId).emit("force-camera-off", { by: socket.id });
+    io.to(roomId).emit("camera-status", {
+      sender: targetSocketId,
+      enabled: false,
+    });
+  });
+
   // ---------------------------------------------------------------
   // Teacher-only classroom control. Both events trust socket.user
   // (set by the socket auth middleware from the verified JWT) for the

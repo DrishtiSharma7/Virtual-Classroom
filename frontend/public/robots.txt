@@ -1,0 +1,11 @@
+# Almost everything in this app requires a login (dashboard, classrooms,
+# live sessions, quizzes, attendance, settings) — none of that is indexable
+# or useful in search results anyway, so it's disallowed explicitly rather
+# than left for crawlers to discover via 404s/redirects to /login.
+User-agent: *
+Allow: /$
+Allow: /login$
+Allow: /register$
+Disallow: /
+
+Sitemap: https://virtualclassroom.app/sitemap.xml

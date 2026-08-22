@@ -6,11 +6,16 @@ import { submitQuiz } from "../../api/quiz.api";
 /**
  * Student-facing Live Quiz panel.
  *
+ * Meant to be mounted unconditionally for students (it renders null until a
+ * "quiz-launched" event arrives), so it opens itself automatically the
+ * moment the teacher launches a quiz — no manual toggle needed.
+ *
  * props:
  *  - socket: the live socket.io-client instance (socketRef.current)
  *  - sessionId: current live session id (room id)
  *  - studentId: current user's id (for the optional live tally broadcast)
- *  - onClose: called when the student dismisses the panel after it's done
+ *  - onClose: optional — called (in addition to the panel resetting its
+ *    own internal state) when the student dismisses the finished panel
  */
 export default function StudentQuizPanel({ socket, sessionId, studentId, onClose }) {
   const [quiz, setQuiz] = useState(null); // { quizId, questions: [{ _id, question, options, timeLimit }] }
@@ -156,7 +161,19 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-bold text-slate-800">Live Quiz Panel</h3>
         {finished && (
-          <button onClick={onClose} aria-label="Close quiz panel">
+          <button
+            // Resets local state so the panel goes back to hidden
+            // (`if (!quiz) return null` below) instead of staying stuck on
+            // the "complete" screen — it'll reopen on its own the next
+            // time "quiz-launched" fires. `onClose` is also still called,
+            // for a parent that wants to react to it (e.g. unmounting a
+            // wrapper), but isn't required for the panel to close itself.
+            onClick={() => {
+              setQuiz(null);
+              onClose?.();
+            }}
+            aria-label="Close quiz panel"
+          >
             <X size={16} />
           </button>
         )}

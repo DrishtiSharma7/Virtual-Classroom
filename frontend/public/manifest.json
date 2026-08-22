@@ -1,0 +1,17 @@
+{
+  "name": "Virtual Classroom",
+  "short_name": "VClassroom",
+  "description": "Live online classes, a real-time collaborative whiteboard, quizzes, attendance, and assignments in one place.",
+  "start_url": "/login",
+  "display": "standalone",
+  "background_color": "#f8faff",
+  "theme_color": "#5b5fef",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

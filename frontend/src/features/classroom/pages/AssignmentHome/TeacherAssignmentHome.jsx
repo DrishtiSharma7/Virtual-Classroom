@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import "./AssignmentHome.css";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 const assignmentsData = [
   {
@@ -47,6 +48,7 @@ const assignmentsData = [
 ];
 
 export default function TeacherAssignments() {
+  usePageMeta("Assignments");
   const [search, setSearch] = useState("");
 
   const filteredAssignments = assignmentsData.filter(

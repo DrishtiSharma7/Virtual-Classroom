@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import "./AttendanceHome.css";
 import { getClassroomAttendance } from "../../api/attendance.api";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 function AttendanceHome() {
+  usePageMeta("Attendance");
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

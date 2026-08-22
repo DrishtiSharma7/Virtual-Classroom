@@ -269,25 +269,45 @@ export default function TeacherQuizPanel({
     }
   };
 
-  const handleEndQuiz = async () => {
-    clearInterval(timerRef.current);
-    socket?.emit("close-quiz", { sessionId, quizId: quiz._id });
-
-    setStage("results");
-    setResultsLoading(true);
-
+  const fetchResults = async (quizId) => {
     try {
-      const data = await getQuizResults(quiz._id);
+      const data = await getQuizResults(quizId);
       setResults({
         perStudent: data?.perStudent || [],
         perQuestion: data?.perQuestion || [],
       });
     } catch (err) {
       setError(err?.response?.data?.message || "Could not load results.");
-    } finally {
-      setResultsLoading(false);
     }
   };
+
+  const handleEndQuiz = async () => {
+    clearInterval(timerRef.current);
+    socket?.emit("close-quiz", { sessionId, quizId: quiz._id });
+
+    setStage("results");
+    setResultsLoading(true);
+    await fetchResults(quiz._id);
+    setResultsLoading(false);
+  };
+
+  // Keeps results live as students finish submitting. A student's
+  // submitQuiz call is a separate REST round trip triggered by the
+  // "close-quiz" broadcast above, independently timed from it — there's
+  // no guarantee it lands before handleEndQuiz's own results fetch does,
+  // so results could otherwise show as missing/incomplete purely due to
+  // timing. The backend emits this once a response is actually saved.
+  useEffect(() => {
+    if (!socket || !quiz) return;
+
+    const onResponseSubmitted = ({ quizId }) => {
+      if (quizId !== quiz._id) return;
+      fetchResults(quiz._id);
+    };
+
+    socket.on("quiz-response-submitted", onResponseSubmitted);
+    return () => socket.off("quiz-response-submitted", onResponseSubmitted);
+  }, [socket, quiz]);
 
   const handleExport = () => {
     exportResultsToExcel(

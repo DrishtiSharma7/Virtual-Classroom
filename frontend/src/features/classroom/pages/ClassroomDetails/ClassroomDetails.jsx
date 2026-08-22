@@ -22,11 +22,13 @@ import "./ClassroomDetails.css";
 import { getClassroomById } from "../../api/classroom.api";
 import { useNavigate } from "react-router-dom";
 import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 function ClassroomDetails() {
   const { classroomId } = useParams();
 
   const [classroom, setClassroom] = useState(null);
+  usePageMeta(classroom?.name || "Classroom");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();

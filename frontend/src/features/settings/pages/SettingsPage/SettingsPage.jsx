@@ -13,9 +13,11 @@ import {
   updateTeacherSettings,
   updateStudentSettings,
 } from "../../api/settings.api";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 const SettingsPage = () => {
   const { role } = useSelector((state) => state.auth);
+  usePageMeta("Settings");
 
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState(null);

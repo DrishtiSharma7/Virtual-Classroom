@@ -22,6 +22,7 @@ import {
   toggleQuizRetake,
 } from "../../api/quiz.api";
 import { exportResultsToExcel } from "../../utils/quizExcel";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 export default function QuizDetail() {
   const { quizId } = useParams();
@@ -29,6 +30,7 @@ export default function QuizDetail() {
   const { role } = useSelector((state) => state.auth);
 
   const [quiz, setQuiz] = useState(null);
+  usePageMeta(quiz?.title || "Quiz");
   const [results, setResults] = useState({ perStudent: [], perQuestion: [] });
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);

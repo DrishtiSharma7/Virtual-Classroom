@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { KeyRound, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { joinClassroom } from "../../api/classroom.api";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 function JoinClassroom() {
   const navigate = useNavigate();
+  usePageMeta("Join Classroom");
 
   // Only students are allowed to join a classroom (mirrors backend role check).
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");

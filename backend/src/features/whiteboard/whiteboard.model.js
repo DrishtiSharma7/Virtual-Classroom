@@ -1,5 +1,25 @@
 const mongoose = require("mongoose");
 
+const pageSchema = new mongoose.Schema(
+  {
+    pageId: {
+      type: String,
+      required: true,
+    },
+
+    name: {
+      type: String,
+      default: "Page 1",
+    },
+
+    elements: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
 const whiteboardSchema = new mongoose.Schema(
   {
     session: {
@@ -9,9 +29,9 @@ const whiteboardSchema = new mongoose.Schema(
       unique: true,
     },
 
-    elements: {
-      type: [mongoose.Schema.Types.Mixed],
-      default: [],
+    pages: {
+      type: [pageSchema],
+      default: () => [{ pageId: "page-1", name: "Page 1", elements: [] }],
     },
   },
   { timestamps: true }

@@ -274,6 +274,19 @@ exports.submitQuiz = async (req, res) => {
       source,
     });
 
+    // Tell the teacher's live quiz panel a new response landed, so it can
+    // refetch results — the teacher's own "end quiz" flow fires its
+    // results GET immediately after emitting "close-quiz" on the socket,
+    // with no guarantee a given student's submitQuiz (a separate,
+    // independently-timed REST round trip triggered by that same
+    // "close-quiz" broadcast) has finished before that GET lands. Without
+    // this, results could show as missing/incomplete depending on
+    // network timing, not because anything actually failed.
+    const io = req.app.get("io");
+    io?.to(quiz.session.toString()).emit("quiz-response-submitted", {
+      quizId: quiz._id.toString(),
+    });
+
     res.json({
       message: "Quiz submitted",
       score,

@@ -10,9 +10,11 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { createClassroom } from "../../api/classroom.api";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 function CreateClassroom() {
   const navigate = useNavigate();
+  usePageMeta("Create Classroom");
 
   // Only teachers are allowed to create a classroom (mirrors backend role check).
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");

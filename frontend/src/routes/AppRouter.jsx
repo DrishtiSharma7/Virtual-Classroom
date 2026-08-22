@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout/DashboardLayout";
 
 import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
+import LandingPage from "../features/marketing/pages/LandingPage/LandingPage";
 
 import ClassroomHome from "../features/classroom/pages/ClassroomHome/ClassroomHome";
 import ClassroomDetails from "../features/classroom/pages/ClassroomDetails/ClassroomDetails";
@@ -31,7 +32,7 @@ function AppRouter() {
       <Routes>
         {/* Public Routes */}
         <Route element={<AuthLayout />}>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>

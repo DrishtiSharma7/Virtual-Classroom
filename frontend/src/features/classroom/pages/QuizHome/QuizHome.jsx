@@ -2,9 +2,11 @@ import { useSelector } from "react-redux";
 
 import TeacherQuizHome from "./TeacherQuizHome";
 import StudentQuizHome from "./StudentQuizHome";
+import usePageMeta from "../../../../hooks/usePageMeta";
 
 export default function QuizHome() {
   const { role } = useSelector((state) => state.auth);
+  usePageMeta("Quizzes");
 
   if (!role) {
     return (
