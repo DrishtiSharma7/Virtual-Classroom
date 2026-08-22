@@ -70,7 +70,7 @@ function LandingPage() {
         </nav>
       </header>
 
-      {/* Hero */}
+
       <main className="relative z-10 mx-auto flex max-w-7xl flex-col-reverse items-center gap-8 px-5 py-12 sm:px-10 sm:py-16 md:flex-row md:gap-12 md:py-24">
         <div className="flex-1 text-center md:text-left">
           <h1 className="text-3xl font-extrabold leading-tight text-[#0f0f10] sm:text-4xl md:text-5xl">
@@ -104,7 +104,7 @@ function LandingPage() {
         />
       </main>
 
-      {/* Features */}
+
       <section className="relative z-10 mx-auto max-w-7xl px-5 pb-16 sm:px-10 sm:pb-24">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map(({ Icon, title, description }) => (
@@ -126,7 +126,7 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Bottom CTA */}
+
       <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16 text-center sm:px-10 sm:pb-24">
         <div className="rounded-3xl bg-gradient-to-br from-[#5b5fef] to-[#4347d9] px-6 py-12 shadow-[0_20px_50px_rgba(75,79,214,0.25)] sm:px-12">
           <MessageCircle className="mx-auto mb-4 h-10 w-10 text-white/90" />

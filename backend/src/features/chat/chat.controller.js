@@ -1,7 +1,5 @@
 const Chat = require("./chat.model");
 
-// Get messages by session
-
 exports.getMessagesBySession = async (req, res) => {
   try {
     const messages = await Chat.find({
@@ -21,8 +19,6 @@ exports.getMessagesBySession = async (req, res) => {
     });
   }
 };
-
-// Delete Message
 
 exports.deleteMessage = async (req, res) => {
   try {

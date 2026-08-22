@@ -28,11 +28,6 @@ mongoose
   .then(async () => {
     console.log("MongoDB Connected");
 
-    // This process's in-memory room registry starts empty on every boot,
-    // so any attendance interval left "open" from before a restart/crash
-    // can no longer be trusted — close it out now (students who are in
-    // fact still connected simply open a fresh interval on their next
-    // socket join).
     const reconciled = await attendanceService.reconcileOnStartup();
     if (reconciled > 0) {
       console.log(`Attendance: reconciled ${reconciled} dangling interval(s) from before restart`);

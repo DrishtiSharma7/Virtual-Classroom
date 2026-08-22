@@ -31,35 +31,24 @@ const emptyQuestion = () => ({
   timeLimit: 60,
 });
 
-/**
- * Teacher-facing Live Quiz panel.
- *
- * props:
- *  - socket: the live socket.io-client instance (socketRef.current)
- *  - sessionId: current live session id (room id)
- *  - classroomId: current classroom id (used to list previously saved quizzes)
- *  - onClose: called when the panel's X button is clicked
- */
-export default function TeacherQuizPanel({
-  socket,
-  sessionId,
-  classroomId,
-  onClose,
-}) {
-  const [stage, setStage] = useState("select"); // select | builder | live | results
+export default function TeacherQuizPanel(
+  {
+    socket,
+    sessionId,
+    classroomId,
+    onClose,
+  }
+) {
+  const [stage, setStage] = useState("select");
   const [questions, setQuestions] = useState([emptyQuestion()]);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
-  // Previously saved quizzes for this classroom, so the teacher can pick
-  // one of their own choosing instead of always building from scratch.
   const [savedQuizzes, setSavedQuizzes] = useState([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [launchingId, setLaunchingId] = useState(null);
 
-  // Full quiz doc (still has correctAnswer client-side; only the socket
-  // broadcast to students strips it, on the backend).
   const [quiz, setQuiz] = useState(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -67,12 +56,8 @@ export default function TeacherQuizPanel({
   const [liveAnswerCount, setLiveAnswerCount] = useState(0);
   const timerRef = useRef(null);
 
-  // { perStudent: [...], perQuestion: [...] } — API shape changed when the
-  // per-question breakdown was added (previously a bare array).
   const [results, setResults] = useState({ perStudent: [], perQuestion: [] });
   const [resultsLoading, setResultsLoading] = useState(false);
-
-  /* ---------------- Saved quiz selection ---------------- */
 
   useEffect(() => {
     if (stage !== "select" || !classroomId) return;
@@ -119,8 +104,6 @@ export default function TeacherQuizPanel({
       setLaunchingId(null);
     }
   };
-
-  /* ---------------- Question builder ---------------- */
 
   const updateQuestion = (index, patch) => {
     setQuestions((prev) =>
@@ -174,8 +157,6 @@ export default function TeacherQuizPanel({
       q.timeLimit <= 120
   );
 
-  /* ---------------- Launch ---------------- */
-
   const handleLaunch = async () => {
     if (validQuestions.length === 0) {
       setError(
@@ -213,8 +194,6 @@ export default function TeacherQuizPanel({
     }
   };
 
-  /* ---------------- Live question timer ---------------- */
-
   useEffect(() => {
     if (stage !== "live" || !quiz) return;
 
@@ -235,7 +214,6 @@ export default function TeacherQuizPanel({
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, questionIndex, quiz]);
 
   useEffect(() => {
@@ -291,12 +269,6 @@ export default function TeacherQuizPanel({
     setResultsLoading(false);
   };
 
-  // Keeps results live as students finish submitting. A student's
-  // submitQuiz call is a separate REST round trip triggered by the
-  // "close-quiz" broadcast above, independently timed from it — there's
-  // no guarantee it lands before handleEndQuiz's own results fetch does,
-  // so results could otherwise show as missing/incomplete purely due to
-  // timing. The backend emits this once a response is actually saved.
   useEffect(() => {
     if (!socket || !quiz) return;
 
@@ -324,8 +296,6 @@ export default function TeacherQuizPanel({
     setStage("select");
   };
 
-  /* ---------------- Render ---------------- */
-
   return (
     <div className="w-[320px] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
       <div className="mb-3 flex items-center justify-between">
@@ -344,7 +314,7 @@ export default function TeacherQuizPanel({
         </p>
       )}
 
-      {/* -------- Select a saved quiz, or build a new one -------- */}
+
       {stage === "select" && (
         <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
           <button
@@ -400,7 +370,7 @@ export default function TeacherQuizPanel({
         </div>
       )}
 
-      {/* -------- Builder -------- */}
+
       {stage === "builder" && (
         <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
           <button
@@ -520,7 +490,7 @@ export default function TeacherQuizPanel({
         </div>
       )}
 
-      {/* -------- Live -------- */}
+
       {stage === "live" && quiz && (
         <div>
           <p className="mb-1 text-xs font-semibold text-slate-400">
@@ -589,7 +559,7 @@ export default function TeacherQuizPanel({
         </div>
       )}
 
-      {/* -------- Results -------- */}
+
       {stage === "results" && (
         <div>
           {resultsLoading ? (
@@ -598,8 +568,7 @@ export default function TeacherQuizPanel({
             </p>
           ) : (
             <>
-              {/* Bug #11: per-question correct/incorrect/unanswered
-                  breakdown, alongside the existing per-student totals. */}
+
               {results.perQuestion.length > 0 && (
                 <div className="mb-3 max-h-[160px] space-y-1 overflow-y-auto rounded-lg border border-slate-100 p-2">
                   <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">

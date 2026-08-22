@@ -142,11 +142,6 @@ function AttendanceHome() {
         ? await getClassroomAttendance(classroomId)
         : await getAttendanceDashboard();
 
-      // getClassroomAttendance's rows don't carry a classroom name (they're
-      // already scoped to one), but the table always shows a Classroom
-      // column regardless of how this page was reached — so it never
-      // changes shape when navigating between the scoped and dashboard
-      // views. Fill it in from the classroom itself in that case.
       const classroomName = classroomId
         ? (await getClassroomById(classroomId)).name
         : null;
@@ -354,7 +349,7 @@ function AttendanceHome() {
   return (
     <div className="attendance-page">
       <div className="attendance-container">
-        {/* Header */}
+
 
         <div className="attendance-header">
           <div>
@@ -385,7 +380,7 @@ function AttendanceHome() {
           </div>
         </div>
 
-        {/* Statistics Cards */}
+
 
         <div className="stats-grid">
           <div className="stat-card">
@@ -413,7 +408,7 @@ function AttendanceHome() {
           </div>
         </div>
 
-        {/* Search & Filters */}
+
 
         <div className="filter-card">
           <div className="filter-grid">
@@ -433,7 +428,7 @@ function AttendanceHome() {
             </div>
           </div>
         </div>
-        {/* Attendance Table */}
+
 
         <div className="table-wrapper">
           <table className="attendance-table">
@@ -492,7 +487,7 @@ function AttendanceHome() {
             </tbody>
           </table>
         </div>
-        {/* Pagination */}
+
 
         {totalPages > 1 && (
           <div className="pagination">

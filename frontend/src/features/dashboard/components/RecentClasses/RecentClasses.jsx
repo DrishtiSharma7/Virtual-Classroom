@@ -1,9 +1,6 @@
 import React from "react";
 import "./RecentClasses.css";
 
-// Backend only ever selects name/subject/createdAt (+ teacher.name for the
-// student variant) for this list — see dashboard.service.js's
-// `recentClasses`/`myClasses` queries — so those are the only columns shown.
 const RecentClasses = ({ classes = [] }) => {
   return (
     <div className="recent-classes-container">

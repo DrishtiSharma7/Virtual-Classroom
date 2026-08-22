@@ -38,7 +38,7 @@ const StudentDashboard = () => {
       <h1 className="sr-only">Student Dashboard</h1>
       <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
-      {/* Stats Grid */}
+
       <div className="stats-grid">
         <StatCard
           icon={<Layers />}

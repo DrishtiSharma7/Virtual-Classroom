@@ -45,8 +45,6 @@ exports.createSession = async (req, res) => {
   }
 };
 
-// GET ALL SESSIONS OF CLASSROOM
-
 exports.getSessionsByClassroom = async (req, res) => {
   try {
     const sessions = await Session.find({
@@ -70,8 +68,6 @@ exports.getSessionsByClassroom = async (req, res) => {
     });
   }
 };
-
-// GET SESSION BY ID
 
 exports.getSessionById = async (req, res) => {
   try {
@@ -103,8 +99,6 @@ exports.getSessionById = async (req, res) => {
   }
 };
 
-// DELETE SESSION
-
 exports.deleteSession = async (req, res) => {
   try {
     const session = await Session.findById(req.params.id);
@@ -132,8 +126,6 @@ exports.deleteSession = async (req, res) => {
     });
   }
 };
-
-// START SESSION
 
 exports.startSession = async (req, res) => {
   try {
@@ -167,8 +159,6 @@ exports.startSession = async (req, res) => {
   }
 };
 
-// END SESSION
-
 exports.endSession = async (req, res) => {
   try {
     const session = await Session.findById(req.params.id);
@@ -190,11 +180,8 @@ exports.endSession = async (req, res) => {
 
     await session.save();
 
-    // Finalize attendance for anyone still marked IN_SESSION (students who
-    // never explicitly left before the teacher ended the session).
     await attendanceService.completeSessionAttendance(session._id);
 
-    // Chat is session-scoped, not persisted beyond the live session.
     await Chat.deleteMany({ session: session._id });
 
     res.json({

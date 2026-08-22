@@ -53,7 +53,7 @@ function LoginForm() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f8faff]">
-      {/* Header */}
+
       <header className="relative z-10 flex items-center gap-2.5 px-5 pt-6 sm:px-10 sm:pt-8">
         <GraduationCap className="h-9 w-9 text-[#4b4fd6] sm:h-[42px] sm:w-[42px]" />
         <span className="text-2xl font-bold text-[#1d1d1f] sm:text-[28px]">
@@ -61,10 +61,10 @@ function LoginForm() {
         </span>
       </header>
 
-      {/* Main container */}
+
       <main className="relative z-10 flex min-h-[calc(100vh-100px)] items-center justify-center px-4 py-6 sm:px-5">
         <div className="animate-card-fade-in flex w-full max-w-[1050px] flex-col overflow-hidden rounded-[18px] bg-[#e5e9f9] shadow-[0_20px_50px_rgba(0,0,0,0.08)] sm:rounded-3xl md:min-h-[560px] md:flex-row">
-          {/* LEFT PANEL — hidden on mobile/tablet, shown from desktop (lg) up */}
+
           <section className="hidden flex-1 flex-row items-center justify-between gap-3 bg-[#e5e9f9] px-5 py-5 text-left sm:flex-col sm:items-center sm:justify-center sm:gap-0 sm:px-8 sm:py-9 sm:text-center md:px-5 md:py-12 lg:flex">
             <div className="flex flex-col sm:order-2 sm:items-center">
               <h2 className="mb-1.5 text-lg font-bold leading-tight text-gray-900 sm:mb-3.5 sm:text-2xl md:text-[28px]">
@@ -91,7 +91,7 @@ function LoginForm() {
             </picture>
           </section>
 
-          {/* RIGHT PANEL */}
+
           <section className="flex flex-1 flex-col items-center justify-center rounded-t-[18px] bg-white px-5 py-7 shadow-[0_20px_50px_rgba(0,0,0,0.12)] sm:rounded-t-3xl sm:px-8 sm:py-9 md:rounded-l-3xl md:rounded-tr-none md:px-6 md:py-6">
             <form className="w-full max-w-[400px]" onSubmit={handleSubmit}>
               <h1 className="mb-2 text-[26px] font-bold text-[#0f0f10] sm:text-[32px]">
@@ -102,7 +102,7 @@ function LoginForm() {
                 Sign in to continue to your Virtual Classroom.
               </p>
 
-              {/* EMAIL */}
+
               <div className="relative mb-4">
                 <input
                   type="email"
@@ -115,7 +115,7 @@ function LoginForm() {
                 />
               </div>
 
-              {/* PASSWORD */}
+
               <div className="relative mb-4">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -137,7 +137,7 @@ function LoginForm() {
                 </button>
               </div>
 
-              {/* OPTIONS */}
+
               <div className="mb-5 mt-1 flex flex-wrap items-center justify-between gap-2">
                 <label className="flex select-none items-center gap-2 text-base text-gray-700 sm:text-lg">
                   <input
@@ -157,7 +157,7 @@ function LoginForm() {
                 </Link>
               </div>
 
-              {/* ROLE SELECTOR */}
+
               <div className="mb-5 flex gap-3">
                 <button
                   type="button"
@@ -186,7 +186,7 @@ function LoginForm() {
                 </button>
               </div>
 
-              {/* LOGIN BUTTON */}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -195,7 +195,7 @@ function LoginForm() {
                 {loading ? "Logging in..." : "Login"}
               </button>
 
-              {/* REGISTER */}
+
               <p className="text-center text-sm text-gray-500">
                 Don't have an account?{" "}
                 <Link

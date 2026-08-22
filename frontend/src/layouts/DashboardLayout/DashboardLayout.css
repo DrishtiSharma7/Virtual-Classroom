@@ -44,7 +44,7 @@
 
 @media (min-width: 1024px) {
   .dashboard-main {
-    margin-left: 16rem; /* Sidebar width = 256px */
+    margin-left: 16rem;
   }
 
   .dashboard-content {

@@ -2,13 +2,6 @@ import { useEffect } from "react";
 
 const SITE_NAME = "Virtual Classroom";
 
-// Sets this route's <title>, meta description, and canonical link on mount,
-// restoring the previous values on unmount. Only meaningful for the handful
-// of public routes (landing/login/register) — the rest of the app is
-// auth-gated and never gets indexed, so there's no SEO value in wiring this
-// up everywhere, but the title still helps users tell tabs/history/
-// bookmarks apart. Canonical is derived from the current location so every
-// public route points at itself instead of all sharing index.html's "/".
 export default function usePageMeta(title, description) {
   useEffect(() => {
     const prevTitle = document.title;

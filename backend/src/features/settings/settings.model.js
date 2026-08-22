@@ -9,7 +9,6 @@ const settingsSchema = new mongoose.Schema(
       unique: true,
     },
 
-    // Shared session preferences (Teacher + Student) — Live Session (Video & Audio)
     session: {
       joinWithCameraOn: {
         type: Boolean,
@@ -21,9 +20,7 @@ const settingsSchema = new mongoose.Schema(
       },
     },
 
-    // Teacher-only preferences
     teacher: {
-      // Digital Whiteboard defaults
       defaultPenColor: {
         type: String,
         default: "#1e293b",
@@ -34,14 +31,12 @@ const settingsSchema = new mongoose.Schema(
         min: 1,
         max: 20,
       },
-      // Live Quiz defaults
       defaultQuizTimeLimit: {
         type: Number,
         default: 60,
         min: 30,
         max: 120,
       },
-      // Classroom control
       autoMuteStudentsOnJoin: {
         type: Boolean,
         default: false,
@@ -52,7 +47,6 @@ const settingsSchema = new mongoose.Schema(
       },
     },
 
-    // Student-only preferences
     student: {
       preferredSessionView: {
         type: String,

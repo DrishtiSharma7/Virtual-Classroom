@@ -1,10 +1,5 @@
 import * as XLSX from "xlsx";
 
-// Attendance is tracked automatically from real session participation
-// (see backend attendance.service.js) and is never manually writable — so,
-// unlike quizExcel.js, there is deliberately no matching "import" here.
-// Export only mirrors whatever the teacher/student is currently looking at.
-
 const filenameSafe = (value) =>
   String(value || "attendance")
     .trim()
@@ -12,9 +7,6 @@ const filenameSafe = (value) =>
     .replace(/^-+|-+$/g, "")
     .toLowerCase();
 
-// rows: the teacher-view attendance array (per-student, across one
-// classroom or the whole dashboard) — see AttendanceHome.jsx's `attendance`
-// state when !isStudent.
 export const exportTeacherAttendanceToExcel = (rows, scopeLabel) => {
   const sheetRows = rows.map((row) => ({
     Student: row.name,
@@ -32,8 +24,6 @@ export const exportTeacherAttendanceToExcel = (rows, scopeLabel) => {
   XLSX.writeFile(workbook, `attendance-${filenameSafe(scopeLabel)}.xlsx`);
 };
 
-// rows: the student-view attendance array (per-session) — see
-// AttendanceHome.jsx's `attendance` state when isStudent.
 export const exportMyAttendanceToExcel = (rows, studentName) => {
   const sheetRows = rows.map((row) => ({
     Class: row.classroomName,

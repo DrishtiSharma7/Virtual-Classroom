@@ -31,12 +31,6 @@ exports.createQuiz = async (req, res) => {
   }
 };
 
-// ======================================
-// GET ALL QUIZZES FOR A CLASSROOM
-// Teacher -> quizzes they created, with response counts.
-// Student -> every quiz in the classroom, tagged as attempted
-//            (with their score) or not-yet-attempted.
-// ======================================
 exports.getClassroomQuizzes = async (req, res) => {
   try {
     const quizzes = await Quiz.find({ classroom: req.params.classroomId })
@@ -68,8 +62,6 @@ exports.getClassroomQuizzes = async (req, res) => {
       return res.json(withCounts);
     }
 
-    // student role — only quizzes the teacher has actually launched at
-    // least once (live, or reopened for retake) are visible at all.
     const visibleQuizzes = quizzes.filter((q) => q.launched);
 
     const myResponses = await QuizResponse.find({
@@ -108,13 +100,6 @@ exports.getClassroomQuizzes = async (req, res) => {
   }
 };
 
-// ======================================
-// GET SINGLE QUIZ DETAIL
-// Teacher (owner) -> full quiz incl. correct answers + response count.
-// Student -> if attempted, per-question breakdown (their answer, correct
-//            answer, right/wrong); if not attempted, questions without
-//            correctAnswer / their status only.
-// ======================================
 exports.getQuizDetail = async (req, res) => {
   try {
     const quiz = await Quiz.findById(req.params.id).populate(
@@ -157,7 +142,6 @@ exports.getQuizDetail = async (req, res) => {
       });
     }
 
-    // student role — gather every attempt (live + retake), oldest first.
     const responses = await QuizResponse.find({
       quiz: quiz._id,
       student: req.user.id,
@@ -274,14 +258,6 @@ exports.submitQuiz = async (req, res) => {
       source,
     });
 
-    // Tell the teacher's live quiz panel a new response landed, so it can
-    // refetch results — the teacher's own "end quiz" flow fires its
-    // results GET immediately after emitting "close-quiz" on the socket,
-    // with no guarantee a given student's submitQuiz (a separate,
-    // independently-timed REST round trip triggered by that same
-    // "close-quiz" broadcast) has finished before that GET lands. Without
-    // this, results could show as missing/incomplete depending on
-    // network timing, not because anything actually failed.
     const io = req.app.get("io");
     io?.to(quiz.session.toString()).emit("quiz-response-submitted", {
       quizId: quiz._id.toString(),
@@ -315,8 +291,6 @@ exports.getResults = async (req, res) => {
 
       .populate("student", "name email");
 
-    // Per-question breakdown: correct / incorrect / unanswered, computed
-    // from every student's `answers` array against `quiz.questions`.
     const questionStats = quiz.questions.map((q, index) => ({
       questionId: q._id,
       question: q.question,
@@ -350,13 +324,6 @@ exports.getResults = async (req, res) => {
   }
 };
 
-// ======================================
-// TEACHER: open/close a quiz for students to self-attempt after the
-// live session (from the Quiz page, no socket/live session needed).
-// Also flips `launched` so the quiz becomes visible to students at all,
-// covering the case where a quiz was created but never actually
-// launched live yet.
-// ======================================
 exports.toggleRetake = async (req, res) => {
   try {
     const quiz = await Quiz.findById(req.params.id);

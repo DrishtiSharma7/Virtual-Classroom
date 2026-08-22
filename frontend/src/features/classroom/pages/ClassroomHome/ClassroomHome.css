@@ -90,8 +90,6 @@
   @apply bg-white rounded-2xl p-8 text-center text-gray-500 shadow-sm mb-6;
 }
 
-/* Mobile */
-
 @media (max-width: 639px) {
   .classroom-page {
     @apply p-4;
@@ -142,8 +140,6 @@
   }
 }
 
-/* Tablet */
-
 @media (min-width: 640px) and (max-width: 1023px) {
   .classroom-page {
     @apply px-4 pt-2 pb-4;
@@ -153,8 +149,6 @@
     @apply grid-cols-2 gap-5;
   }
 }
-
-/* Desktop */
 
 @media (min-width: 1024px) {
   .classroom-page {

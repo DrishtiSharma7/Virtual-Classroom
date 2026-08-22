@@ -4,19 +4,6 @@ import { getLiveSessionAttendance } from "../../api/attendance.api";
 
 const POLL_INTERVAL_MS = 20000;
 
-/**
- * Teacher-facing live attendance panel.
- *
- * props:
- *  - sessionId: current live session id
- *  - onClose: called when the panel's X button is clicked
- *
- * The final, authoritative attendance record is only ever computed and
- * saved when the session ends (see backend attendance.service.js) — this
- * panel is a read-only, best-effort snapshot for the teacher's awareness
- * during the live session, polled rather than pushed to keep this
- * already-large component's socket wiring untouched.
- */
 export default function LiveAttendancePanel({ sessionId, onClose }) {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState("");

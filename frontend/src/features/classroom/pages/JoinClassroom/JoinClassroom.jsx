@@ -8,7 +8,6 @@ function JoinClassroom() {
   const navigate = useNavigate();
   usePageMeta("Join Classroom");
 
-  // Only students are allowed to join a classroom (mirrors backend role check).
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const role = storedUser?.role || localStorage.getItem("role") || "student";
   const isTeacher = role === "teacher";
@@ -85,7 +84,6 @@ function JoinClassroom() {
     );
   }
 
-  // Success state — the student has been enrolled.
   if (joinedClassroom) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
@@ -131,7 +129,6 @@ function JoinClassroom() {
     );
   }
 
-  // Already-joined state — distinct from a generic error, offer a direct link if we have one.
   if (alreadyJoinedClassroom) {
     return (
       <div className="flex h-full items-center justify-center bg-slate-50 px-4 py-10">

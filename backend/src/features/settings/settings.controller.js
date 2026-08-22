@@ -2,9 +2,6 @@ const bcrypt = require("bcryptjs");
 const Settings = require("./settings.model");
 const User = require("../auth/auth.model");
 
-// GET /api/settings
-// Returns the user's profile + settings, creating a default settings doc
-// (scoped to their role) the first time they visit the page.
 exports.getSettings = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -33,7 +30,6 @@ exports.getSettings = async (req, res) => {
   }
 };
 
-// PUT /api/settings/profile  { name }
 exports.updateProfile = async (req, res) => {
   try {
     const { name } = req.body;
@@ -61,7 +57,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// PUT /api/settings/password  { currentPassword, newPassword }
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -91,8 +86,6 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-// PUT /api/settings/session  { joinWithCameraOn, joinWithMicOn }
-// Shared by both roles.
 exports.updateSessionSettings = async (req, res) => {
   try {
     const { joinWithCameraOn, joinWithMicOn } = req.body;
@@ -120,7 +113,6 @@ exports.updateSessionSettings = async (req, res) => {
   }
 };
 
-// PUT /api/settings/teacher — teacher-only preferences
 exports.updateTeacherSettings = async (req, res) => {
   try {
     const {
@@ -162,7 +154,6 @@ exports.updateTeacherSettings = async (req, res) => {
   }
 };
 
-// PUT /api/settings/student — student-only preferences
 exports.updateStudentSettings = async (req, res) => {
   try {
     const { preferredSessionView, showQuizResultImmediately } = req.body;

@@ -1,6 +1,5 @@
 const Recording = require("./recording.model");
 
-// Upload Recording
 exports.uploadRecording = async (req, res) => {
   try {
     if (!req.file) {
@@ -29,7 +28,6 @@ exports.uploadRecording = async (req, res) => {
   }
 };
 
-// Get Recordings by Classroom
 exports.getRecordings = async (req, res) => {
   try {
     const recordings = await Recording.find({
@@ -48,7 +46,6 @@ exports.getRecordings = async (req, res) => {
   }
 };
 
-// Delete Recording
 exports.deleteRecording = async (req, res) => {
   try {
     const recording = await Recording.findById(req.params.id);

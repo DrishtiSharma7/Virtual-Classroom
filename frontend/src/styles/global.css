@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Self-hosted variable font — see index.html's preload for why. One file
-   covers the whole 400-800 weight range (that's what Google's own CDN was
-   actually serving under the hood for this weight list too — a single
-   variable-font file repeated across each @font-face declaration). */
 @font-face {
   font-family: "Inter";
   font-style: normal;

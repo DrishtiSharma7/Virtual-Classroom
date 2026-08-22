@@ -81,7 +81,7 @@ function RegisterForm() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f8faff]">
-      {/* Header */}
+
       <header className="relative z-10 flex items-center gap-2.5 px-5 pt-6 sm:px-10 sm:pt-8">
         <GraduationCap className="h-9 w-9 text-[#4b4fd6] sm:h-[42px] sm:w-[42px]" />
         <span className="text-2xl font-bold text-[#1d1d1f] sm:text-[28px]">
@@ -89,10 +89,10 @@ function RegisterForm() {
         </span>
       </header>
 
-      {/* Main container */}
+
       <main className="relative z-10 flex min-h-[calc(100vh-140px)] items-center justify-center px-4 py-6 sm:px-5">
         <div className="animate-rp-fade-in flex w-full max-w-[950px] flex-col overflow-hidden rounded-[18px] bg-gradient-to-br from-[#98d1f7] via-[#a7c4ff] to-[#dabbfb] shadow-[0_20px_45px_rgba(0,0,0,0.12)] sm:rounded-[22px] md:h-[640px] md:flex-row">
-          {/* -------- Left panel -------- */}
+
           <div className="hidden flex-1 flex-row items-center justify-between gap-3 px-5 py-5 text-left md:flex md:flex-col md:items-center md:justify-center md:gap-0 md:px-8 md:py-12 md:text-center">
             <div className="flex flex-col md:order-2 md:items-center">
               <h1 className="mb-1.5 text-lg font-bold leading-tight text-gray-900 md:mb-3 md:text-xl lg:mb-3.5 lg:text-[28px]">
@@ -119,7 +119,7 @@ function RegisterForm() {
             </picture>
           </div>
 
-          {/* -------- Right panel -------- */}
+
           <div className="flex flex-col overflow-y-auto rounded-t-[18px] bg-white px-5 py-7 sm:rounded-t-[22px] sm:px-8 sm:py-9 md:w-1/2 md:rounded-l-3xl md:rounded-tr-none md:px-8 md:py-6 lg:px-12 lg:py-10">
             <h2 className="mb-1.5 flex items-center gap-2 text-xl font-bold text-[#111] sm:text-3xl lg:text-[32px]">
               Create Account

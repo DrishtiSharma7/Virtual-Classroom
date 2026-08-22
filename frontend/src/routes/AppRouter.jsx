@@ -4,12 +4,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout/DashboardLayout";
 
-// Login/register/landing are the unauthenticated entry points, so they
-// stay eagerly bundled — everything below is only ever reached after
-// signing in, and is lazy-loaded so those entry pages (and the login/
-// register flow itself) don't have to download the whole authenticated
-// app — dashboard, whiteboard, live video/WebRTC, xlsx/jsPDF exports,
-// etc. — before they can even render a form.
 import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
 import LandingPage from "../features/marketing/pages/LandingPage/LandingPage";
@@ -29,8 +23,6 @@ const SettingsPage = lazy(() => import("../features/settings/pages/SettingsPage/
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
 
-// Route-level Suspense fallback only — brief, since chunks this small are
-// typically cached/fetched in well under a second on any real connection.
 function RouteFallback() {
   return (
     <div className="flex h-screen w-full items-center justify-center">
@@ -44,14 +36,14 @@ function AppRouter() {
     <BrowserRouter>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
-          {/* Public Routes */}
+
           <Route element={<AuthLayout />}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Route>
 
-          {/* Protected Routes */}
+
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout showNavbar={true} />}>
               <Route path="/dashboard" element={<Dashboard />} />

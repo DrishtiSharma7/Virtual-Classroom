@@ -5,11 +5,6 @@ const attendanceService = require("../features/attendance/attendance.service");
 const TEACHER_INACTIVITY_TIMEOUT_MS =
   Number(process.env.TEACHER_INACTIVITY_TIMEOUT_MS) || 20 * 60 * 1000;
 
-// roomId -> pending setTimeout handle. If the host's last socket in a room
-// disconnects (tab closed, crash, lost internet) without ever calling the
-// explicit end-session API, the session would otherwise stay "live"
-// forever. This mirrors session.controller.endSession after a grace period,
-// and is canceled the moment the host reconnects and rejoins the room.
 const pendingAutoEnds = new Map();
 
 function scheduleAutoEnd(sessionId, io) {

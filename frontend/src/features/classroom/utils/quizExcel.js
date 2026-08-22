@@ -1,7 +1,5 @@
 import * as XLSX from "xlsx";
 
-// Expected columns (header row, case-insensitive matching):
-// Question | Option1 | Option2 | Option3 | Option4 | CorrectOption (1-4) | TimeLimit (seconds)
 export const parseQuizExcel = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -44,7 +42,6 @@ export const parseQuizExcel = (file) => {
   });
 };
 
-// Downloadable template so teachers know the exact column format expected above.
 export const downloadQuizTemplate = () => {
   const rows = [
     {
@@ -65,7 +62,6 @@ export const downloadQuizTemplate = () => {
   XLSX.writeFile(workbook, "quiz-import-template.xlsx");
 };
 
-// results: array from getQuizResults() -> [{ student: {name, email}, answers, score, ... }]
 export const exportResultsToExcel = (results, quizTitle = "Quiz Results") => {
   const rows = results.map((r) => ({
     "Student Name": r.student?.name || "Unknown",
@@ -77,7 +73,6 @@ export const exportResultsToExcel = (results, quizTitle = "Quiz Results") => {
   const sheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
 
-  // Sheet names can't exceed 31 chars or contain []:*?/\
   const safeSheetName = quizTitle.replace(/[\[\]:*?/\\]/g, "").slice(0, 31) || "Results";
 
   XLSX.utils.book_append_sheet(workbook, sheet, safeSheetName);

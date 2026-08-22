@@ -3,35 +3,19 @@ import { CheckCircle2, X } from "lucide-react";
 
 import { submitQuiz } from "../../api/quiz.api";
 
-/**
- * Student-facing Live Quiz panel.
- *
- * Meant to be mounted unconditionally for students (it renders null until a
- * "quiz-launched" event arrives), so it opens itself automatically the
- * moment the teacher launches a quiz — no manual toggle needed.
- *
- * props:
- *  - socket: the live socket.io-client instance (socketRef.current)
- *  - sessionId: current live session id (room id)
- *  - studentId: current user's id (for the optional live tally broadcast)
- *  - onClose: optional — called (in addition to the panel resetting its
- *    own internal state) when the student dismisses the finished panel
- */
 export default function StudentQuizPanel({ socket, sessionId, studentId, onClose }) {
-  const [quiz, setQuiz] = useState(null); // { quizId, questions: [{ _id, question, options, timeLimit }] }
+  const [quiz, setQuiz] = useState(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selected, setSelected] = useState(null);
-  const [answers, setAnswers] = useState([]); // running list of chosen option indices
+  const [answers, setAnswers] = useState([]);
   const [locked, setLocked] = useState(false);
-  const [revealedAnswer, setRevealedAnswer] = useState(null); // correctAnswer for current index, once known
+  const [revealedAnswer, setRevealedAnswer] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [finished, setFinished] = useState(false);
   const [score, setScore] = useState(null);
   const [submitError, setSubmitError] = useState("");
   const timerRef = useRef(null);
   const answersRef = useRef([]);
-
-  /* ---------------- Socket listeners ---------------- */
 
   useEffect(() => {
     if (!socket) return;
@@ -55,7 +39,6 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
         clearInterval(timerRef.current);
         setRevealedAnswer(correctAnswer);
 
-        // Move to the next question shortly after seeing the correct answer.
         setTimeout(() => {
           setQuestionIndex((i) => i + 1);
           setSelected(null);
@@ -93,15 +76,13 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
       socket.off("answer-revealed", onRevealed);
       socket.off("quiz-closed", onClosed);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, quiz]);
-
-  /* ---------------- Per-question countdown ---------------- */
 
   useEffect(() => {
     if (!quiz || finished) return;
     const current = quiz.questions[questionIndex];
-    if (!current) return; // ran past the last question, waiting for quiz-closed
+    if (!current)
+      return;
 
     setTimeLeft(current.timeLimit || 60);
 
@@ -118,17 +99,14 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz, questionIndex, finished]);
-
-  /* ---------------- Answer handling ---------------- */
 
   const lockAnswer = () => {
     setLocked((alreadyLocked) => {
       if (alreadyLocked) return true;
 
       setSelected((sel) => {
-        const value = sel === null ? -1 : sel; // -1 = unanswered in time
+        const value = sel === null ? -1 : sel;
         setAnswers((prev) => {
           const next = [...prev];
           next[questionIndex] = value;
@@ -150,9 +128,8 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
     setSelected(optIndex);
   };
 
-  /* ---------------- Render ---------------- */
-
-  if (!quiz) return null;
+  if (!quiz)
+    return null;
 
   const current = quiz.questions[questionIndex];
 
@@ -162,12 +139,6 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
         <h3 className="text-sm font-bold text-slate-800">Live Quiz Panel</h3>
         {finished && (
           <button
-            // Resets local state so the panel goes back to hidden
-            // (`if (!quiz) return null` below) instead of staying stuck on
-            // the "complete" screen — it'll reopen on its own the next
-            // time "quiz-launched" fires. `onClose` is also still called,
-            // for a parent that wants to react to it (e.g. unmounting a
-            // wrapper), but isn't required for the panel to close itself.
             onClick={() => {
               setQuiz(null);
               onClose?.();

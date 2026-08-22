@@ -16,7 +16,6 @@ function CreateClassroom() {
   const navigate = useNavigate();
   usePageMeta("Create Classroom");
 
-  // Only teachers are allowed to create a classroom (mirrors backend role check).
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const role = storedUser?.role || localStorage.getItem("role") || "student";
   const isTeacher = role === "teacher";
@@ -75,9 +74,7 @@ function CreateClassroom() {
       await navigator.clipboard.writeText(createdClassroom.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard may be unavailable (e.g. insecure context) — fail silently.
-    }
+    } catch {}
   };
 
   if (!isTeacher) {
@@ -101,7 +98,6 @@ function CreateClassroom() {
     );
   }
 
-  // Success state — show the auto-generated join code so the teacher can share it.
   if (createdClassroom) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">

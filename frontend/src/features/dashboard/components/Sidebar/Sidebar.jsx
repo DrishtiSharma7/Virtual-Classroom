@@ -18,7 +18,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
 
-  // Bug #13: signOut() existed in useAuth/authSlice but nothing called it.
   const handleLogout = () => {
     setSidebarOpen(false);
     signOut();

@@ -35,11 +35,9 @@ describe("sessionLifecycle (teacher inactivity auto-end)", () => {
 
     scheduleAutoEnd("session-11", io);
 
-    // Host rejoins well before the 20-minute default grace period elapses.
     await jest.advanceTimersByTimeAsync(19 * 60 * 1000);
     cancelAutoEnd("session-11");
 
-    // Advance well past the original timeout to be sure nothing fires late.
     await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
 
     expect(fakeSession.save).not.toHaveBeenCalled();

@@ -32,15 +32,10 @@ function ClassroomDetails() {
 
   const [startingSession, setStartingSession] = useState(false);
 
-  // --- ROLE DETECTION -------------------------------------------------
-  // Adjust this to however your app actually stores/exposes the logged-in
-  // user. This assumes a JSON object with a `role` field in localStorage.
   const user = JSON.parse(localStorage.getItem("user") || "null");
-  const role = user?.role; // "teacher" | "student"
+  const role = user?.role;
   const isTeacher = role === "teacher";
   const isStudent = role === "student";
-  // ---------------------------------------------------------------------
-
   useEffect(() => {
     fetchClassroom();
   }, [classroomId]);
@@ -73,7 +68,6 @@ function ClassroomDetails() {
     try {
       setStartingSession(true);
 
-      // Session create
       const createRes = await createSession({
         classroom: classroom._id,
         title: `${classroom.subject} Live Session`,
@@ -98,7 +92,6 @@ function ClassroomDetails() {
   const handleJoinSession = async () => {
   try {
     const res = await getSessionsByClassroom(classroom._id);
-    // yaha assume kar raha hoon response array hai, live session dhoondh rahe hain
     const liveSession = res.data?.find((s) => s.status === "live");
 
     if (!liveSession) {
@@ -113,7 +106,6 @@ function ClassroomDetails() {
   }
 };
 
-  // --- TEACHER-ONLY ACTIONS (stubbed handlers — wire up to your API) ---
   const handlePostAnnouncement = () => {
     navigate(`/classrooms/${classroom._id}/announcements/new`);
   };
@@ -123,8 +115,8 @@ function ClassroomDetails() {
   };
 
   const handleRemoveStudent = (studentId) => {
-    if (!window.confirm("Remove this student from the classroom?")) return;
-    // TODO: call your removeStudent(classroom._id, studentId) API, then refetch
+    if (!window.confirm("Remove this student from the classroom?"))
+      return;
     console.log("Remove student:", studentId);
   };
 
@@ -135,13 +127,13 @@ function ClassroomDetails() {
   return (
     <div className="details-page">
       <div className="details-container">
-        {/* Back */}
+
         <Link to="/classrooms" className="back-btn">
           <ArrowLeft size={18} />
           Back to Classrooms
         </Link>
 
-        {/* Banner */}
+
 
         <div className="class-banner">
           <div>
@@ -154,7 +146,7 @@ function ClassroomDetails() {
             </div>
           </div>
 
-          {/* Only teachers can start a live session */}
+
           {isTeacher && (
             <button
               className="live-btn"
@@ -167,7 +159,7 @@ function ClassroomDetails() {
           )}
         </div>
 
-        {/* Stats */}
+
 
         <div className="stats-grid">
           <div className="stat-card">
@@ -189,13 +181,13 @@ function ClassroomDetails() {
           </div>
         </div>
 
-        {/* Main Grid */}
+
 
         <div className="details-grid">
-          {/* LEFT */}
+
 
           <div className="left-section">
-            {/* Live Session */}
+
 
             <div className="section-card">
               <div className="section-title">
@@ -214,7 +206,7 @@ function ClassroomDetails() {
                 Today • 2:00 PM - 3:00 PM
               </div>
 
-              {/* Students join; teachers get a "Manage" affordance instead */}
+
               {isStudent && (
                 <button className="join-btn" onClick={handleJoinSession}>
                   Join Session
@@ -230,7 +222,7 @@ function ClassroomDetails() {
               )}
             </div>
 
-            {/* Announcements */}
+
 
             <div className="section-card">
               <div className="section-title">
@@ -265,10 +257,10 @@ function ClassroomDetails() {
 
           </div>
 
-          {/* RIGHT */}
+
 
           <div className="right-section">
-            {/* Students */}
+
 
             <div className="section-card">
               <div className="section-title">
@@ -293,7 +285,7 @@ function ClassroomDetails() {
                         </div>
                       </div>
 
-                      {/* Only teachers can remove students */}
+
                       {isTeacher && (
                         <button
                           className="remove-btn"
@@ -310,7 +302,7 @@ function ClassroomDetails() {
               )}
             </div>
 
-            {/* Recordings */}
+
 
             <div className="section-card">
               <div className="section-title">

@@ -60,8 +60,6 @@ export default function TeacherQuizHome() {
   const [exportingId, setExportingId] = useState(null);
   const fileInputRef = useRef(null);
 
-  /* ---------------- Load classrooms ---------------- */
-
   useEffect(() => {
     (async () => {
       try {
@@ -75,8 +73,6 @@ export default function TeacherQuizHome() {
       }
     })();
   }, []);
-
-  /* ---------------- Load sessions + quizzes per classroom ---------------- */
 
   const loadQuizzes = async (id) => {
     setLoadingQuizzes(true);
@@ -104,8 +100,6 @@ export default function TeacherQuizHome() {
       }
     })();
   }, [classroomId]);
-
-  /* ---------------- Builder helpers ---------------- */
 
   const openBuilder = () => {
     setTitle("");
@@ -141,9 +135,6 @@ export default function TeacherQuizHome() {
 
   const handleImportClick = () => fileInputRef.current?.click();
 
-  // Triggered from the main list page (not from inside the modal): opens a
-  // fresh builder and immediately prompts for the Excel file, so the whole
-  // import happens without a separate "New Quiz" click first.
   const handleQuickImportClick = () => {
     openBuilder();
     fileInputRef.current?.click();
@@ -219,8 +210,6 @@ export default function TeacherQuizHome() {
     }
   };
 
-  /* ---------------- List actions ---------------- */
-
   const handleDelete = async (quizId) => {
     if (!window.confirm("Delete this quiz and all its responses?")) return;
 
@@ -276,8 +265,6 @@ export default function TeacherQuizHome() {
     }
   };
 
-  /* ---------------- Render ---------------- */
-
   const totalResponses = quizzes.reduce(
     (sum, q) => sum + (q.responseCount || 0),
     0
@@ -324,9 +311,7 @@ export default function TeacherQuizHome() {
           </div>
         </div>
 
-        {/* Hidden file input shared by the top-level Import Excel button and
-            the one inside the builder modal — always mounted so it works
-            whether or not the modal is open. */}
+
         <input
           ref={fileInputRef}
           type="file"
@@ -335,7 +320,7 @@ export default function TeacherQuizHome() {
           onChange={handleFileChange}
         />
 
-        {/* Classroom picker */}
+
         {loadingClassrooms ? (
           <p className="loading-text">Loading classrooms...</p>
         ) : classrooms.length === 0 ? (
@@ -360,7 +345,7 @@ export default function TeacherQuizHome() {
               </select>
             </div>
 
-            {/* Stats */}
+
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-header">
@@ -385,7 +370,7 @@ export default function TeacherQuizHome() {
               </div>
             </div>
 
-            {/* Quiz list */}
+
             {loadingQuizzes ? (
               <p className="loading-text">Loading quizzes...</p>
             ) : quizzes.length === 0 ? (
@@ -504,185 +489,185 @@ export default function TeacherQuizHome() {
           </>
         )}
 
-      {/* Builder modal */}
-      {showBuilder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">New Quiz</h2>
-              <button
-                onClick={() => setShowBuilder(false)}
-                aria-label="Close"
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            {builderError && (
-              <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-                {builderError}
-              </p>
-            )}
-
-            <div className="mb-4 grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">
-                  Quiz title
-                </label>
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Chapter 3 Recap"
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#4f46e5]"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">
-                  Class session
-                </label>
-                <select
-                  value={sessionId}
-                  onChange={(e) => setSessionId(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#4f46e5]"
+        {showBuilder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">New Quiz</h2>
+                <button
+                  onClick={() => setShowBuilder(false)}
+                  aria-label="Close"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  <option value="">Select a session</option>
-                  {sessions.map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.title} — {new Date(s.startTime).toLocaleDateString()}
-                    </option>
-                  ))}
-                </select>
-                {sessions.length === 0 && (
-                  <p className="mt-1 text-xs text-amber-600">
-                    Create a class session for this classroom first.
-                  </p>
-                )}
+                  <X size={18} />
+                </button>
               </div>
-            </div>
 
-            <div className="mb-4 flex items-center gap-2">
-              <button
-                onClick={handleImportClick}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-slate-50"
-              >
-                <Upload size={13} /> Import from Excel
-              </button>
-              <button
-                onClick={downloadQuizTemplate}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-slate-50"
-              >
-                <Download size={13} /> Download template
-              </button>
-            </div>
+              {builderError && (
+                <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                  {builderError}
+                </p>
+              )}
 
-            <div className="space-y-3">
-              {questions.map((q, qi) => (
-                <div
-                  key={qi}
-                  className="rounded-xl border border-gray-200 p-3 text-sm"
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-gray-500">
-                      Question {qi + 1}
-                    </span>
-                    {questions.length > 1 && (
-                      <button
-                        onClick={() => removeQuestion(qi)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    )}
-                  </div>
-
-                  <input
-                    value={q.question}
-                    onChange={(e) =>
-                      updateQuestion(qi, { question: e.target.value })
-                    }
-                    placeholder="Question text"
-                    className="mb-2 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
-                  />
-
-                  <div className="mb-2 grid grid-cols-2 gap-1.5">
-                    {q.options.map((opt, oi) => (
-                      <label
-                        key={oi}
-                        className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs ${
-                          Number(q.correctAnswer) === oi
-                            ? "border-emerald-300 bg-emerald-50"
-                            : "border-gray-200"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`correct-${qi}`}
-                          checked={Number(q.correctAnswer) === oi}
-                          onChange={() =>
-                            updateQuestion(qi, { correctAnswer: oi })
-                          }
-                        />
-                        <input
-                          value={opt}
-                          onChange={(e) => updateOption(qi, oi, e.target.value)}
-                          placeholder={`Option ${oi + 1}`}
-                          className="w-full bg-transparent outline-none"
-                        />
-                      </label>
-                    ))}
-                  </div>
-
-                  <label className="flex items-center gap-1.5 text-xs text-gray-500">
-                    Time limit (30-120s)
-                    <input
-                      type="number"
-                      min={30}
-                      max={120}
-                      value={q.timeLimit}
-                      onChange={(e) =>
-                        updateQuestion(qi, {
-                          timeLimit: Number(e.target.value),
-                        })
-                      }
-                      className="w-16 rounded-lg border border-gray-200 px-1.5 py-1"
-                    />
+              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                    Quiz title
                   </label>
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Chapter 3 Recap"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#4f46e5]"
+                  />
                 </div>
-              ))}
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">
+                    Class session
+                  </label>
+                  <select
+                    value={sessionId}
+                    onChange={(e) => setSessionId(e.target.value)}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#4f46e5]"
+                  >
+                    <option value="">Select a session</option>
+                    {sessions.map((s) => (
+                      <option key={s._id} value={s._id}>
+                        {s.title} — {new Date(s.startTime).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                  {sessions.length === 0 && (
+                    <p className="mt-1 text-xs text-amber-600">
+                      Create a class session for this classroom first.
+                    </p>
+                  )}
+                </div>
+              </div>
 
-              <button
-                onClick={addQuestion}
-                className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 py-1.5 text-xs font-medium text-gray-500 hover:bg-slate-50"
-              >
-                <Plus size={13} /> Add question
-              </button>
-            </div>
+              <div className="mb-4 flex items-center gap-2">
+                <button
+                  onClick={handleImportClick}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-slate-50"
+                >
+                  <Upload size={13} /> Import from Excel
+                </button>
+                <button
+                  onClick={downloadQuizTemplate}
+                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-slate-50"
+                >
+                  <Download size={13} /> Download template
+                </button>
+              </div>
 
-            <div className="mt-5 flex items-center gap-2">
-              <button
-                onClick={() => setShowBuilder(false)}
-                className="flex-1 rounded-xl border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:opacity-60"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" /> Saving...
-                  </>
-                ) : (
-                  "Save Quiz"
-                )}
-              </button>
+              <div className="space-y-3">
+                {questions.map((q, qi) => (
+                  <div
+                    key={qi}
+                    className="rounded-xl border border-gray-200 p-3 text-sm"
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-500">
+                        Question {qi + 1}
+                      </span>
+                      {questions.length > 1 && (
+                        <button
+                          onClick={() => removeQuestion(qi)}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+
+                    <input
+                      value={q.question}
+                      onChange={(e) =>
+                        updateQuestion(qi, { question: e.target.value })
+                      }
+                      placeholder="Question text"
+                      className="mb-2 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
+                    />
+
+                    <div className="mb-2 grid grid-cols-2 gap-1.5">
+                      {q.options.map((opt, oi) => (
+                        <label
+                          key={oi}
+                          className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs ${
+                            Number(q.correctAnswer) === oi
+                              ? "border-emerald-300 bg-emerald-50"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`correct-${qi}`}
+                            checked={Number(q.correctAnswer) === oi}
+                            onChange={() =>
+                              updateQuestion(qi, { correctAnswer: oi })
+                            }
+                          />
+                          <input
+                            value={opt}
+                            onChange={(e) => updateOption(qi, oi, e.target.value)}
+                            placeholder={`Option ${oi + 1}`}
+                            className="w-full bg-transparent outline-none"
+                          />
+                        </label>
+                      ))}
+                    </div>
+
+                    <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                      Time limit (30-120s)
+                      <input
+                        type="number"
+                        min={30}
+                        max={120}
+                        value={q.timeLimit}
+                        onChange={(e) =>
+                          updateQuestion(qi, {
+                            timeLimit: Number(e.target.value),
+                          })
+                        }
+                        className="w-16 rounded-lg border border-gray-200 px-1.5 py-1"
+                      />
+                    </label>
+                  </div>
+                ))}
+
+                <button
+                  onClick={addQuestion}
+                  className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 py-1.5 text-xs font-medium text-gray-500 hover:bg-slate-50"
+                >
+                  <Plus size={13} /> Add question
+                </button>
+              </div>
+
+              <div className="mt-5 flex items-center gap-2">
+                <button
+                  onClick={() => setShowBuilder(false)}
+                  className="flex-1 rounded-xl border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:opacity-60"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    "Save Quiz"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

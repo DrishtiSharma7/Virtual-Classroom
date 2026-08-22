@@ -1,6 +1,5 @@
 const Material = require("./material.model");
 
-// Upload Material
 exports.uploadMaterial = async (req, res) => {
   try {
     const material = await Material.create({
@@ -22,7 +21,6 @@ exports.uploadMaterial = async (req, res) => {
   }
 };
 
-// Get Materials by Classroom
 exports.getMaterials = async (req, res) => {
   try {
     const materials = await Material.find({
@@ -41,7 +39,6 @@ exports.getMaterials = async (req, res) => {
   }
 };
 
-// Delete Material
 exports.deleteMaterial = async (req, res) => {
   try {
     const material = await Material.findById(req.params.id);

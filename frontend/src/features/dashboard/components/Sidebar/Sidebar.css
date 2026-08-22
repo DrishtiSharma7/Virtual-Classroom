@@ -41,13 +41,9 @@
   transition: transform 0.3s ease;
 }
 
-/* Mobile open */
-
 .sidebar-container.open {
   transform: translateX(0);
 }
-
-/* Desktop */
 
 @screen lg {
   .sidebar-container {

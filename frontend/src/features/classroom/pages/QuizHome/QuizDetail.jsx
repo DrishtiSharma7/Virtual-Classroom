@@ -64,7 +64,6 @@ export default function QuizDetail() {
     (async () => {
       await loadQuiz();
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, role]);
 
   const handleExport = async () => {
@@ -228,7 +227,7 @@ export default function QuizDetail() {
         )}
       </div>
 
-      {/* ---------------- Teacher: submissions summary ---------------- */}
+
       {role === "teacher" && (
         <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-4">
           <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
@@ -270,7 +269,7 @@ export default function QuizDetail() {
         </div>
       )}
 
-      {/* ---------------- Student: attempts history ---------------- */}
+
       {role !== "teacher" && quiz.attempted && quiz.attempts?.length > 0 && (
         <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-4">
           <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
@@ -299,7 +298,7 @@ export default function QuizDetail() {
         </div>
       )}
 
-      {/* ---------------- Student: not attempted, retake closed ---------------- */}
+
       {role !== "teacher" && !quiz.attempted && !canRetakeNow && (
         <div className="mb-6 rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-5 text-sm text-amber-800">
           You haven't attempted this quiz yet. Your teacher launches it live
@@ -307,7 +306,7 @@ export default function QuizDetail() {
         </div>
       )}
 
-      {/* ---------------- Student: quiz open for self-attempt ---------------- */}
+
       {canRetakeNow && !attempting && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-emerald-300 bg-emerald-50 p-5">
           <p className="text-sm text-emerald-800">
@@ -324,7 +323,7 @@ export default function QuizDetail() {
         </div>
       )}
 
-      {/* ---------------- Attempt form (retake) ---------------- */}
+
       {attempting ? (
         <div className="space-y-4">
           {quiz.questions.map((q, index) => (
@@ -382,7 +381,6 @@ export default function QuizDetail() {
           </div>
         </div>
       ) : (
-        /* ---------------- Questions (read-only: answer key / latest breakdown) ---------------- */
         <div className="space-y-4">
           {quiz.questions.map((q, index) => (
             <div

@@ -21,16 +21,10 @@ router.get(
   quizController.getResults,
 );
 
-// Role-aware list of every quiz in a classroom (teacher: own quizzes +
-// response counts, student: attempted/not-attempted + score).
 router.get("/classroom/:classroomId", auth, quizController.getClassroomQuizzes);
 
-// Role-aware single quiz view (teacher: full quiz w/ correct answers,
-// student: their right/wrong breakdown, or the un-attempted questions).
 router.get("/:id/detail", auth, quizController.getQuizDetail);
 
-// Teacher opens/closes the quiz for students to self-attempt after the
-// live session (also marks it launched/visible to students).
 router.patch(
   "/:id/retake",
   auth,

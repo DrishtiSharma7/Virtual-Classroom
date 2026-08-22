@@ -1,6 +1,4 @@
-/* Mirrors QuizHome.css / AttendanceHome.css's design system so Recordings
-   reads as the same page family — page chrome, stat cards, filter bar,
-   table, and status badges all follow the same recipe. */
+
 
 .recordings-page {
   @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
@@ -9,8 +7,6 @@
 .recordings-container {
   @apply max-w-7xl mx-auto;
 }
-
-/* Header */
 
 .recordings-header {
   @apply flex justify-between items-center mb-6 flex-wrap gap-4;
@@ -35,8 +31,6 @@
 .export-btn:disabled {
   @apply bg-gray-300 hover:bg-gray-300 text-gray-500 cursor-not-allowed;
 }
-
-/* Statistics Cards */
 
 .stats-grid {
   @apply grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4;
@@ -66,8 +60,6 @@
   @apply text-2xl font-bold mt-2;
 }
 
-/* Filters */
-
 .filter-card {
   @apply bg-white rounded-xl shadow p-3 mb-4 flex flex-wrap items-center gap-3;
 }
@@ -79,8 +71,6 @@
 .classroom-select {
   @apply border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500;
 }
-
-/* Table */
 
 .table-wrapper {
   @apply bg-white rounded-2xl shadow overflow-x-auto;
@@ -110,8 +100,6 @@
   @apply font-semibold;
 }
 
-/* Actions */
-
 .action-buttons {
   @apply flex justify-center gap-2;
 }
@@ -132,8 +120,6 @@
   @apply text-red-600;
 }
 
-/* Empty / loading state */
-
 .no-data {
   @apply text-center py-12 text-gray-500 rounded-2xl border border-dashed border-gray-300 bg-white;
 }
@@ -141,8 +127,6 @@
 .loading-text {
   @apply text-sm text-gray-400;
 }
-
-/* Modal (upload form / video player) */
 
 .modal-overlay {
   @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4;
@@ -179,8 +163,6 @@
 .form-error {
   @apply mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600;
 }
-
-/* Responsive */
 
 @media (max-width: 768px) {
   .recordings-page {

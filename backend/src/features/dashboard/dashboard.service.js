@@ -4,16 +4,11 @@ const Attendance = require("../attendance/attendance.model");
 
 const getDashboardData = async (user) => {
   console.log("USER NAME:", user.name);
-  // ============================
-  // TEACHER DASHBOARD
-  // ============================
   if (user.role === "teacher") {
-    // Total Classrooms
     const totalClasses = await Classroom.countDocuments({
       teacher: user.id,
     });
 
-    // Recent Classrooms
     const recentClasses = await Classroom.find({
       teacher: user.id,
     })
@@ -21,13 +16,11 @@ const getDashboardData = async (user) => {
       .limit(5)
       .select("name subject createdAt");
 
-    // Live Sessions
     const liveSessions = await Session.countDocuments({
       createdBy: user.id,
       status: "live",
     });
 
-    // Total Unique Students
     const classrooms = await Classroom.find({
       teacher: user.id,
     }).select("students");
@@ -42,14 +35,12 @@ const getDashboardData = async (user) => {
 
     const totalStudents = uniqueStudents.size;
 
-    // Teacher Sessions
     const teacherSessions = await Session.find({
       createdBy: user.id,
     }).select("_id");
 
     const sessionIds = teacherSessions.map((session) => session._id);
 
-    // Attendance
     const totalAttendance = await Attendance.countDocuments({
       session: {
         $in: sessionIds,
@@ -84,10 +75,6 @@ const getDashboardData = async (user) => {
     };
   }
 
-  // ============================
-  // STUDENT DASHBOARD
-  // ============================
-
   const enrolledClasses = await Classroom.countDocuments({
     students: user.id,
   });
@@ -100,7 +87,6 @@ const getDashboardData = async (user) => {
     .limit(5)
     .select("name subject teacher createdAt");
 
-  // Student Attendance
   const totalAttendance = await Attendance.countDocuments({
     student: user.id,
   });

@@ -160,7 +160,7 @@ const SettingsPage = () => {
         </p>
       </div>
 
-      {/* Account */}
+
       <SettingsSection
         title="Account"
         description="Your basic profile information."
@@ -228,7 +228,7 @@ const SettingsPage = () => {
         </form>
       </SettingsSection>
 
-      {/* Security */}
+
       <SettingsSection
         title="Security"
         description="Update the password used to sign in."
@@ -310,7 +310,7 @@ const SettingsPage = () => {
         </form>
       </SettingsSection>
 
-      {/* Session preferences — shared by both roles */}
+
       <SettingsSection
         title="Live Session"
         description="Defaults applied when you join a video session."
@@ -335,7 +335,7 @@ const SettingsPage = () => {
         </SettingsRow>
       </SettingsSection>
 
-      {/* Teacher-only settings */}
+
       {role === "teacher" && (
         <>
           <SettingsSection
@@ -419,7 +419,7 @@ const SettingsPage = () => {
         </>
       )}
 
-      {/* Student-only settings */}
+
       {role === "student" && (
         <SettingsSection
           title="Learning Preferences"

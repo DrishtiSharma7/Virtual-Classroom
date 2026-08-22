@@ -24,7 +24,7 @@ export default function StudentQuizHome() {
 
   const [loadingClassrooms, setLoadingClassrooms] = useState(true);
   const [loadingQuizzes, setLoadingQuizzes] = useState(false);
-  const [filter, setFilter] = useState("all"); // all | attempted | pending
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     (async () => {
@@ -122,7 +122,7 @@ export default function StudentQuizHome() {
               </div>
             </div>
 
-            {/* Stats */}
+
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-header">

@@ -18,10 +18,8 @@ function ClassroomHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Role check — adjust this to match how your app actually stores the logged-in user.
-  // Assuming: localStorage me "user" object save hota hai jisme role field hai.
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = storedUser?.role || "student"; // "teacher" | "student"
+  const role = storedUser?.role || "student";
   const isTeacher = role === "teacher";
 
   useEffect(() => {
@@ -66,7 +64,7 @@ function ClassroomHome() {
   return (
     <div className="classroom-page">
       <div className="classroom-container">
-        {/* Header */}
+
         <div className="classroom-header">
           <div>
             <h1 className="classroom-title">
@@ -79,7 +77,7 @@ function ClassroomHome() {
             </p>
           </div>
 
-          {/* Create button sirf teacher ko dikhega */}
+
           {isTeacher && (
             <Link to="/classrooms/create" className="create-classroom-btn">
               <Plus size={20} />
@@ -87,7 +85,7 @@ function ClassroomHome() {
             </Link>
           )}
 
-          {/* Join button sirf student ko dikhega */}
+
           {!isTeacher && (
             <Link to="/classrooms/join" className="create-classroom-btn">
               <KeyRound size={20} />
@@ -96,7 +94,7 @@ function ClassroomHome() {
           )}
         </div>
 
-        {/* Empty state */}
+
         {classrooms.length === 0 && (
           <div className="classroom-empty">
             {isTeacher
@@ -105,7 +103,7 @@ function ClassroomHome() {
           </div>
         )}
 
-        {/* Cards */}
+
         <div className="classroom-grid">
           {classrooms.map((room) => (
             <div key={room._id} className="classroom-card">
@@ -125,7 +123,7 @@ function ClassroomHome() {
                   <span className="classroom-detail-value">{room.code}</span>
                 </div>
 
-                {/* Teacher ko student count, student ko total classmates count */}
+
                 <div className="classroom-detail-row">
                   <span className="classroom-detail-label">
                     <Users size={18} />
@@ -140,14 +138,14 @@ function ClassroomHome() {
               </div>
 
               <div className="classroom-enter-delete">
-              <Link
-                to={`/classrooms/${room._id}`}
-                className="enter-classroom-btn"
-              >
-                Enter Classroom
-                <ArrowRight size={18} />
-              </Link>
-              {/* Delete button sirf teacher ko dikhega */}
+                <Link
+                  to={`/classrooms/${room._id}`}
+                  className="enter-classroom-btn"
+                >
+                  Enter Classroom
+                  <ArrowRight size={18} />
+                </Link>
+
                 {isTeacher && (
                   <button
                     onClick={() => handleDelete(room._id)}

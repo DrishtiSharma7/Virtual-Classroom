@@ -223,7 +223,6 @@ describe("attendance.service", () => {
       student: student._id,
     });
 
-    // 10 min + 9 min connected = 19 min; the 1-minute gap is excluded.
     expect(record.duration).toBe(19 * 60);
   });
 
@@ -244,8 +243,6 @@ describe("attendance.service", () => {
       studentId: student._id.toString(),
     });
 
-    // Gap of 5 minutes — longer than the default 2-minute reconnect grace
-    // window — but the student still reconnects and keeps accumulating.
     jest.setSystemTime(new Date(startTime.getTime() + minutes(10)));
     await attendanceService.recordConnect({
       session,
@@ -262,7 +259,6 @@ describe("attendance.service", () => {
       student: student._id,
     });
 
-    // 5 min + 10 min = 15 min out of a 20 min session.
     expect(record.duration).toBe(15 * 60);
     expect(record.attendancePercentage).toBeCloseTo(75, 0);
     expect(record.status).toBe("COMPLETED");
@@ -272,7 +268,6 @@ describe("attendance.service", () => {
     const { student, classroom, session, startTime } = await makeFixture();
     jest.useFakeTimers({ doNotFake: ["nextTick"] });
 
-    // Connected 10, disconnected 1, connected 20, disconnected 3, connected 15.
     jest.setSystemTime(startTime);
     await attendanceService.recordConnect({
       session,
@@ -428,8 +423,6 @@ describe("attendance.service", () => {
       studentId: student._id.toString(),
     });
 
-    // A 3-hour session (much longer than a typical class) — student present
-    // for exactly the first 90 of the 180 minutes.
     jest.setSystemTime(new Date(startTime.getTime() + minutes(90)));
     await attendanceService.recordDisconnect({
       sessionId: session._id,
@@ -504,8 +497,6 @@ describe("attendance.service", () => {
 
     expect(hasJoinOrLeave).toBe(false);
 
-    // recordConnect/recordDisconnect only ever accept ids — never a
-    // duration/percentage a client could try to inject.
     expect(attendanceService.recordConnect.length).toBeLessThanOrEqual(1);
     expect(attendanceService.recordDisconnect.length).toBeLessThanOrEqual(1);
   });

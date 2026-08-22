@@ -15,10 +15,6 @@ function SettingsSection({ title, description, children }) {
 }
 
 export function SettingsRow({ label, description, children }) {
-  // The control in `children` varies (a toggle button, a native <select>,
-  // a color/range input) so there's no single element to attach a
-  // <label htmlFor> to. role="group" + aria-labelledby associates this
-  // row's visible label with whatever control it wraps, generically.
   const labelId = useId();
 
   return (

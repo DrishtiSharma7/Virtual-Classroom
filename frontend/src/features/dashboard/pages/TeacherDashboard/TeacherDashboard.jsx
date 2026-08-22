@@ -61,7 +61,7 @@ const TeacherDashboard = () => {
       <h1 className="sr-only">Teacher Dashboard</h1>
       <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
-      {/* Stats Grid */}
+
       <div className="stats-grid">
         <StatCard
           icon={<LayoutDashboard />}
@@ -94,7 +94,7 @@ const TeacherDashboard = () => {
 
       <QuickActions handleStartSession={handleStartSession} />
 
-      {/* Recent Classes & Activity */}
+
       <div className="dashboard-split-section">
         <RecentClasses classes={dashboard?.recentClasses || []} />
 

@@ -1,10 +1,5 @@
 const jwt = require("jsonwebtoken");
 
-// Socket.IO auth middleware. The frontend already connects with
-// `io(url, { auth: { token } })` — this verifies that token the same way
-// the REST auth.middleware does, and attaches the decoded payload
-// ({ id, name, role }) to socket.user so every event handler downstream
-// can trust socket.user instead of whatever the client claims in payloads.
 module.exports = (socket, next) => {
   try {
     const raw = socket.handshake.auth?.token || socket.handshake.query?.token;

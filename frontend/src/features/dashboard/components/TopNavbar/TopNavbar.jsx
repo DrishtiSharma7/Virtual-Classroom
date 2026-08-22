@@ -17,11 +17,7 @@ const TopNavbar = ({ setSidebarOpen }) => {
           <Menu size={24} />
         </button>
 
-        {/* Not an <h1> — this bar is persistent chrome shown across several
-            routes (dashboard, create classroom, join classroom), each of
-            which owns its own page heading. A second "Teacher/Student
-            Dashboard" <h1> here would conflict with those on every page
-            that isn't actually the dashboard. */}
+
         <p className="navbar-title">
           {role === "teacher" ? "Teacher Dashboard" : "Student Dashboard"}
         </p>
