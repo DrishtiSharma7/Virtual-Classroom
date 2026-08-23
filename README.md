@@ -1,6 +1,6 @@
 # Virtual Classroom
 
-A full-stack virtual classroom platform for live, interactive online teaching. Teachers can run live video sessions with a shared whiteboard, quizzes, and screen sharing, while students join sessions, take quizzes, review recordings, and track their own attendance — all with role-based dashboards and analytics for both sides.
+A full-stack virtual classroom platform for live, interactive online teaching. Teachers can run live video sessions with a shared whiteboard, quizzes, and screen sharing, while students join sessions, take quizzes, review recordings, and track their own attendance, all with role-based dashboards and analytics for both sides.
 
 ## Features
 
@@ -39,6 +39,10 @@ A full-stack virtual classroom platform for live, interactive online teaching. T
 - Class materials upload/sharing
 - Account settings
 - Session persisted login — a logged-in user is routed straight to the dashboard
+
+## Live Deployed Link
+
+virtual-classroom-bths.vercel.app
 
 ## Tech Stack
 
