@@ -360,6 +360,73 @@ const ScreenShareStage = ({ stream }) => {
   );
 };
 
+const StudentZoomModal = ({ participant, hostScreenStreamId, onClose }) => {
+  const videoRef = useRef(null);
+  const stream = participant
+    ? Object.values(participant.videoStreams || {}).find(
+        (s) => s.id !== hostScreenStreamId
+      ) || null
+    : null;
+  const showVideo =
+    !!participant?.cameraEnabled && !!stream && stream.getVideoTracks().length > 0;
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  if (!participant) return null;
+
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-slate-900 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-white">
+              {participant.user?.name || "Student"}
+            </p>
+            <p className="text-xs text-slate-400">Zoomed camera view</p>
+          </div>
+          <button
+            onClick={onClose}
+            title="Close"
+            className="rounded-md p-1.5 text-slate-300 hover:bg-white/10 hover:text-white"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="relative aspect-video w-full bg-black">
+          {showVideo && (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="h-full w-full object-contain"
+            />
+          )}
+          {!showVideo && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-800">
+              <img
+                src={avatarFor(participant.user?.name)}
+                alt={participant.user?.name}
+                className="h-20 w-20 rounded-full object-cover"
+              />
+              <p className="text-xs text-slate-400">Camera is off</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function LiveClassroom() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
@@ -456,6 +523,9 @@ export default function LiveClassroom() {
   const [removedNotice, setRemovedNotice] = useState("");
   const [forceMuted, setForceMuted] = useState(false);
   const [mutedParticipants, setMutedParticipants] = useState(() => new Set());
+
+  const [zoomedStudentId, setZoomedStudentId] = useState(null);
+  const lastTapRef = useRef({ socketId: null, time: 0 });
 
   const isHost =
     !!session &&
@@ -1668,6 +1738,28 @@ export default function LiveClassroom() {
     });
   };
 
+  const handleOpenStudentZoom = (targetSocketId) => {
+    if (!isHost) return;
+    setZoomedStudentId(targetSocketId);
+  };
+
+  const handleRowDoubleClick = (p) => () => {
+    if (!isHost || p.user?.role === "teacher") return;
+    handleOpenStudentZoom(p.socketId);
+  };
+
+  const handleRowTouchEnd = (p) => () => {
+    if (!isHost || p.user?.role === "teacher") return;
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last.socketId === p.socketId && now - last.time < 300) {
+      lastTapRef.current = { socketId: null, time: 0 };
+      handleOpenStudentZoom(p.socketId);
+    } else {
+      lastTapRef.current = { socketId: p.socketId, time: now };
+    }
+  };
+
   const handleKickStudent = (targetSocketId) => {
     if (!isHost) return;
     if (!window.confirm("Remove this student from the session?")) return;
@@ -1743,6 +1835,10 @@ export default function LiveClassroom() {
   const teacherCameraStream =
     teacherVideoStreams.find((s) => s.id !== hostScreenStreamId) || null;
 
+  const zoomedParticipant = zoomedStudentId
+    ? participants.find((p) => p.socketId === zoomedStudentId) || null
+    : null;
+
   const isSharingScreenForMe = isHost ? sharingScreen : hostSharingScreen;
   const screenPreviewStream = isHost ? localScreenPreview : teacherScreenStream;
 
@@ -1771,6 +1867,14 @@ export default function LiveClassroom() {
             </p>
           </div>
         </div>
+      )}
+
+      {isHost && zoomedParticipant && (
+        <StudentZoomModal
+          participant={zoomedParticipant}
+          hostScreenStreamId={hostScreenStreamId}
+          onClose={() => setZoomedStudentId(null)}
+        />
       )}
 
       <header className="border-b border-slate-200 bg-white px-6 py-3">
@@ -2534,10 +2638,24 @@ export default function LiveClassroom() {
 
                     {participants.map((p) => {
                       const isRowHost = p.user?.role === "teacher";
+                      const zoomable = isHost && !isRowHost;
                       return (
                         <div
                           key={p.socketId}
-                          className="flex items-center justify-between"
+                          onDoubleClick={
+                            zoomable ? handleRowDoubleClick(p) : undefined
+                          }
+                          onTouchEnd={
+                            zoomable ? handleRowTouchEnd(p) : undefined
+                          }
+                          title={
+                            zoomable
+                              ? "Double-click (or double-tap) to zoom in on camera"
+                              : undefined
+                          }
+                          className={`flex items-center justify-between ${
+                            zoomable ? "cursor-pointer" : ""
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <ParticipantThumb
