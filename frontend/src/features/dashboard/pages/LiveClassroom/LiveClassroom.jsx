@@ -2417,7 +2417,6 @@ export default function LiveClassroom() {
           <aside className="flex w-[340px] flex-shrink-0 flex-col gap-4 overflow-hidden">
 
             {participants
-              .filter((p) => isHost || p.user?.role !== "teacher")
               .map((p) => (
                 <AudioRelay
                   key={p.socketId}
