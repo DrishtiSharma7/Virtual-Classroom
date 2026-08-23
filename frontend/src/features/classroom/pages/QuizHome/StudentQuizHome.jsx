@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import "./QuizHome.css";
+import StatCard from "../../../dashboard/components/StatCard/StatCard";
 import { getMyClassrooms } from "../../api/classroom.api";
 import { getClassroomQuizzes } from "../../api/quiz.api";
 
@@ -124,27 +125,24 @@ export default function StudentQuizHome() {
 
 
             <div className="quiz-stats-grid">
-              <div className="stat-card">
-                <div className="stat-header">
-                  <ClipboardList className="stat-icon-indigo" size={24} />
-                  <p className="stat-label">Total</p>
-                </div>
-                <h2 className="stat-value">{quizzes.length}</h2>
-              </div>
-              <div className="stat-card">
-                <div className="stat-header">
-                  <ClipboardCheck className="stat-icon-green" size={24} />
-                  <p className="stat-label">Attempted</p>
-                </div>
-                <h2 className="stat-value">{attemptedCount}</h2>
-              </div>
-              <div className="stat-card">
-                <div className="stat-header">
-                  <Hourglass className="stat-icon-amber" size={24} />
-                  <p className="stat-label">Pending</p>
-                </div>
-                <h2 className="stat-value">{pendingCount}</h2>
-              </div>
+              <StatCard
+                icon={<ClipboardList />}
+                label="Total"
+                value={quizzes.length}
+                colorClass="bg-blue-soft"
+              />
+              <StatCard
+                icon={<ClipboardCheck />}
+                label="Attempted"
+                value={attemptedCount}
+                colorClass="bg-green-soft"
+              />
+              <StatCard
+                icon={<Hourglass />}
+                label="Pending"
+                value={pendingCount}
+                colorClass="bg-orange-soft"
+              />
             </div>
 
             {loadingQuizzes ? (

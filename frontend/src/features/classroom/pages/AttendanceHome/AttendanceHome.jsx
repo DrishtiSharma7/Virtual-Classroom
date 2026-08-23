@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import "./AttendanceHome.css";
+import StatCard from "../../../dashboard/components/StatCard/StatCard";
 import {
   getClassroomAttendance,
   getAttendanceDashboard,
@@ -71,6 +72,9 @@ function AttendanceHome() {
   );
 
   const totalStudents = attendance.length;
+
+  const presentCount = attendance.filter((a) => a.isPresent).length;
+  const absentCount = totalStudents - presentCount;
 
   const presentSessions = attendance.reduce(
     (sum, s) => sum + (s.presentSessions || 0),
@@ -219,6 +223,33 @@ function AttendanceHome() {
                 Export Excel
               </button>
             </div>
+          </div>
+
+          <div className="attendance-stats-grid">
+            <StatCard
+              icon={<CalendarDays />}
+              label="Total Sessions"
+              value={totalStudents}
+              colorClass="bg-blue-soft"
+            />
+            <StatCard
+              icon={<UserCheck />}
+              label="Present"
+              value={presentCount}
+              colorClass="bg-green-soft"
+            />
+            <StatCard
+              icon={<UserX />}
+              label="Absent"
+              value={absentCount}
+              colorClass="bg-orange-soft"
+            />
+            <StatCard
+              icon={<CalendarCheck />}
+              label="Attendance"
+              value={`${attendancePercentage}%`}
+              colorClass="bg-purple-soft"
+            />
           </div>
 
           <div className="filter-card">
@@ -383,29 +414,30 @@ function AttendanceHome() {
 
 
         <div className="attendance-stats-grid">
-          <div className="stat-card">
-            <Users className="stat-icon-indigo" />
-            <p className="stat-label">Total Students</p>
-            <h2 className="stat-value">{totalStudents}</h2>
-          </div>
-
-          <div className="stat-card">
-            <UserCheck className="stat-icon-green" />
-            <p className="stat-label">Present Sessions</p>
-            <h2 className="stat-value">{presentSessions}</h2>
-          </div>
-
-          <div className="stat-card">
-            <UserX className="stat-icon-red" />
-            <p className="stat-label">Absent Sessions</p>
-            <h2 className="stat-value">{absentSessions}</h2>
-          </div>
-
-          <div className="stat-card">
-            <CalendarDays className="stat-icon-blue" />
-            <p className="stat-label">Attendance</p>
-            <h3 className="stat-value">{attendancePercentage}%</h3>
-          </div>
+          <StatCard
+            icon={<Users />}
+            label="Total Students"
+            value={totalStudents}
+            colorClass="bg-blue-soft"
+          />
+          <StatCard
+            icon={<UserCheck />}
+            label="Present Sessions"
+            value={presentSessions}
+            colorClass="bg-green-soft"
+          />
+          <StatCard
+            icon={<UserX />}
+            label="Absent Sessions"
+            value={absentSessions}
+            colorClass="bg-orange-soft"
+          />
+          <StatCard
+            icon={<CalendarDays />}
+            label="Attendance"
+            value={`${attendancePercentage}%`}
+            colorClass="bg-purple-soft"
+          />
         </div>
 
 

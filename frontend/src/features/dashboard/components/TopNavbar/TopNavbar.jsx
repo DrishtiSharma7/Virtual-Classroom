@@ -1,5 +1,5 @@
 import { React, useState } from "react";
-import { Menu, Bell, CircleUser } from "lucide-react";
+import { Menu, CircleUser } from "lucide-react";
 import { useSelector } from "react-redux";
 import "./TopNavbar.css";
 
@@ -24,10 +24,6 @@ const TopNavbar = ({ setSidebarOpen }) => {
       </div>
 
       <div className="navbar-profile-section">
-        <button className="navbar-notification-btn" aria-label="Notifications">
-          <Bell size={22} strokeWidth={2} color="black" />
-        </button>
-
         <div className="navbar-user-card">
           <CircleUser size={36} strokeWidth={1.5} color="black" />
 

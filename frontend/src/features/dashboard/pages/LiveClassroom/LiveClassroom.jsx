@@ -9,7 +9,6 @@ import {
   Clock,
   BarChart3,
   Dot,
-  Bell,
   Settings,
   Pencil,
   Eraser,
@@ -32,7 +31,6 @@ import {
   PencilRuler,
   Presentation,
   Vote,
-  DoorOpen,
   ThumbsUp,
   Smile,
   Paperclip,
@@ -1788,7 +1786,6 @@ export default function LiveClassroom() {
           </div>
 
           <div className="flex items-center gap-6">
-            <Bell className="text-slate-500" size={20} />
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-slate-700">
                 {currentUser?.name || "Guest"}
@@ -2385,8 +2382,6 @@ export default function LiveClassroom() {
                   onClick={() => setShowAttendancePanel((v) => !v)}
                 />
               )}
-              <BottomControl Icon={DoorOpen} label="Breakout" />
-
               {!isHost && (
                 <div className="relative flex flex-1">
                   {showFeedbackMenu && (

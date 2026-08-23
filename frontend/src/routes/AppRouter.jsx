@@ -22,6 +22,7 @@ const AnalyticsDashboard = lazy(() => import("../features/analytics/pages/Analyt
 const SettingsPage = lazy(() => import("../features/settings/pages/SettingsPage/SettingsPage"));
 
 import ProtectedRoute from "./ProtectedRoute";
+import PublicRoute from "./PublicRoute";
 import RoleRoute from "./RoleRoute";
 
 function RouteFallback() {
@@ -38,10 +39,12 @@ function AppRouter() {
       <Suspense fallback={<RouteFallback />}>
         <Routes>
 
-          <Route element={<AuthLayout />}>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+          <Route element={<PublicRoute />}>
+            <Route element={<AuthLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
           </Route>
 
 

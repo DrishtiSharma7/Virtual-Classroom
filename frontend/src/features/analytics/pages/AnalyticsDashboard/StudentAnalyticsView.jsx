@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { RefreshCw, CalendarCheck, Trophy, Clock, Target } from "lucide-react";
+import { RefreshCw, CalendarCheck, Trophy, Clock, Target, ChartColumn } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { getMyAnalytics } from "../../api/analytics.api";
 import { resolveDateRange, formatDateLabel, DATE_PRESETS } from "../../utils/dateRanges";
@@ -43,7 +43,10 @@ const StudentAnalyticsView = () => {
       <div className="analytics-container">
         <header className="analytics-header">
           <div>
-            <h1 className="analytics-title">My Analytics</h1>
+            <h1 className="analytics-title">
+              <ChartColumn className="analytics-title-icon" size={26} />
+              My Analytics
+            </h1>
             <p className="analytics-subtitle">
               Your attendance, quiz performance, and session participation.
             </p>

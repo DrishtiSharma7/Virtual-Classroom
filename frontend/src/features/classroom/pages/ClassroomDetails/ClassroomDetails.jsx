@@ -5,7 +5,6 @@ import {
   Video,
   Users,
   CalendarDays,
-  Bell,
   PlayCircle,
   ArrowRight,
   UserCircle2,
@@ -227,7 +226,6 @@ function ClassroomDetails() {
             <div className="section-card">
               <div className="section-title">
                 <span className="section-title-left">
-                  <Bell size={20} />
                   Announcements
                 </span>
                 {isTeacher && (

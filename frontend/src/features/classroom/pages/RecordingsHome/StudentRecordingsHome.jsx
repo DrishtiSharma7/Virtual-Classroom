@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Video, Play, X, Film } from "lucide-react";
+import { Video, Play, X, Film, LayoutGrid } from "lucide-react";
 
 import "./RecordingsHome.css";
+import StatCard from "../../../dashboard/components/StatCard/StatCard";
 import { getMyClassrooms } from "../../api/classroom.api";
 import {
   getClassroomRecordings,
@@ -88,13 +89,18 @@ export default function StudentRecordingsHome() {
             </div>
 
             <div className="recordings-stats-grid">
-              <div className="stat-card">
-                <div className="stat-header">
-                  <Film className="stat-icon-indigo" size={24} />
-                  <p className="stat-label">Total Recordings</p>
-                </div>
-                <h2 className="stat-value">{recordings.length}</h2>
-              </div>
+              <StatCard
+                icon={<Film />}
+                label="Total Recordings"
+                value={recordings.length}
+                colorClass="bg-blue-soft"
+              />
+              <StatCard
+                icon={<LayoutGrid />}
+                label="Classrooms"
+                value={classrooms.length}
+                colorClass="bg-purple-soft"
+              />
             </div>
 
             {loadingRecordings ? (

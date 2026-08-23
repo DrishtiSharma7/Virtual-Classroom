@@ -11,7 +11,11 @@
 }
 
 .analytics-title {
-  @apply text-2xl font-bold text-slate-800;
+  @apply flex items-center gap-2 text-2xl font-bold text-slate-800;
+}
+
+.analytics-title-icon {
+  @apply text-indigo-600;
 }
 
 .analytics-subtitle {

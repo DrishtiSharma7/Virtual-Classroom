@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import "./QuizHome.css";
+import StatCard from "../../../dashboard/components/StatCard/StatCard";
 import { getMyClassrooms } from "../../api/classroom.api";
 import { getSessionsByClassroom } from "../../../auth/api/session.api";
 import {
@@ -347,27 +348,24 @@ export default function TeacherQuizHome() {
 
 
             <div className="quiz-stats-grid">
-              <div className="stat-card">
-                <div className="stat-header">
-                  <ClipboardList className="stat-icon-indigo" size={24} />
-                  <p className="stat-label">Total Quizzes</p>
-                </div>
-                <h2 className="stat-value">{quizzes.length}</h2>
-              </div>
-              <div className="stat-card">
-                <div className="stat-header">
-                  <Users className="stat-icon-green" size={24} />
-                  <p className="stat-label">Total Submissions</p>
-                </div>
-                <h2 className="stat-value">{totalResponses}</h2>
-              </div>
-              <div className="stat-card">
-                <div className="stat-header">
-                  <CalendarDays className="stat-icon-blue" size={24} />
-                  <p className="stat-label">Class Sessions</p>
-                </div>
-                <h2 className="stat-value">{sessions.length}</h2>
-              </div>
+              <StatCard
+                icon={<ClipboardList />}
+                label="Total Quizzes"
+                value={quizzes.length}
+                colorClass="bg-blue-soft"
+              />
+              <StatCard
+                icon={<Users />}
+                label="Total Submissions"
+                value={totalResponses}
+                colorClass="bg-orange-soft"
+              />
+              <StatCard
+                icon={<CalendarDays />}
+                label="Class Sessions"
+                value={sessions.length}
+                colorClass="bg-purple-soft"
+              />
             </div>
 
 

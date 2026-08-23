@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChartColumn } from "lucide-react";
 import { getOverview, getAttendanceAnalytics, getSessionAnalytics, getQuizAnalytics } from "../../api/analytics.api";
 import { getMyClassrooms } from "../../../classroom/api/classroom.api";
 import { resolveDateRange } from "../../utils/dateRanges";
@@ -127,7 +128,10 @@ const TeacherAnalyticsView = () => {
       <div className="analytics-container">
         <header className="analytics-header">
           <div>
-            <h1 className="analytics-title">Analytics</h1>
+            <h1 className="analytics-title">
+              <ChartColumn className="analytics-title-icon" size={26} />
+              Analytics
+            </h1>
             <p className="analytics-subtitle">
               Track classroom engagement, attendance, session activity, and student performance.
             </p>
