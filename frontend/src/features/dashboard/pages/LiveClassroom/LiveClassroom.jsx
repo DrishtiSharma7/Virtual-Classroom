@@ -59,6 +59,8 @@ import {
   ClipboardCheck,
   ChartColumn,
   LogOut,
+  UserX,
+  CameraOff,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
@@ -2582,7 +2584,7 @@ export default function LiveClassroom() {
                                   onClick={() => handleKickStudent(p.socketId)}
                                   className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-200"
                                 >
-                                  Remove
+                                  <UserX size={16} />
                                 </button>
 
                                 {p.cameraEnabled && (
@@ -2592,7 +2594,7 @@ export default function LiveClassroom() {
                                     }
                                     className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500"
                                   >
-                                    Cam Off
+                                    <CameraOff size={16} />
                                   </button>
                                 )}
                               </>
