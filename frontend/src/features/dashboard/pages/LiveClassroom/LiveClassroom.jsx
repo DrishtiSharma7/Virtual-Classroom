@@ -528,10 +528,9 @@ export default function LiveClassroom() {
           return;
         }
 
-        stream.getAudioTracks().forEach((t) => (t.enabled = false));
-
         localStream.current = stream;
         setCameraEnabled(false);
+        setMicEnabled(true);
       } catch (err) {
         console.log(err);
         if (!cancelled) {

@@ -2,6 +2,7 @@ const Session = require("./session.model");
 const Classroom = require("../classroom/classroom.model");
 const Chat = require("../chat/chat.model");
 const attendanceService = require("../attendance/attendance.service");
+const sessionLifecycle = require("../../sockets/sessionLifecycle");
 
 exports.createSession = async (req, res) => {
   try {
@@ -183,6 +184,13 @@ exports.endSession = async (req, res) => {
     await attendanceService.completeSessionAttendance(session._id);
 
     await Chat.deleteMany({ session: session._id });
+
+    sessionLifecycle.cancelAutoEnd(session._id.toString());
+
+    const io = req.app.get("io");
+    io?.to(session._id.toString()).emit("session-ended", {
+      message: "This session has been ended by the host.",
+    });
 
     res.json({
       message: "Session ended",
