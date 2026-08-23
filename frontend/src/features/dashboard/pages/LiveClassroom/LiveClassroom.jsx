@@ -61,6 +61,8 @@ import {
   LogOut,
   UserX,
   CameraOff,
+  Volume2,
+  VolumeOff,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
@@ -2576,8 +2578,8 @@ export default function LiveClassroom() {
                                   className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                   {mutedParticipants.has(p.socketId)
-                                    ? "Muted"
-                                    : "Mute"}
+                                    ? <Volume2 size={16} />
+                                    : <VolumeOff size={16} />}
                                 </button>
 
                                 <button
