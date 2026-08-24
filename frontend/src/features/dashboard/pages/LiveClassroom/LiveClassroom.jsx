@@ -159,6 +159,16 @@ const rtcConfig = {
     {
       urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"],
     },
+    
+    ...(import.meta.env.VITE_TURN_URL
+      ? [
+          {
+            urls: import.meta.env.VITE_TURN_URL,
+            username: import.meta.env.VITE_TURN_USERNAME,
+            credential: import.meta.env.VITE_TURN_CREDENTIAL,
+          },
+        ]
+      : []),
   ],
 };
 
@@ -290,14 +300,20 @@ const ParticipantThumb = ({ stream, active, name }) => {
   );
 };
 
-const AudioRelay = ({ stream }) => {
+const AudioRelay = ({ stream, onAutoplayBlocked }) => {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
+    const el = videoRef.current;
+    if (!el || !stream) return;
+    el.srcObject = stream;
+    // Browser autoplay policies can silently block unmuted playback; if so,
+    // register the element so we can retry once the user interacts with the page.
+    const playPromise = el.play();
+    if (playPromise?.catch) {
+      playPromise.catch(() => onAutoplayBlocked?.(el));
     }
-  }, [stream]);
+  }, [stream, onAutoplayBlocked]);
 
   if (!stream) return null;
   return <video ref={videoRef} autoPlay playsInline className="hidden" />;
@@ -451,6 +467,10 @@ export default function LiveClassroom() {
   const togglingMicRef = useRef(false);
   const cameraSenders = useRef({});
   const screenSenders = useRef({});
+  const politeRef = useRef({});
+  const makingOfferRef = useRef({});
+  const blockedAudioElsRef = useRef(new Set());
+  const [needsAudioUnlock, setNeedsAudioUnlock] = useState(false);
 
   const [session, setSession] = useState(null);
   usePageMeta(session?.title || "Live Class");
@@ -644,6 +664,9 @@ export default function LiveClassroom() {
       const pc = new RTCPeerConnection(rtcConfig);
       peerConnections.current[targetId] = pc;
 
+      politeRef.current[targetId] = (socketRef.current?.id || "") < targetId;
+      makingOfferRef.current[targetId] = false;
+
       localStream.current?.getAudioTracks().forEach((track) => {
         pc.addTrack(track, localStream.current);
       });
@@ -680,10 +703,18 @@ export default function LiveClassroom() {
         const stream = event.streams[0];
         if (!stream) return;
 
+        console.log(
+          `[WebRTC][${targetId}] Remote track:`,
+          event.track.kind,
+          "enabled=",
+          event.track.enabled,
+          "readyState=",
+          event.track.readyState
+        );
+
         setParticipants((prev) =>
           prev.map((p) => {
             if (p.socketId !== targetId) return p;
-            if (p.videoStreams?.[stream.id] === stream) return p;
             return {
               ...p,
               videoStreams: { ...(p.videoStreams || {}), [stream.id]: stream },
@@ -692,22 +723,46 @@ export default function LiveClassroom() {
         );
       };
 
-      let makingOffer = false;
       pc.onnegotiationneeded = async () => {
         try {
-          if (makingOffer) return;
-          makingOffer = true;
+          makingOfferRef.current[targetId] = true;
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           socketRef.current?.emit("offer", {
             roomId: sessionId,
             target: targetId,
-            offer,
+            offer: pc.localDescription,
           });
         } catch (err) {
           console.log(err);
         } finally {
-          makingOffer = false;
+          makingOfferRef.current[targetId] = false;
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log(`[WebRTC][${targetId}] ICE state:`, pc.iceConnectionState);
+      };
+
+      pc.onicegatheringstatechange = () => {
+        console.log(`[WebRTC][${targetId}] ICE gathering:`, pc.iceGatheringState);
+      };
+
+      pc.onsignalingstatechange = () => {
+        console.log(`[WebRTC][${targetId}] Signaling state:`, pc.signalingState);
+      };
+
+      pc.onconnectionstatechange = () => {
+        console.log(`[WebRTC][${targetId}] Connection state:`, pc.connectionState);
+
+        if (pc.connectionState === "connected") {
+          console.log(`[WebRTC][${targetId}] Senders:`, pc.getSenders());
+          console.log(`[WebRTC][${targetId}] Receivers:`, pc.getReceivers());
+          console.log(`[WebRTC][${targetId}] Transceivers:`, pc.getTransceivers());
+        }
+
+        if (pc.connectionState === "failed") {
+          pc.restartIce?.();
         }
       };
 
@@ -1183,6 +1238,8 @@ export default function LiveClassroom() {
         delete pendingCandidates.current[stale.socketId];
         delete cameraSenders.current[stale.socketId];
         delete screenSenders.current[stale.socketId];
+        delete politeRef.current[stale.socketId];
+        delete makingOfferRef.current[stale.socketId];
         const next = [...prev];
         next[staleIdx] = {
           socketId,
@@ -1218,20 +1275,41 @@ export default function LiveClassroom() {
 
     socket.on("offer", async ({ sender, offer }) => {
       const pc = peerConnections.current[sender] || createPeerConnection(sender);
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      await flushQueuedCandidates(sender, pc);
 
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit("answer", { roomId: sessionId, target: sender, answer });
+      const polite = politeRef.current[sender];
+      const offerCollision =
+        offer.type === "offer" &&
+        (makingOfferRef.current[sender] || pc.signalingState !== "stable");
+
+      if (!polite && offerCollision) return;
+
+      try {
+        if (offerCollision) {
+          await pc.setLocalDescription({ type: "rollback" });
+        }
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        await flushQueuedCandidates(sender, pc);
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit("answer", { roomId: sessionId, target: sender, answer });
+      } catch (err) {
+        console.log(err);
+      }
     });
 
     socket.on("answer", async ({ sender, answer }) => {
       const pc = peerConnections.current[sender];
       if (!pc) return;
 
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      await flushQueuedCandidates(sender, pc);
+      if (pc.signalingState !== "have-local-offer") return;
+
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        await flushQueuedCandidates(sender, pc);
+      } catch (err) {
+        console.log(err);
+      }
     });
 
     socket.on("ice-candidate", async ({ sender, candidate }) => {
@@ -1257,6 +1335,8 @@ export default function LiveClassroom() {
       delete pendingCandidates.current[socketId];
       delete cameraSenders.current[socketId];
       delete screenSenders.current[socketId];
+      delete politeRef.current[socketId];
+      delete makingOfferRef.current[socketId];
       setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
     });
 
@@ -1471,6 +1551,30 @@ export default function LiveClassroom() {
 
     return () => clearTimeout(timer);
   }, [removedNotice, navigate, session]);
+
+  const handleAutoplayBlocked = useCallback((el) => {
+    blockedAudioElsRef.current.add(el);
+    setNeedsAudioUnlock(true);
+  }, []);
+
+  useEffect(() => {
+    if (!needsAudioUnlock) return;
+
+    const unlock = () => {
+      blockedAudioElsRef.current.forEach((el) => {
+        el.play().catch(() => {});
+      });
+      blockedAudioElsRef.current.clear();
+      setNeedsAudioUnlock(false);
+    };
+
+    document.addEventListener("click", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      document.removeEventListener("click", unlock);
+      document.removeEventListener("keydown", unlock);
+    };
+  }, [needsAudioUnlock]);
 
   const toggleCamera = async () => {
     const existingTrack = localStream.current?.getVideoTracks()[0];
@@ -1775,6 +1879,8 @@ export default function LiveClassroom() {
     delete peerConnections.current[targetSocketId];
     delete cameraSenders.current[targetSocketId];
     delete screenSenders.current[targetSocketId];
+    delete politeRef.current[targetSocketId];
+    delete makingOfferRef.current[targetSocketId];
     setParticipants((prev) =>
       prev.filter((p) => p.socketId !== targetSocketId)
     );
@@ -1858,6 +1964,11 @@ export default function LiveClassroom() {
 
   return (
     <div className="relative flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
+      {needsAudioUnlock && (
+        <div className="absolute inset-x-0 top-0 z-50 flex items-center justify-center bg-amber-500 py-1.5 text-xs font-medium text-white">
+          Your browser blocked audio playback. Click anywhere to enable sound.
+        </div>
+      )}
       {removedNotice && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/70">
           <div className="max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
@@ -2526,18 +2637,17 @@ export default function LiveClassroom() {
 
           <aside className="flex w-[340px] flex-shrink-0 flex-col gap-4 overflow-hidden">
 
-            {participants
-              .filter((p) => isHost || p.user?.role !== "teacher")
-              .map((p) => (
-                <AudioRelay
-                  key={p.socketId}
-                  stream={
-                    Object.values(p.videoStreams || {}).find(
-                      (s) => s.id !== hostScreenStreamId
-                    ) || null
-                  }
-                />
-              ))}
+            {participants.map((p) => (
+              <AudioRelay
+                key={p.socketId}
+                stream={
+                  Object.values(p.videoStreams || {}).find(
+                    (s) => s.id !== hostScreenStreamId
+                  ) || null
+                }
+                onAutoplayBlocked={handleAutoplayBlocked}
+              />
+            ))}
 
             <div className="flex flex-[2] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
               <div className="flex border-b border-slate-100">
