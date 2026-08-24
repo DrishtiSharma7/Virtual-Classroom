@@ -171,6 +171,28 @@ const rtcConfig = {
       : []),
   ],
 };
+const preferVideoCodec = (pc, sender) => {
+  try {
+    if (typeof RTCRtpSender === "undefined" || !RTCRtpSender.getCapabilities)
+      return;
+
+    const transceiver = pc
+      .getTransceivers()
+      .find((t) => t.sender === sender);
+    if (!transceiver?.setCodecPreferences) return;
+
+    const { codecs } = RTCRtpSender.getCapabilities("video") || {};
+    if (!codecs?.length) return;
+
+    const preferred = codecs.filter((c) => /VP8/i.test(c.mimeType));
+    const rest = codecs.filter((c) => !/VP8/i.test(c.mimeType));
+    if (!preferred.length) return;
+
+    transceiver.setCodecPreferences([...preferred, ...rest]);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 const BOARD_WIDTH = 1600;
 const BOARD_HEIGHT = 900;
@@ -182,8 +204,7 @@ const REACTIONS = [
   { id: "slow-down", Icon: Turtle, label: "Slow down" },
 ];
 
-// Same destinations as the main app's Sidebar (dashboard/components/Sidebar),
-// icon-only since the in-session rail has no room for labels.
+
 const NAV_RAIL_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Classrooms", path: "/classrooms" },
@@ -677,6 +698,7 @@ export default function LiveClassroom() {
           camTrack,
           localStream.current
         );
+        preferVideoCodec(pc, cameraSenders.current[targetId]);
       }
 
       if (isHostRef.current) {
@@ -686,6 +708,7 @@ export default function LiveClassroom() {
             scrTrack,
             screenStream.current
           );
+          preferVideoCodec(pc, screenSenders.current[targetId]);
         }
       }
 
@@ -1680,6 +1703,7 @@ export default function LiveClassroom() {
           track,
           localStream.current
         );
+        preferVideoCodec(pc, cameraSenders.current[targetId]);
       }
     });
   };
@@ -1694,6 +1718,7 @@ export default function LiveClassroom() {
           track,
           screenStream.current
         );
+        preferVideoCodec(pc, screenSenders.current[targetId]);
       }
     });
   };
