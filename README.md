@@ -42,7 +42,7 @@ A full-stack virtual classroom platform for live, interactive online teaching. T
 
 ## Live Deployed Link
 
-[virtual-classroom-bths.vercel.app](https://virtual-classroom-bths.vercel.app/)
+[virtual-classroom-kbnc.vercel.app](https://virtual-classroom-kbnc.vercel.app/)
 
 ## Tech Stack
 
