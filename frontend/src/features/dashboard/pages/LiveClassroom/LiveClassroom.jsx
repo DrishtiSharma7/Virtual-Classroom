@@ -320,6 +320,7 @@ const TeacherCameraTile = ({ stream, active, name }) => {
           ref={videoRef}
           autoPlay
           playsInline
+          muted
           className={`h-full w-full object-cover ${
             showVideo ? "" : "opacity-0"
           }`}
@@ -408,6 +409,7 @@ const StudentZoomModal = ({ participant, hostScreenStreamId, onClose }) => {
               ref={videoRef}
               autoPlay
               playsInline
+              muted
               className="h-full w-full object-contain"
             />
           )}
