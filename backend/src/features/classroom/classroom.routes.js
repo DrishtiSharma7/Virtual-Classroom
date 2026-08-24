@@ -22,6 +22,13 @@ router.get("/my", authMiddleware, classroomController.getMyClassrooms);
 
 router.get("/:id", authMiddleware, classroomController.getClassroomById);
 
+router.put(
+  "/:id",
+  authMiddleware,
+  roleMiddleware("teacher"),
+  classroomController.updateClassroom,
+);
+
 router.delete(
   "/:id",
   authMiddleware,

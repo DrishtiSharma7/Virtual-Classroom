@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   ArrowLeft,
   Video,
@@ -12,13 +13,20 @@ import {
   Plus,
   Trash2,
   UploadCloud,
+  Pencil,
+  X,
 } from "lucide-react";
 
 import "./ClassroomDetails.css";
-import { getClassroomById } from "../../api/classroom.api";
+import { getClassroomById, updateClassroom } from "../../api/classroom.api";
+import {
+  createAnnouncement,
+  getClassroomAnnouncements,
+} from "../../api/announcement.api";
 import { useNavigate } from "react-router-dom";
 import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
+import StatCard from "../../../dashboard/components/StatCard/StatCard";
 
 function ClassroomDetails() {
   const { classroomId } = useParams();
@@ -31,12 +39,25 @@ function ClassroomDetails() {
 
   const [startingSession, setStartingSession] = useState(false);
 
+  const [showEditSession, setShowEditSession] = useState(false);
+  const [sessionTitleInput, setSessionTitleInput] = useState("");
+  const [savingSessionTitle, setSavingSessionTitle] = useState(false);
+  const [sessionTitleError, setSessionTitleError] = useState("");
+
+  const [announcements, setAnnouncements] = useState([]);
+  const [showAddAnnouncement, setShowAddAnnouncement] = useState(false);
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementDescription, setAnnouncementDescription] = useState("");
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+  const [announcementError, setAnnouncementError] = useState("");
+
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const role = user?.role;
   const isTeacher = role === "teacher";
   const isStudent = role === "student";
   useEffect(() => {
     fetchClassroom();
+    fetchAnnouncements();
   }, [classroomId]);
 
   const fetchClassroom = async () => {
@@ -48,6 +69,15 @@ function ClassroomDetails() {
       setError("Unable to load classroom.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      const data = await getClassroomAnnouncements(classroomId);
+      setAnnouncements(data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -106,11 +136,40 @@ function ClassroomDetails() {
 };
 
   const handlePostAnnouncement = () => {
-    navigate(`/classrooms/${classroom._id}/announcements/new`);
+    setAnnouncementTitle("");
+    setAnnouncementDescription("");
+    setAnnouncementError("");
+    setShowAddAnnouncement(true);
+  };
+
+  const handleCreateAnnouncement = async () => {
+    if (!announcementTitle.trim()) {
+      setAnnouncementError("Give this announcement a title.");
+      return;
+    }
+    try {
+      setPostingAnnouncement(true);
+      setAnnouncementError("");
+      const res = await createAnnouncement({
+        classroom: classroom._id,
+        title: announcementTitle.trim(),
+        description: announcementDescription.trim(),
+      });
+      setAnnouncements((prev) => [res.announcement, ...prev]);
+      setShowAddAnnouncement(false);
+      toast.success("Announcement posted.");
+    } catch (err) {
+      console.error(err);
+      setAnnouncementError(
+        err.response?.data?.message || "Unable to post announcement.",
+      );
+    } finally {
+      setPostingAnnouncement(false);
+    }
   };
 
   const handleUploadRecording = () => {
-    navigate(`/classrooms/${classroom._id}/recordings/upload`);
+    navigate(`/recordings?classroomId=${classroom._id}&upload=1`);
   };
 
   const handleRemoveStudent = (studentId) => {
@@ -119,9 +178,41 @@ function ClassroomDetails() {
     console.log("Remove student:", studentId);
   };
 
+  const handleOpenEditSession = () => {
+    setSessionTitleInput(sessionTitle);
+    setSessionTitleError("");
+    setShowEditSession(true);
+  };
+
+  const handleSaveSessionTitle = async () => {
+    if (!sessionTitleInput.trim()) {
+      setSessionTitleError("Session title cannot be empty.");
+      return;
+    }
+    try {
+      setSavingSessionTitle(true);
+      setSessionTitleError("");
+      const res = await updateClassroom(classroom._id, {
+        sessionTitle: sessionTitleInput.trim(),
+      });
+      setClassroom(res.classroom);
+      setShowEditSession(false);
+      toast.success("Session title updated.");
+    } catch (err) {
+      console.error(err);
+      setSessionTitleError(
+        err.response?.data?.message || "Unable to update session title.",
+      );
+    } finally {
+      setSavingSessionTitle(false);
+    }
+  };
+
   const students = classroom.students || [];
   const recordings = classroom.recordings || [];
-  const announcements = classroom.announcements || [];
+  const sessionTitle = classroom.sessionTitle?.trim()
+    ? classroom.sessionTitle
+    : `${classroom.subject} Live Session`;
 
   return (
     <div className="details-page">
@@ -161,23 +252,28 @@ function ClassroomDetails() {
 
 
         <div className="classroom-details-stats-grid">
-          <div className="stat-card">
-            <Users size={26} className="stat-icon indigo" />
-            <p>Total Students</p>
-            <h2>{students.length}</h2>
-          </div>
+          <StatCard
+            icon={<Users size={22} />}
+            label="Total Students"
+            value={students.length}
+            colorClass="bg-blue-soft"
+          />
 
-          <Link to={`/attendance/${classroom._id}`} className="stat-card">
-            <CalendarDays size={26} className="stat-icon blue" />
-            <p>{isTeacher ? "Attendance" : "My Attendance"}</p>
-            <h2>91%</h2>
+          <Link to={`/attendance/${classroom._id}`} className="block">
+            <StatCard
+              icon={<CalendarDays size={22} />}
+              label={isTeacher ? "Attendance" : "My Attendance"}
+              value="91%"
+              colorClass="bg-green-soft"
+            />
           </Link>
 
-          <div className="stat-card">
-            <PlayCircle size={26} className="stat-icon purple" />
-            <p>Recordings</p>
-            <h2>{recordings.length}</h2>
-          </div>
+          <StatCard
+            icon={<PlayCircle size={22} />}
+            label="Recordings"
+            value={recordings.length}
+            colorClass="bg-purple-soft"
+          />
         </div>
 
 
@@ -196,29 +292,42 @@ function ClassroomDetails() {
                 </span>
               </div>
 
-              <h3>React Authentication using JWT</h3>
+              <div className="session-title-row">
+                <h3>{sessionTitle}</h3>
+                {isTeacher && (
+                  <button
+                    className="edit-icon-btn"
+                    onClick={handleOpenEditSession}
+                    title="Edit session title"
+                    aria-label="Edit session title"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                )}
+              </div>
 
               <p>Join today's scheduled live lecture.</p>
 
-              <div className="session-time">
-                <Clock3 size={16} />
-                Today • 2:00 PM - 3:00 PM
+              <div className="session-footer">
+                <div className="session-time">
+                  <Clock3 size={16} />
+                  Today • 2:00 PM - 3:00 PM
+                </div>
+
+                {isStudent && (
+                  <button className="join-btn" onClick={handleJoinSession}>
+                    Join Session
+                    <ArrowRight size={18} />
+                  </button>
+                )}
+
+                {isTeacher && (
+                  <button className="join-btn" onClick={handleStartSession}>
+                    Go Live Now
+                    <ArrowRight size={18} />
+                  </button>
+                )}
               </div>
-
-
-              {isStudent && (
-                <button className="join-btn" onClick={handleJoinSession}>
-                  Join Session
-                  <ArrowRight size={18} />
-                </button>
-              )}
-
-              {isTeacher && (
-                <button className="join-btn" onClick={handleStartSession}>
-                  Go Live Now
-                  <ArrowRight size={18} />
-                </button>
-              )}
             </div>
 
 
@@ -243,11 +352,48 @@ function ClassroomDetails() {
               {announcements.length === 0 ? (
                 <p className="empty-text">No announcements available.</p>
               ) : (
-                announcements.map((item, index) => (
-                  <div key={index} className="announcement-item">
+                announcements.map((item) => (
+                  <div key={item._id} className="announcement-item">
                     <h4>{item.title}</h4>
 
-                    <p>{item.description}</p>
+                    {item.description && <p>{item.description}</p>}
+                  </div>
+                ))
+              )}
+            </div>
+
+
+
+            <div className="section-card">
+              <div className="section-title">
+                <span className="section-title-left">
+                  <PlayCircle size={20} />
+                  Recordings
+                </span>
+                {isTeacher && (
+                  <button
+                    className="inline-add-btn"
+                    onClick={handleUploadRecording}
+                    title="Upload Recording"
+                  >
+                    <UploadCloud size={16} />
+                    Upload
+                  </button>
+                )}
+              </div>
+
+              {recordings.length === 0 ? (
+                <p className="empty-text">No recordings found.</p>
+              ) : (
+                recordings.slice(0, 5).map((video, index) => (
+                  <div key={video._id || index} className="recording-row">
+                    <div>
+                      <h4>{video.title}</h4>
+
+                      <p>Recorded Lecture</p>
+                    </div>
+
+                    <button className="watch-btn">Watch</button>
                   </div>
                 ))
               )}
@@ -299,45 +445,96 @@ function ClassroomDetails() {
                 </div>
               )}
             </div>
-
-
-
-            <div className="section-card">
-              <div className="section-title">
-                <span className="section-title-left">
-                  <PlayCircle size={20} />
-                  Recordings
-                </span>
-                {isTeacher && (
-                  <button
-                    className="inline-add-btn"
-                    onClick={handleUploadRecording}
-                    title="Upload Recording"
-                  >
-                    <UploadCloud size={16} />
-                    Upload
-                  </button>
-                )}
-              </div>
-
-              {recordings.length === 0 ? (
-                <p className="empty-text">No recordings found.</p>
-              ) : (
-                recordings.slice(0, 5).map((video, index) => (
-                  <div key={video._id || index} className="recording-row">
-                    <div>
-                      <h4>{video.title}</h4>
-
-                      <p>Recorded Lecture</p>
-                    </div>
-
-                    <button className="watch-btn">Watch</button>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </div>
+
+        {showEditSession && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <div className="modal-header">
+                <h2 className="modal-title">Edit Session Title</h2>
+                <button
+                  onClick={() => setShowEditSession(false)}
+                  aria-label="Close"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {sessionTitleError && (
+                <p className="form-error">{sessionTitleError}</p>
+              )}
+
+              <div className="form-field">
+                <label className="form-label">Session Title</label>
+                <input
+                  value={sessionTitleInput}
+                  onChange={(e) => setSessionTitleInput(e.target.value)}
+                  placeholder={`e.g. ${classroom.subject} Live Session`}
+                  className="form-input"
+                />
+              </div>
+
+              <button
+                onClick={handleSaveSessionTitle}
+                disabled={savingSessionTitle}
+                className="join-btn mt-6 w-full justify-center"
+              >
+                {savingSessionTitle ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showAddAnnouncement && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <div className="modal-header">
+                <h2 className="modal-title">Post Announcement</h2>
+                <button
+                  onClick={() => setShowAddAnnouncement(false)}
+                  aria-label="Close"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {announcementError && (
+                <p className="form-error">{announcementError}</p>
+              )}
+
+              <div className="form-field">
+                <label className="form-label">Title</label>
+                <input
+                  value={announcementTitle}
+                  onChange={(e) => setAnnouncementTitle(e.target.value)}
+                  placeholder="e.g. Class rescheduled to 4 PM"
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-label">Description (optional)</label>
+                <input
+                  value={announcementDescription}
+                  onChange={(e) => setAnnouncementDescription(e.target.value)}
+                  placeholder="Add more details..."
+                  className="form-input"
+                />
+              </div>
+
+              <button
+                onClick={handleCreateAnnouncement}
+                disabled={postingAnnouncement}
+                className="join-btn mt-6 w-full justify-center"
+              >
+                {postingAnnouncement ? "Posting..." : "Post"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

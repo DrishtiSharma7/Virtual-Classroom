@@ -12,6 +12,11 @@ const classroomSchema = new mongoose.Schema(
       required: true,
     },
 
+    sessionTitle: {
+      type: String,
+      default: "",
+    },
+
     code: {
       type: String,
       required: true,

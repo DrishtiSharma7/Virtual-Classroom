@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   Video,
@@ -22,6 +23,9 @@ import {
 } from "../../api/recording.api";
 
 export default function TeacherRecordingsHome() {
+  const [searchParams] = useSearchParams();
+  const autoOpenedRef = useRef(false);
+
   const [classrooms, setClassrooms] = useState([]);
   const [classroomId, setClassroomId] = useState("");
   const [recordings, setRecordings] = useState([]);
@@ -45,7 +49,13 @@ export default function TeacherRecordingsHome() {
       try {
         const data = await getMyClassrooms();
         setClassrooms(data);
-        if (data.length > 0) setClassroomId(data[0]._id);
+        const preselect = searchParams.get("classroomId");
+        const match = preselect && data.find((c) => c._id === preselect);
+        if (match) {
+          setClassroomId(match._id);
+        } else if (data.length > 0) {
+          setClassroomId(data[0]._id);
+        }
       } catch {
         toast.error("Could not load your classrooms.");
       } finally {
@@ -80,6 +90,17 @@ export default function TeacherRecordingsHome() {
     setUploadError("");
     setShowUpload(true);
   };
+
+  useEffect(() => {
+    if (
+      classroomId &&
+      searchParams.get("upload") === "1" &&
+      !autoOpenedRef.current
+    ) {
+      autoOpenedRef.current = true;
+      openUpload();
+    }
+  }, [classroomId]);
 
   const handleUpload = async () => {
     if (!title.trim()) {

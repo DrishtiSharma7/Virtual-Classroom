@@ -106,6 +106,35 @@ exports.getClassroomById = async (req, res) => {
   }
 };
 
+exports.updateClassroom = async (req, res) => {
+  try {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) {
+      return res.status(404).json({
+        message: "Classroom not found",
+      });
+    }
+    if (classroom.teacher.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
+    }
+    const { sessionTitle } = req.body;
+    if (sessionTitle !== undefined) {
+      classroom.sessionTitle = sessionTitle;
+    }
+    await classroom.save();
+    res.json({
+      success: true,
+      classroom,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
 exports.deleteClassroom = async (req, res) => {
   try {
     const classroom = await Classroom.findById(req.params.id);

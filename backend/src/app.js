@@ -15,6 +15,7 @@ const dashboardRoutes = require("./features/dashboard/dashboard.routes");
 const settingsRoutes = require("./features/settings/settings.routes");
 const whiteboardRoutes = require("./features/whiteboard/whiteboard.routes");
 const analyticsRoutes = require("./features/analytics/analytics.routes");
+const announcementRoutes = require("./features/announcement/announcement.routes");
 const app = express();
 
 app.use(cors());
@@ -56,5 +57,6 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 module.exports = app;
