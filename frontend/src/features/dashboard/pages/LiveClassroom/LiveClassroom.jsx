@@ -615,6 +615,10 @@ export default function LiveClassroom() {
 
     const initMedia = async () => {
       try {
+        if (localStream.current) {
+          localStream.current.getTracks().forEach((t) => t.stop());
+          localStream.current = null;
+        }
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
