@@ -1533,12 +1533,19 @@ export default function LiveClassroom() {
 
     socket.on("draw-preview", ({ pageId, element }) => {
       if (!element?.id || pageId !== activePageIdRef.current) return;
+      if (
+        socketRef.current &&
+        element.id.startsWith(`${socketRef.current.id}-`)
+      )
+        return;
       remoteLiveRef.current[element.id] = element;
       redrawCanvas();
     });
 
     socket.on("draw-preview-end", ({ pageId, id }) => {
       if (pageId !== activePageIdRef.current) return;
+      if (id && socketRef.current && id.startsWith(`${socketRef.current.id}-`))
+        return;
       if (id) delete remoteLiveRef.current[id];
       redrawCanvas();
     });
