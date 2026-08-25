@@ -615,10 +615,6 @@ export default function LiveClassroom() {
 
     const initMedia = async () => {
       try {
-        if (localStream.current) {
-          localStream.current.getTracks().forEach((t) => t.stop());
-          localStream.current = null;
-        }
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
@@ -629,13 +625,16 @@ export default function LiveClassroom() {
           return;
         }
 
-        localStream.current = stream;
-
         const videoTrack = stream.getVideoTracks()[0];
         const audioTrack = stream.getAudioTracks()[0];
 
-        setCameraEnabled(!!videoTrack?.enabled);
-        setMicEnabled(!!audioTrack?.enabled);
+        if (videoTrack) videoTrack.enabled = false;
+        if (audioTrack) audioTrack.enabled = false;
+
+        localStream.current = stream;
+
+        setCameraEnabled(false);
+        setMicEnabled(false);
         setMediaError("");
 
         setActiveCameraId(videoTrack?.getSettings().deviceId || null);
