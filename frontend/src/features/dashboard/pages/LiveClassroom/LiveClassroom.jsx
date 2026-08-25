@@ -1508,6 +1508,14 @@ export default function LiveClassroom() {
 
     socket.on("draw", ({ pageId, element }) => {
       if (!element || !pageId) return;
+      if (
+        element.id &&
+        socketRef.current &&
+        element.id.startsWith(`${socketRef.current.id}-`)
+      ) {
+        return;
+      }
+
       try {
         if (element.id) delete remoteLiveRef.current[element.id];
         const pageElements =
