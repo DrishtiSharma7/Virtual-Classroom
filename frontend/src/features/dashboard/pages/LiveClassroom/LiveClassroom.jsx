@@ -159,7 +159,7 @@ const rtcConfig = {
     {
       urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"],
     },
-    
+
     ...(import.meta.env.VITE_TURN_URL
       ? [
           {
@@ -171,28 +171,6 @@ const rtcConfig = {
       : []),
   ],
 };
-const preferVideoCodec = (pc, sender) => {
-  try {
-    if (typeof RTCRtpSender === "undefined" || !RTCRtpSender.getCapabilities)
-      return;
-
-    const transceiver = pc
-      .getTransceivers()
-      .find((t) => t.sender === sender);
-    if (!transceiver?.setCodecPreferences) return;
-
-    const { codecs } = RTCRtpSender.getCapabilities("video") || {};
-    if (!codecs?.length) return;
-
-    const preferred = codecs.filter((c) => /VP8/i.test(c.mimeType));
-    const rest = codecs.filter((c) => !/VP8/i.test(c.mimeType));
-    if (!preferred.length) return;
-
-    transceiver.setCodecPreferences([...preferred, ...rest]);
-  } catch (err) {
-    console.log(err);
-  }
-};
 
 const BOARD_WIDTH = 1600;
 const BOARD_HEIGHT = 900;
@@ -203,7 +181,6 @@ const REACTIONS = [
   { id: "raise-hand", Icon: Hand, label: "Raise hand" },
   { id: "slow-down", Icon: Turtle, label: "Slow down" },
 ];
-
 
 const NAV_RAIL_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -406,7 +383,9 @@ const StudentZoomModal = ({ participant, hostScreenStreamId, onClose }) => {
       ) || null
     : null;
   const showVideo =
-    !!participant?.cameraEnabled && !!stream && stream.getVideoTracks().length > 0;
+    !!participant?.cameraEnabled &&
+    !!stream &&
+    stream.getVideoTracks().length > 0;
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -630,31 +609,48 @@ export default function LiveClassroom() {
   }, [session?.startTime]);
 
   useEffect(() => {
-    if (sessionLoading)
-      return;
+    if (sessionLoading) return;
+
     let cancelled = false;
 
     const initMedia = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
+          video: true,
         });
 
         if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
+          stream.getTracks().forEach((track) => track.stop());
           return;
         }
 
         localStream.current = stream;
-        setCameraEnabled(false);
-        setMicEnabled(true);
+
+        const videoTrack = stream.getVideoTracks()[0];
+        const audioTrack = stream.getAudioTracks()[0];
+
+        setCameraEnabled(!!videoTrack?.enabled);
+        setMicEnabled(!!audioTrack?.enabled);
+        setMediaError("");
+
+        setActiveCameraId(videoTrack?.getSettings().deviceId || null);
+
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
       } catch (err) {
-        console.log(err);
+        console.error("[Media] Initial media error:", err);
+
         if (!cancelled) {
-          setMediaError("Microphone unavailable.");
+          setCameraEnabled(false);
+          setMicEnabled(false);
+          setMediaError("Camera or microphone unavailable.");
         }
       } finally {
-        if (!cancelled) setMediaReady(true);
+        if (!cancelled) {
+          setMediaReady(true);
+        }
       }
     };
 
@@ -663,7 +659,7 @@ export default function LiveClassroom() {
     return () => {
       cancelled = true;
     };
-  }, [sessionLoading, isHost]);
+  }, [sessionLoading]);
 
   useEffect(() => {
     if (!mediaReady || !navigator.mediaDevices?.enumerateDevices) {
@@ -680,37 +676,69 @@ export default function LiveClassroom() {
 
   const createPeerConnection = useCallback(
     (targetId) => {
-      peerConnections.current[targetId]?.close();
+      // Close old connection if it exists
+      if (peerConnections.current[targetId]) {
+        try {
+          peerConnections.current[targetId].close();
+        } catch (err) {
+          console.error("[WebRTC] Error closing old PC:", err);
+        }
+      }
 
       const pc = new RTCPeerConnection(rtcConfig);
+
       peerConnections.current[targetId] = pc;
 
       politeRef.current[targetId] = (socketRef.current?.id || "") < targetId;
+
       makingOfferRef.current[targetId] = false;
 
-      localStream.current?.getAudioTracks().forEach((track) => {
-        pc.addTrack(track, localStream.current);
-      });
+      // --------------------------------------------------
+      // ADD LOCAL AUDIO + CAMERA AT CONNECTION CREATION
+      // --------------------------------------------------
 
-      const camTrack = localStream.current?.getVideoTracks()[0];
-      if (camTrack) {
-        cameraSenders.current[targetId] = pc.addTrack(
-          camTrack,
-          localStream.current
-        );
-        preferVideoCodec(pc, cameraSenders.current[targetId]);
+      if (localStream.current) {
+        localStream.current.getTracks().forEach((track) => {
+          try {
+            const sender = pc.addTrack(track, localStream.current);
+
+            if (track.kind === "video") {
+              cameraSenders.current[targetId] = sender;
+            }
+          } catch (err) {
+            console.error(
+              `[WebRTC][${targetId}] Failed to add ${track.kind} track:`,
+              err
+            );
+          }
+        });
       }
+
+      // --------------------------------------------------
+      // SCREEN SHARE
+      // --------------------------------------------------
 
       if (isHostRef.current) {
-        const scrTrack = screenStream.current?.getVideoTracks()[0];
-        if (scrTrack) {
-          screenSenders.current[targetId] = pc.addTrack(
-            scrTrack,
-            screenStream.current
-          );
-          preferVideoCodec(pc, screenSenders.current[targetId]);
+        const screenTrack = screenStream.current?.getVideoTracks()[0];
+
+        if (screenTrack) {
+          try {
+            screenSenders.current[targetId] = pc.addTrack(
+              screenTrack,
+              screenStream.current
+            );
+          } catch (err) {
+            console.error(
+              `[WebRTC][${targetId}] Failed to add screen track:`,
+              err
+            );
+          }
         }
       }
+
+      // --------------------------------------------------
+      // ICE CANDIDATES
+      // --------------------------------------------------
 
       pc.onicecandidate = (event) => {
         if (!event.candidate) return;
@@ -722,71 +750,130 @@ export default function LiveClassroom() {
         });
       };
 
-      pc.ontrack = (event) => {
-        const stream = event.streams[0];
-        if (!stream) return;
+      // --------------------------------------------------
+      // REMOTE TRACK
+      // --------------------------------------------------
 
-        console.log(
-          `[WebRTC][${targetId}] Remote track:`,
-          event.track.kind,
-          "enabled=",
-          event.track.enabled,
-          "readyState=",
-          event.track.readyState
-        );
+      pc.ontrack = (event) => {
+        console.log(`[WebRTC][${targetId}] Remote track received:`, {
+          kind: event.track.kind,
+          id: event.track.id,
+          enabled: event.track.enabled,
+          readyState: event.track.readyState,
+          streams: event.streams?.length,
+        });
+
+        // Important: if the browser doesn't provide event.streams[0],
+        // build our own MediaStream so the track isn't lost.
+        const stream = event.streams?.[0] || new MediaStream([event.track]);
 
         setParticipants((prev) =>
-          prev.map((p) => {
-            if (p.socketId !== targetId) return p;
+          prev.map((participant) => {
+            if (participant.socketId !== targetId) {
+              return participant;
+            }
+
             return {
-              ...p,
-              videoStreams: { ...(p.videoStreams || {}), [stream.id]: stream },
+              ...participant,
+              videoStreams: {
+                ...(participant.videoStreams || {}),
+                [stream.id]: stream,
+              },
             };
           })
         );
       };
 
+      // --------------------------------------------------
+      // NEGOTIATION
+      // --------------------------------------------------
+
       pc.onnegotiationneeded = async () => {
         try {
+          if (pc.signalingState !== "stable") {
+            return;
+          }
+
+          if (makingOfferRef.current[targetId]) {
+            return;
+          }
+
           makingOfferRef.current[targetId] = true;
+
           const offer = await pc.createOffer();
+
+          if (pc.signalingState !== "stable") {
+            return;
+          }
+
           await pc.setLocalDescription(offer);
+
           socketRef.current?.emit("offer", {
             roomId: sessionId,
             target: targetId,
             offer: pc.localDescription,
           });
         } catch (err) {
-          console.log(err);
+          console.error(`[WebRTC][${targetId}] Negotiation error:`, err);
         } finally {
           makingOfferRef.current[targetId] = false;
         }
       };
 
+      // --------------------------------------------------
+      // ICE STATE
+      // --------------------------------------------------
+
       pc.oniceconnectionstatechange = () => {
         console.log(`[WebRTC][${targetId}] ICE state:`, pc.iceConnectionState);
+
+        if (pc.iceConnectionState === "failed") {
+          console.warn(`[WebRTC][${targetId}] ICE failed - restarting ICE`);
+
+          pc.restartIce?.();
+        }
       };
 
       pc.onicegatheringstatechange = () => {
-        console.log(`[WebRTC][${targetId}] ICE gathering:`, pc.iceGatheringState);
+        console.log(
+          `[WebRTC][${targetId}] ICE gathering:`,
+          pc.iceGatheringState
+        );
       };
 
-      pc.onsignalingstatechange = () => {
-        console.log(`[WebRTC][${targetId}] Signaling state:`, pc.signalingState);
-      };
+      // --------------------------------------------------
+      // CONNECTION STATE
+      // --------------------------------------------------
 
       pc.onconnectionstatechange = () => {
-        console.log(`[WebRTC][${targetId}] Connection state:`, pc.connectionState);
+        console.log(
+          `[WebRTC][${targetId}] Connection state:`,
+          pc.connectionState
+        );
 
         if (pc.connectionState === "connected") {
           console.log(`[WebRTC][${targetId}] Senders:`, pc.getSenders());
           console.log(`[WebRTC][${targetId}] Receivers:`, pc.getReceivers());
-          console.log(`[WebRTC][${targetId}] Transceivers:`, pc.getTransceivers());
+          console.log(
+            `[WebRTC][${targetId}] Transceivers:`,
+            pc.getTransceivers()
+          );
         }
 
         if (pc.connectionState === "failed") {
           pc.restartIce?.();
         }
+      };
+
+      // --------------------------------------------------
+      // SIGNALING STATE
+      // --------------------------------------------------
+
+      pc.onsignalingstatechange = () => {
+        console.log(
+          `[WebRTC][${targetId}] Signaling state:`,
+          pc.signalingState
+        );
       };
 
       return pc;
@@ -812,8 +899,7 @@ export default function LiveClassroom() {
   const redrawCanvas = useCallback(() => {
     const ctx = ctxRef.current;
     const canvas = canvasRef.current;
-    if (!ctx || !canvas)
-      return;
+    if (!ctx || !canvas) return;
 
     ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
     const elements = boardsRef.current[activePageIdRef.current] || [];
@@ -877,7 +963,10 @@ export default function LiveClassroom() {
       wrap.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
 
-    const scale = Math.min(availWidth / BOARD_WIDTH, availHeight / BOARD_HEIGHT);
+    const scale = Math.min(
+      availWidth / BOARD_WIDTH,
+      availHeight / BOARD_HEIGHT
+    );
     const cssWidth = BOARD_WIDTH * scale;
     const cssHeight = BOARD_HEIGHT * scale;
 
@@ -902,8 +991,7 @@ export default function LiveClassroom() {
     getWhiteboard(sessionId)
       .then(({ pages: loadedPages, activePageId: loadedActivePageId }) => {
         applyBoardPages(loadedPages, loadedActivePageId);
-        if (ctxRef.current)
-          redrawCanvas();
+        if (ctxRef.current) redrawCanvas();
         bumpHistory();
       })
       .catch((err) => console.log("Whiteboard history error:", err));
@@ -922,11 +1010,12 @@ export default function LiveClassroom() {
 
   const commitElement = useCallback(
     (el) => {
-      if (!canDraw || !activePageId)
-        return;
+      if (!canDraw || !activePageId) return;
 
       try {
-        const pageElements = boardsRef.current[activePageId] || (boardsRef.current[activePageId] = []);
+        const pageElements =
+          boardsRef.current[activePageId] ||
+          (boardsRef.current[activePageId] = []);
         pageElements.push(el);
         hasRedoRef.current[activePageId] = false;
         redrawCanvas();
@@ -1008,8 +1097,7 @@ export default function LiveClassroom() {
     }
 
     redrawCanvas();
-    if (ctxRef.current)
-      drawElement(ctxRef.current, current);
+    if (ctxRef.current) drawElement(ctxRef.current, current);
 
     socketRef.current?.emit("draw-preview", {
       roomId: sessionId,
@@ -1024,8 +1112,7 @@ export default function LiveClassroom() {
     drawStateRef.current.isDrawing = false;
     drawStateRef.current.current = null;
 
-    if (!current)
-      return;
+    if (!current) return;
 
     socketRef.current?.emit("draw-preview-end", {
       roomId: sessionId,
@@ -1041,7 +1128,10 @@ export default function LiveClassroom() {
   const handleUndo = () => {
     if (!canDraw || !canUndo || !activePageId) return;
     try {
-      socketRef.current?.emit("undo", { roomId: sessionId, pageId: activePageId });
+      socketRef.current?.emit("undo", {
+        roomId: sessionId,
+        pageId: activePageId,
+      });
     } catch (err) {
       console.error("Whiteboard undo error:", err);
     }
@@ -1050,7 +1140,10 @@ export default function LiveClassroom() {
   const handleRedo = () => {
     if (!canDraw || !activePageId) return;
     try {
-      socketRef.current?.emit("redo", { roomId: sessionId, pageId: activePageId });
+      socketRef.current?.emit("redo", {
+        roomId: sessionId,
+        pageId: activePageId,
+      });
     } catch (err) {
       console.error("Whiteboard redo error:", err);
     }
@@ -1096,7 +1189,11 @@ export default function LiveClassroom() {
       const height = BOARD_HEIGHT;
       const orientation = width >= height ? "landscape" : "portrait";
 
-      const doc = new jsPDF({ orientation, unit: "px", format: [width, height] });
+      const doc = new jsPDF({
+        orientation,
+        unit: "px",
+        format: [width, height],
+      });
 
       pages.forEach((page, index) => {
         if (index > 0) doc.addPage([width, height], orientation);
@@ -1297,58 +1394,85 @@ export default function LiveClassroom() {
     });
 
     socket.on("offer", async ({ sender, offer }) => {
-      const pc = peerConnections.current[sender] || createPeerConnection(sender);
+      const pc =
+        peerConnections.current[sender] || createPeerConnection(sender);
+
+      if (!pc) return;
 
       const polite = politeRef.current[sender];
+
       const offerCollision =
         offer.type === "offer" &&
         (makingOfferRef.current[sender] || pc.signalingState !== "stable");
 
-      if (!polite && offerCollision) return;
+      if (!polite && offerCollision) {
+        console.log(`[WebRTC][${sender}] Ignoring offer collision`);
+        return;
+      }
 
       try {
         if (offerCollision) {
           await pc.setLocalDescription({ type: "rollback" });
         }
+
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
         await flushQueuedCandidates(sender, pc);
 
         const answer = await pc.createAnswer();
+
         await pc.setLocalDescription(answer);
-        socket.emit("answer", { roomId: sessionId, target: sender, answer });
+
+        socketRef.current?.emit("answer", {
+          roomId: sessionId,
+          target: sender,
+          answer: pc.localDescription,
+        });
       } catch (err) {
-        console.log(err);
+        console.error(`[WebRTC][${sender}] Offer handling failed:`, err);
       }
     });
 
     socket.on("answer", async ({ sender, answer }) => {
       const pc = peerConnections.current[sender];
+
       if (!pc) return;
 
-      if (pc.signalingState !== "have-local-offer") return;
+      if (pc.signalingState !== "have-local-offer") {
+        console.warn(
+          `[WebRTC][${sender}] Ignoring answer in state:`,
+          pc.signalingState
+        );
+        return;
+      }
 
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
+
         await flushQueuedCandidates(sender, pc);
       } catch (err) {
-        console.log(err);
+        console.error(`[WebRTC][${sender}] Answer handling failed:`, err);
       }
     });
 
     socket.on("ice-candidate", async ({ sender, candidate }) => {
       const pc = peerConnections.current[sender];
 
-      if (!pc || !pc.remoteDescription) {
+      if (!pc || !candidate) return;
+
+      if (!pc.remoteDescription) {
         pendingCandidates.current[sender] =
           pendingCandidates.current[sender] || [];
+
         pendingCandidates.current[sender].push(candidate);
+
         return;
       }
 
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
-        console.log(err);
+        console.error(`[WebRTC][${sender}] ICE candidate failed:`, err);
       }
     });
 
@@ -1382,8 +1506,7 @@ export default function LiveClassroom() {
     socket.on("draw", ({ pageId, element }) => {
       if (!element || !pageId) return;
       try {
-        if (element.id)
-          delete remoteLiveRef.current[element.id];
+        if (element.id) delete remoteLiveRef.current[element.id];
         const pageElements =
           boardsRef.current[pageId] || (boardsRef.current[pageId] = []);
         pageElements.push(element);
@@ -1450,21 +1573,27 @@ export default function LiveClassroom() {
         const byId = new Map(prev.map((p) => [p.pageId, p]));
         const next = pageIds.map((id) => byId.get(id)).filter(Boolean);
         prev.forEach((p) => {
-          if (!next.includes(p))
-            next.push(p);
+          if (!next.includes(p)) next.push(p);
         });
         return next;
       });
     });
 
-    socket.on("board-sync", ({ pages: syncedPages, activePageId: syncedActivePageId, allowStudentDraw: allow }) => {
-      applyBoardPages(syncedPages, syncedActivePageId);
-      remoteLiveRef.current = {};
-      if (typeof allow === "boolean") setAllowStudentDraw(allow);
-      redrawCanvas();
-      bumpHistory();
-      setWbError("");
-    });
+    socket.on(
+      "board-sync",
+      ({
+        pages: syncedPages,
+        activePageId: syncedActivePageId,
+        allowStudentDraw: allow,
+      }) => {
+        applyBoardPages(syncedPages, syncedActivePageId);
+        remoteLiveRef.current = {};
+        if (typeof allow === "boolean") setAllowStudentDraw(allow);
+        redrawCanvas();
+        bumpHistory();
+        setWbError("");
+      }
+    );
 
     socket.on("draw-permission-changed", ({ allowStudentDraw: allow }) => {
       setAllowStudentDraw(!!allow);
@@ -1599,126 +1728,53 @@ export default function LiveClassroom() {
     };
   }, [needsAudioUnlock]);
 
-  const toggleCamera = async () => {
-    const existingTrack = localStream.current?.getVideoTracks()[0];
-    if (existingTrack) {
-      existingTrack.enabled = !existingTrack.enabled;
-      setCameraEnabled(existingTrack.enabled);
-      socketRef.current?.emit("camera-status", {
-        roomId: sessionId,
-        enabled: existingTrack.enabled,
-      });
-      return;
-    }
-
-    if (togglingCameraRef.current) return;
-    togglingCameraRef.current = true;
-
-    try {
-      const videoStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-      const videoTrack = videoStream.getVideoTracks()[0];
-      if (!videoTrack)
-        return;
-
-      if (localStream.current) {
-        localStream.current.addTrack(videoTrack);
-      } else {
-        localStream.current = videoStream;
-      }
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = localStream.current;
-      }
-
-      setActiveCameraId(videoTrack.getSettings().deviceId || null);
-
-      pushCameraTrack(videoTrack);
-
-      setCameraEnabled(true);
-      socketRef.current?.emit("camera-status", {
-        roomId: sessionId,
-        enabled: true,
-      });
-    } catch (err) {
-      console.log(err);
-      setMediaError("Camera unavailable.");
-    } finally {
-      togglingCameraRef.current = false;
-    }
-  };
-
-  const toggleMic = async () => {
-    const existingTrack = localStream.current?.getAudioTracks()[0];
-    if (existingTrack) {
-      existingTrack.enabled = !existingTrack.enabled;
-      setMicEnabled(existingTrack.enabled);
-      if (existingTrack.enabled) setForceMuted(false);
-      return;
-    }
-
-    if (togglingMicRef.current)
-      return;
-    togglingMicRef.current = true;
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-      const track = stream.getAudioTracks()[0];
-      if (!track) return;
-
-      if (localStream.current) {
-        localStream.current.addTrack(track);
-      } else {
-        localStream.current = stream;
-      }
-
-      Object.values(peerConnections.current).forEach((pc) => {
-        pc.addTrack(track, localStream.current);
-      });
-
-      setMicEnabled(true);
-      setForceMuted(false);
-      setMediaError("");
-    } catch (err) {
-      console.log(err);
-      setMediaError("Microphone unavailable.");
-    } finally {
-      togglingMicRef.current = false;
-    }
-  };
-
   const pushCameraTrack = (track) => {
-    if (!localStream.current)
-      return;
+    if (!track) return;
 
     Object.entries(peerConnections.current).forEach(([targetId, pc]) => {
       const sender = cameraSenders.current[targetId];
+
       if (sender) {
-        sender.replaceTrack(track);
-      } else if (track) {
-        cameraSenders.current[targetId] = pc.addTrack(
-          track,
-          localStream.current
-        );
-        preferVideoCodec(pc, cameraSenders.current[targetId]);
+        sender.replaceTrack(track).catch((err) => {
+          console.error(
+            `[WebRTC][${targetId}] Camera replaceTrack failed:`,
+            err
+          );
+        });
+      } else {
+        try {
+          const newSender = pc.addTrack(track, localStream.current);
+
+          cameraSenders.current[targetId] = newSender;
+        } catch (err) {
+          console.error(`[WebRTC][${targetId}] Camera addTrack failed:`, err);
+        }
       }
     });
   };
 
   const pushScreenTrack = (track) => {
+    if (!track) return;
+
     Object.entries(peerConnections.current).forEach(([targetId, pc]) => {
       const sender = screenSenders.current[targetId];
+
       if (sender) {
-        sender.replaceTrack(track);
-      } else if (track) {
-        screenSenders.current[targetId] = pc.addTrack(
-          track,
-          screenStream.current
-        );
-        preferVideoCodec(pc, screenSenders.current[targetId]);
+        sender.replaceTrack(track).catch((err) => {
+          console.error(
+            `[WebRTC][${targetId}] Screen replaceTrack failed:`,
+            err
+          );
+        });
+      } else {
+        try {
+          screenSenders.current[targetId] = pc.addTrack(
+            track,
+            screenStream.current
+          );
+        } catch (err) {
+          console.error(`[WebRTC][${targetId}] Screen addTrack failed:`, err);
+        }
       }
     });
   };
@@ -1736,35 +1792,179 @@ export default function LiveClassroom() {
     });
   };
 
-  const switchCamera = async (deviceId) => {
-    try {
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: { exact: deviceId } },
-      });
-      const newTrack = newStream.getVideoTracks()[0];
+  const toggleCamera = async () => {
+    const existingTrack = localStream.current?.getVideoTracks()[0];
 
-      const oldTrack = localStream.current?.getVideoTracks()[0];
-      if (oldTrack) {
-        localStream.current.removeTrack(oldTrack);
-        oldTrack.stop();
+    // Camera already exists → simply enable/disable it.
+    if (existingTrack) {
+      existingTrack.enabled = !existingTrack.enabled;
+
+      setCameraEnabled(existingTrack.enabled);
+
+      socketRef.current?.emit("camera-status", {
+        roomId: sessionId,
+        enabled: existingTrack.enabled,
+      });
+
+      return;
+    }
+
+    if (togglingCameraRef.current) {
+      return;
+    }
+
+    togglingCameraRef.current = true;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+
+      const videoTrack = stream.getVideoTracks()[0];
+
+      if (!videoTrack) {
+        throw new Error("No video track returned");
       }
-      if (localStream.current) {
-        localStream.current.addTrack(newTrack);
-      } else {
-        localStream.current = newStream;
+
+      // Add video track to our local MediaStream
+      if (!localStream.current) {
+        localStream.current = new MediaStream();
       }
+
+      localStream.current.addTrack(videoTrack);
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = localStream.current;
       }
 
+      setActiveCameraId(videoTrack.getSettings().deviceId || null);
+
+      pushCameraTrack(videoTrack);
+
+      videoTrack.enabled = true;
+
+      setCameraEnabled(true);
+      setMediaError("");
+
+      socketRef.current?.emit("camera-status", {
+        roomId: sessionId,
+        enabled: true,
+      });
+    } catch (err) {
+      console.error("[Camera] Error:", err);
+
+      setCameraEnabled(false);
+      setMediaError("Camera unavailable.");
+    } finally {
+      togglingCameraRef.current = false;
+    }
+  };
+
+  const toggleMic = async () => {
+    const existingTrack = localStream.current?.getAudioTracks()[0];
+
+    if (existingTrack) {
+      existingTrack.enabled = !existingTrack.enabled;
+
+      setMicEnabled(existingTrack.enabled);
+
+      if (existingTrack.enabled) {
+        setForceMuted(false);
+      }
+
+      return;
+    }
+
+    if (togglingMicRef.current) {
+      return;
+    }
+
+    togglingMicRef.current = true;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+      const audioTrack = stream.getAudioTracks()[0];
+
+      if (!audioTrack) {
+        throw new Error("No audio track returned");
+      }
+
+      if (!localStream.current) {
+        localStream.current = new MediaStream();
+      }
+
+      localStream.current.addTrack(audioTrack);
+
+      Object.values(peerConnections.current).forEach((pc) => {
+        const alreadyExists = pc
+          .getSenders()
+          .some((sender) => sender.track && sender.track.kind === "audio");
+
+        if (!alreadyExists) {
+          pc.addTrack(audioTrack, localStream.current);
+        }
+      });
+
+      audioTrack.enabled = true;
+
+      setMicEnabled(true);
+      setForceMuted(false);
+      setMediaError("");
+    } catch (err) {
+      console.error("[Microphone] Error:", err);
+
+      setMicEnabled(false);
+      setMediaError("Microphone unavailable.");
+    } finally {
+      togglingMicRef.current = false;
+    }
+  };
+
+  const switchCamera = async (deviceId) => {
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: { exact: deviceId } },
+      });
+
+      const newTrack = newStream.getVideoTracks()[0];
+
+      if (!newTrack) {
+        throw new Error("No camera track found");
+      }
+
+      const oldTrack = localStream.current?.getVideoTracks()[0];
+
+      if (oldTrack) {
+        localStream.current.removeTrack(oldTrack);
+        oldTrack.stop();
+      }
+
+      if (!localStream.current) {
+        localStream.current = new MediaStream();
+      }
+
+      localStream.current.addTrack(newTrack);
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream.current;
+      }
+
+      // IMPORTANT: replace the sender instead of adding another video track.
       pushCameraTrack(newTrack);
 
+      newTrack.enabled = true;
+
       setActiveCameraId(newTrack.getSettings().deviceId || deviceId);
+
       setCameraEnabled(true);
       setShowCameraMenu(false);
+      setMediaError("");
     } catch (err) {
-      console.log(err);
+      console.error("[Camera Switch] Error:", err);
+      setMediaError("Unable to switch camera.");
     }
   };
 
@@ -1772,14 +1972,55 @@ export default function LiveClassroom() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
+        video: true,
       });
 
       localStream.current = stream;
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      const videoTrack = stream.getVideoTracks()[0];
+      const audioTrack = stream.getAudioTracks()[0];
+
+      setCameraEnabled(!!videoTrack);
+      setMicEnabled(!!audioTrack);
+
+      setActiveCameraId(videoTrack?.getSettings().deviceId || null);
+
       setMediaError("");
-      setMicEnabled(true);
+
+      // Update existing peer connections
+      Object.entries(peerConnections.current).forEach(([targetId, pc]) => {
+        if (videoTrack) {
+          const videoSender = cameraSenders.current[targetId];
+
+          if (videoSender) {
+            videoSender.replaceTrack(videoTrack);
+          } else {
+            cameraSenders.current[targetId] = pc.addTrack(
+              videoTrack,
+              localStream.current
+            );
+          }
+        }
+
+        if (audioTrack) {
+          const audioSender = pc
+            .getSenders()
+            .find((sender) => sender.track?.kind === "audio");
+
+          if (audioSender) {
+            audioSender.replaceTrack(audioTrack);
+          } else {
+            pc.addTrack(audioTrack, localStream.current);
+          }
+        }
+      });
     } catch (err) {
-      console.log(err);
-      setMediaError("Microphone unavailable.");
+      console.error("[Retry Camera] Error:", err);
+      setMediaError("Camera unavailable.");
     }
   };
 
@@ -1798,8 +2039,7 @@ export default function LiveClassroom() {
   }, [sessionId]);
 
   const startScreenShare = async () => {
-    if (!isHost)
-      return;
+    if (!isHost) return;
 
     if (sharingScreen) {
       stopScreenShare();
@@ -2072,7 +2312,6 @@ export default function LiveClassroom() {
             )}
           </div>
 
-
           <button
             onClick={handleEndOrLeave}
             disabled={ending}
@@ -2084,9 +2323,7 @@ export default function LiveClassroom() {
         </div>
       </header>
 
-
       <div className="flex flex-1 overflow-hidden">
-
         <nav className="flex w-[72px] flex-col items-center gap-4 bg-slate-900 py-5">
           {NAV_RAIL_ITEMS.map((item) => (
             <NavLink
@@ -2111,21 +2348,16 @@ export default function LiveClassroom() {
           </div>
         </nav>
 
-
         <main className="flex flex-1 gap-4 overflow-hidden p-4">
-
           <div className="flex flex-1 flex-col gap-2 overflow-hidden">
-
             <section
               ref={whiteboardSectionRef}
               className={`relative flex flex-1 flex-col overflow-hidden bg-white shadow-sm ${
                 wbFullscreen ? "" : "rounded-2xl"
               }`}
             >
-
               {canDraw && showDrawTools && (
                 <div className="relative flex flex-wrap items-center justify-between gap-y-1.5 border-b border-slate-100 px-3 py-1.5">
-
                   {openPanel && (
                     <div
                       className="fixed inset-0 z-40"
@@ -2134,12 +2366,13 @@ export default function LiveClassroom() {
                   )}
 
                   <div className="flex flex-wrap items-center gap-0.5">
-
                     {isHost && pages.length > 0 && (
                       <div className="relative mr-1 border-r border-slate-200 pr-1">
                         <button
                           onClick={() =>
-                            setOpenPanel((p) => (p === "pages" ? null : "pages"))
+                            setOpenPanel((p) =>
+                              p === "pages" ? null : "pages"
+                            )
                           }
                           title="Pages"
                           className={`flex h-8 items-center gap-1 rounded-md px-1.5 text-xs font-medium transition-colors ${
@@ -2150,8 +2383,8 @@ export default function LiveClassroom() {
                         >
                           <Layers size={15} />
                           <span className="max-w-[72px] truncate">
-                            {pages.find((p) => p.pageId === activePageId)?.name ||
-                              "Pages"}
+                            {pages.find((p) => p.pageId === activePageId)
+                              ?.name || "Pages"}
                           </span>
                           <ChevronDown size={12} className="text-slate-400" />
                         </button>
@@ -2256,7 +2489,6 @@ export default function LiveClassroom() {
                       title="Text"
                     />
 
-
                     <div className="relative ml-1 border-l border-slate-200 pl-1">
                       <button
                         onClick={() =>
@@ -2309,7 +2541,6 @@ export default function LiveClassroom() {
                       )}
                     </div>
 
-
                     <div className="relative border-l border-slate-200 pl-1">
                       <ToolbarButton
                         Icon={SlidersHorizontal}
@@ -2347,7 +2578,9 @@ export default function LiveClassroom() {
                               min={1}
                               max={30}
                               value={penSize}
-                              onChange={(e) => setPenSize(Number(e.target.value))}
+                              onChange={(e) =>
+                                setPenSize(Number(e.target.value))
+                              }
                               className="h-1 w-full accent-indigo-600"
                             />
                           </div>
@@ -2362,7 +2595,9 @@ export default function LiveClassroom() {
                               max={1}
                               step={0.05}
                               value={opacity}
-                              onChange={(e) => setOpacity(Number(e.target.value))}
+                              onChange={(e) =>
+                                setOpacity(Number(e.target.value))
+                              }
                               className="h-1 w-full accent-indigo-600"
                             />
                           </div>
@@ -2394,7 +2629,6 @@ export default function LiveClassroom() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5">
-
                     {isHost && (
                       <button
                         onClick={toggleStudentDraw}
@@ -2434,7 +2668,6 @@ export default function LiveClassroom() {
                       />
                     </div>
 
-
                     <div className="border-l border-slate-200 pl-1.5">
                       <ToolbarButton
                         Icon={downloadingBoards ? Loader2 : Download}
@@ -2447,7 +2680,6 @@ export default function LiveClassroom() {
                   </div>
                 </div>
               )}
-
 
               {(!connected || wbError) && (
                 <div className="flex items-center gap-1.5 border-b border-amber-100 bg-amber-50 px-4 py-1.5 text-xs text-amber-600">
@@ -2505,7 +2737,6 @@ export default function LiveClassroom() {
                   </div>
                 )}
 
-
                 {!isHost && (
                   <div className="absolute left-[68%] top-[8%]">
                     <StudentQuizPanel
@@ -2515,7 +2746,6 @@ export default function LiveClassroom() {
                     />
                   </div>
                 )}
-
 
                 {isSharingScreenForMe && screenPreviewStream && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900">
@@ -2528,7 +2758,6 @@ export default function LiveClassroom() {
                     </span>
                   </div>
                 )}
-
 
                 {isHost && reactionToasts.length > 0 && (
                   <div className="pointer-events-none absolute bottom-3 right-3 z-30 flex flex-col-reverse gap-2">
@@ -2557,13 +2786,16 @@ export default function LiveClassroom() {
                   </div>
                 )}
 
-
                 <button
                   onClick={toggleFullscreen}
                   title={wbFullscreen ? "Exit fullscreen" : "Fullscreen"}
                   className="absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-500 shadow-sm ring-1 ring-slate-200 backdrop-blur transition-colors hover:bg-white hover:text-slate-700"
                 >
-                  {wbFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                  {wbFullscreen ? (
+                    <Minimize size={16} />
+                  ) : (
+                    <Maximize size={16} />
+                  )}
                 </button>
               </div>
             </section>
@@ -2603,9 +2835,7 @@ export default function LiveClassroom() {
                 label="Materials"
                 active={showMaterials}
                 onClick={() => {
-                  setMaterialsPageId(
-                    activePageId || pages[0]?.pageId || null
-                  );
+                  setMaterialsPageId(activePageId || pages[0]?.pageId || null);
                   setShowMaterials(true);
                 }}
               />
@@ -2661,7 +2891,6 @@ export default function LiveClassroom() {
           </div>
 
           <aside className="flex w-[340px] flex-shrink-0 flex-col gap-4 overflow-hidden">
-
             {participants.map((p) => (
               <AudioRelay
                 key={p.socketId}
@@ -2704,7 +2933,6 @@ export default function LiveClassroom() {
                     Participants
                   </h4>
                   <div className="space-y-3">
-
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <img
@@ -2826,15 +3054,16 @@ export default function LiveClassroom() {
                           <div className="flex items-center gap-2">
                             {isHost && !isRowHost && (
                               <>
-
                                 <button
                                   onClick={() => handleMuteStudent(p.socketId)}
                                   disabled={mutedParticipants.has(p.socketId)}
                                   className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                  {mutedParticipants.has(p.socketId)
-                                    ? <Volume2 size={16} />
-                                    : <VolumeOff size={16} />}
+                                  {mutedParticipants.has(p.socketId) ? (
+                                    <Volume2 size={16} />
+                                  ) : (
+                                    <VolumeOff size={16} />
+                                  )}
                                 </button>
 
                                 <button
@@ -2966,7 +3195,6 @@ export default function LiveClassroom() {
               )}
             </div>
 
-
             <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-3 shadow-sm">
               <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-800">
                 <Camera size={16} />
@@ -3058,7 +3286,6 @@ export default function LiveClassroom() {
         </main>
       </div>
 
-
       {showMaterials && (
         <div
           className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
@@ -3074,9 +3301,7 @@ export default function LiveClassroom() {
               </h4>
               <div className="space-y-1">
                 {pages.length === 0 && (
-                  <p className="text-xs text-slate-400">
-                    No pages yet.
-                  </p>
+                  <p className="text-xs text-slate-400">No pages yet.</p>
                 )}
                 {pages.map((p) => (
                   <button
@@ -3108,7 +3333,6 @@ export default function LiveClassroom() {
                 </button>
               </div>
               <div className="flex-1 overflow-hidden bg-slate-50 p-3">
-
                 <div
                   ref={materialsCanvasWrapRef}
                   className="flex h-full w-full items-center justify-center"
