@@ -1116,15 +1116,9 @@ export default function LiveClassroom() {
     drawStateRef.current.current = null;
 
     if (!current) return;
-
-    socketRef.current?.emit("draw-preview-end", {
-      roomId: sessionId,
-      pageId: activePageId,
-      id: current.id,
-    });
-
-    if (current.type === "path" && current.points.length < 2) return;
-
+    if (current.type === "path" && current.points.length < 2) {
+      return;
+    }
     commitElement(current);
   };
 
