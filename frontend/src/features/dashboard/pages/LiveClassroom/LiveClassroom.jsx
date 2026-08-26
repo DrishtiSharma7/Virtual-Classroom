@@ -1536,14 +1536,6 @@ export default function LiveClassroom() {
       redrawCanvas();
     });
 
-    socket.on("draw-preview-end", ({ pageId, id }) => {
-      if (pageId !== activePageIdRef.current) return;
-      if (id && socketRef.current && id.startsWith(`${socketRef.current.id}-`))
-        return;
-      if (id) delete remoteLiveRef.current[id];
-      redrawCanvas();
-    });
-
     socket.on("page-sync", ({ pageId, elements }) => {
       if (!pageId) return;
       boardsRef.current[pageId] = Array.isArray(elements) ? elements : [];
