@@ -31,7 +31,7 @@ const TeacherDashboard = () => {
   };
 
   if (loading) {
-    return <h2 >Loading...</h2>;
+    return <div className="dashboard-loading">Loading...</div>;
   }
 
   const handleStartSession = async () => {

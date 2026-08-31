@@ -11,7 +11,7 @@ export default function QuizHome() {
   if (!role) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <h2 className="text-sm text-gray-400">Loading...</h2>
+        <h2 className="flex justify-center items-center min-h-screen">Loading...</h2>
       </div>
     );
   }
