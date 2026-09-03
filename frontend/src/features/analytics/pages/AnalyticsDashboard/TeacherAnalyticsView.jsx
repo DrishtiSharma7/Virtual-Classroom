@@ -160,7 +160,7 @@ const TeacherAnalyticsView = () => {
             <button
               type="button"
               onClick={handleRefresh}
-              data-tooltip="Retry fetching teacher analytics"
+              data-tooltip="Retry"
               title="Retry"
               className="analytics-error-retry"
             >

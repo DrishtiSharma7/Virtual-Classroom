@@ -131,7 +131,7 @@ function LoginForm() {
                   type="button"
                   className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center border-none bg-transparent p-0 text-gray-400 hover:text-gray-500"
                   onClick={() => setShowPassword(!showPassword)}
-                  data-tooltip={showPassword ? "Hide password text" : "Show password text"}
+                  data-tooltip={showPassword ? "Hide Password" : "Show Password"}
                   title={showPassword ? "Hide password" : "Show password"}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -163,7 +163,7 @@ function LoginForm() {
               <div className="mb-5 flex gap-3">
                 <button
                   type="button"
-                  data-tooltip="Sign in as a Teacher"
+                  data-tooltip="Teacher"
                   title="Teacher"
                   className={
                     role === "teacher"
@@ -178,7 +178,7 @@ function LoginForm() {
 
                 <button
                   type="button"
-                  data-tooltip="Sign in as a Student"
+                  data-tooltip="Student"
                   title="Student"
                   className={
                     role === "student"
@@ -196,7 +196,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                data-tooltip="Log in to your account"
+                data-tooltip="Login"
                 title="Login"
                 className="mb-5 h-[54px] w-full rounded-full border-none bg-gradient-to-br from-[#5b5fef] to-[#4347d9] text-[17px] font-bold text-white transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(75,79,214,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
               >

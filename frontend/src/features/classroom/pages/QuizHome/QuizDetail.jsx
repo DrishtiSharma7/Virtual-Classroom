@@ -151,7 +151,7 @@ export default function QuizDetail() {
         </p>
         <button
           onClick={() => navigate("/quizzes")}
-          data-tooltip="Return to quizzes list"
+          data-tooltip="Quizzes"
           title="Back to Quizzes"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-[#4f46e5] hover:underline"
         >
@@ -168,7 +168,7 @@ export default function QuizDetail() {
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <button
         onClick={() => navigate("/quizzes")}
-        data-tooltip="Return to quizzes list"
+        data-tooltip="Quizzes"
         title="Back to Quizzes"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-[#4f46e5]"
       >
@@ -216,7 +216,7 @@ export default function QuizDetail() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              data-tooltip="Export quiz responses to Excel spreadsheet"
+              data-tooltip="Export Excel"
               title="Export to Excel"
               className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-slate-50 disabled:opacity-60"
             >
@@ -328,7 +328,7 @@ export default function QuizDetail() {
           </p>
           <button
             onClick={startAttempt}
-            data-tooltip={quiz.attempted ? "Retake this quiz now" : "Start answering quiz questions"}
+            data-tooltip={quiz.attempted ? "Retake Quiz" : "Start Quiz"}
             title={quiz.attempted ? "Retake Quiz" : "Attempt Quiz"}
             className="shrink-0 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-4 py-2 text-sm font-semibold text-white shadow-md hover:-translate-y-0.5"
           >
@@ -375,7 +375,7 @@ export default function QuizDetail() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setAttempting(false)}
-              data-tooltip="Cancel and discard current answers"
+              data-tooltip="Cancel"
               title="Cancel"
               className="flex-1 rounded-xl border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-slate-50"
             >
@@ -384,7 +384,7 @@ export default function QuizDetail() {
             <button
               onClick={handleSubmitRetake}
               disabled={submitting}
-              data-tooltip="Submit your answers for evaluation"
+              data-tooltip="Submit Answers"
               title="Submit"
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] py-2.5 text-sm font-semibold text-white shadow-md disabled:opacity-60"
             >

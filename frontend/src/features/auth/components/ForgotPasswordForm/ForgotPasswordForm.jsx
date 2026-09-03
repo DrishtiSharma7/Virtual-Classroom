@@ -190,7 +190,7 @@ function ForgotPasswordForm() {
                   <button
                     type="submit"
                     disabled={loading}
-                    data-tooltip="Verify email and proceed to reset password"
+                    data-tooltip="Continue"
                     title="Continue"
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border-none bg-gradient-to-br from-[#5c60f3] to-[#4b4fd6] text-base font-semibold text-white shadow-[0_8px_20px_rgba(91,95,239,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(91,95,239,0.36)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -240,7 +240,7 @@ function ForgotPasswordForm() {
                         setStep(1);
                         setError("");
                       }}
-                      data-tooltip="Change target email address"
+                      data-tooltip="Change Email"
                       title="Change email"
                       className="ml-2 shrink-0 font-semibold underline hover:text-indigo-900"
                     >
@@ -272,7 +272,7 @@ function ForgotPasswordForm() {
                       type="button"
                       className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center border-none bg-transparent p-0 text-gray-400 hover:text-gray-500"
                       onClick={() => setShowPassword(!showPassword)}
-                      data-tooltip={showPassword ? "Hide password text" : "Show password text"}
+                      data-tooltip={showPassword ? "Hide Password" : "Show Password"}
                       title={showPassword ? "Hide password" : "Show password"}
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
@@ -298,7 +298,7 @@ function ForgotPasswordForm() {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      data-tooltip={showConfirmPassword ? "Hide password text" : "Show password text"}
+                      data-tooltip={showConfirmPassword ? "Hide Password" : "Show Password"}
                       title={showConfirmPassword ? "Hide password" : "Show password"}
                       aria-label={
                         showConfirmPassword ? "Hide password" : "Show password"
@@ -315,7 +315,7 @@ function ForgotPasswordForm() {
                   <button
                     type="submit"
                     disabled={loading}
-                    data-tooltip="Save new password to server"
+                    data-tooltip="Save Password"
                     title="Update Password"
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border-none bg-gradient-to-br from-[#5c60f3] to-[#4b4fd6] text-base font-semibold text-white shadow-[0_8px_20px_rgba(91,95,239,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(91,95,239,0.36)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -351,7 +351,7 @@ function ForgotPasswordForm() {
 
                   <button
                     onClick={() => navigate("/login", { replace: true })}
-                    data-tooltip="Proceed to sign-in page"
+                    data-tooltip="Sign In"
                     title="Sign In Now"
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] border-none bg-gradient-to-br from-[#5c60f3] to-[#4b4fd6] text-base font-semibold text-white shadow-[0_8px_20px_rgba(91,95,239,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(91,95,239,0.36)]"
                   >

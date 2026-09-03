@@ -68,7 +68,7 @@ const StudentAnalyticsView = () => {
               type="button"
               className="filter-icon-btn"
               onClick={() => setRefreshKey((k) => k + 1)}
-              data-tooltip="Refresh your analytics stats"
+              data-tooltip="Refresh"
               title="Refresh"
               aria-label="Refresh"
             >
@@ -84,7 +84,7 @@ const StudentAnalyticsView = () => {
             <button
               type="button"
               onClick={() => setRefreshKey((k) => k + 1)}
-              data-tooltip="Retry loading your analytics"
+              data-tooltip="Retry"
               title="Retry"
               className="analytics-error-retry"
             >

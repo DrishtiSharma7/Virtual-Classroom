@@ -13,7 +13,7 @@ function QuickActions({ handleStartSession }) {
         <button
           className="action-btn"
           onClick={() => navigate("/classrooms/create")}
-          data-tooltip="Create a new virtual classroom"
+          data-tooltip="Create new"
           title="Create a new virtual classroom"
         >
           Create Classroom
@@ -22,7 +22,7 @@ function QuickActions({ handleStartSession }) {
         <button
           className="action-btn"
           onClick={handleStartSession}
-          data-tooltip="Launch an instant live classroom session"
+          data-tooltip="Launch instant"
           title="Launch an instant live classroom session"
         >
           Start Session
@@ -31,7 +31,7 @@ function QuickActions({ handleStartSession }) {
         <button
           className="action-btn"
           onClick={() => navigate("/quizzes")}
-          data-tooltip="View and manage classroom quizzes"
+          data-tooltip="View manage"
           title="View and manage classroom quizzes"
         >
           Quiz
@@ -40,7 +40,7 @@ function QuickActions({ handleStartSession }) {
         <button
           className="action-btn"
           onClick={() => navigate("/attendance")}
-          data-tooltip="View and export attendance records"
+          data-tooltip="View export"
           title="View and export attendance records"
         >
           Attendance

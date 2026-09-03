@@ -482,7 +482,7 @@ function ClassroomDetails() {
             <button
               className="live-btn bg-emerald-600 hover:bg-emerald-700 shadow-lg flex items-center gap-2"
               onClick={handleJoinOrRejoinSession}
-              data-tooltip="Rejoin your active live video session"
+              data-tooltip="Rejoin active"
               title="Rejoin Live Session"
             >
               <Video size={18} />
@@ -495,7 +495,7 @@ function ClassroomDetails() {
               className="live-btn"
               onClick={handleStartSession}
               disabled={startingSession}
-              data-tooltip="Launch a live video lecture for this class"
+              data-tooltip="Launch live"
               title="Start Live Session"
             >
               <Video size={18} />
@@ -559,7 +559,7 @@ function ClassroomDetails() {
                   <button
                     className="edit-icon-btn"
                     onClick={handleOpenEditSession}
-                    data-tooltip="Edit the title of today's session"
+                    data-tooltip="Edit title"
                     title="Edit session title"
                     aria-label="Edit session title"
                   >
@@ -586,7 +586,7 @@ function ClassroomDetails() {
                   <button
                     className="join-btn"
                     onClick={handleJoinOrRejoinSession}
-                    data-tooltip={liveSession ? "Join ongoing live class session" : "Enter classroom session"}
+                    data-tooltip={liveSession ? "Join Session" : "Enter Class"}
                     title="Join Session"
                   >
                     {liveSession ? "Join Live Session" : "Join Session"}
@@ -599,7 +599,7 @@ function ClassroomDetails() {
                     <button
                       className="join-btn bg-emerald-600 hover:bg-emerald-700 font-semibold shadow"
                       onClick={handleJoinOrRejoinSession}
-                      data-tooltip="Rejoin your active live video session"
+                      data-tooltip="Rejoin active"
                       title="Rejoin Live Session"
                     >
                       Rejoin Live Session
@@ -609,7 +609,7 @@ function ClassroomDetails() {
                       type="button"
                       className="text-xs text-red-500 hover:text-red-700 hover:underline text-center"
                       onClick={handleEndLiveSessionFromClassroom}
-                      data-tooltip="End and finalize this live session for everyone"
+                      data-tooltip="End finalize"
                       title="End session for all students"
                     >
                       End session for all students
@@ -622,7 +622,7 @@ function ClassroomDetails() {
                     className="join-btn"
                     onClick={handleStartSession}
                     disabled={startingSession}
-                    data-tooltip="Launch an instant live lecture for this class"
+                    data-tooltip="Launch instant"
                     title="Go Live Now"
                   >
                     {startingSession ? "Starting..." : "Go Live Now"}
@@ -643,7 +643,7 @@ function ClassroomDetails() {
                   <button
                     className="inline-add-btn"
                     onClick={handlePostAnnouncement}
-                    data-tooltip="Post a new announcement to your students"
+                    data-tooltip="Post new"
                     title="Post Announcement"
                   >
                     <Plus size={18} />
@@ -667,7 +667,7 @@ function ClassroomDetails() {
                           <button
                             className="edit-icon-btn"
                             onClick={() => handleOpenEditAnnouncement(item)}
-                            data-tooltip="Edit this announcement"
+                            data-tooltip="Edit Announcement"
                             title="Edit announcement"
                             aria-label="Edit announcement"
                           >
@@ -677,7 +677,7 @@ function ClassroomDetails() {
                             className="edit-icon-btn text-red-400 hover:text-red-600 hover:bg-red-50"
                             onClick={() => handleDeleteAnnouncement(item._id)}
                             disabled={deletingAnnouncementId === item._id}
-                            data-tooltip="Permanently delete this announcement"
+                            data-tooltip="Permanently delete"
                             title="Delete announcement"
                             aria-label="Delete announcement"
                           >
@@ -703,7 +703,7 @@ function ClassroomDetails() {
                   <button
                     className="inline-add-btn"
                     onClick={handleOpenUploadRecording}
-                    data-tooltip="Upload a recorded class lecture"
+                    data-tooltip="Upload recorded"
                     title="Upload Recording"
                   >
                     <UploadCloud size={16} />
@@ -745,7 +745,7 @@ function ClassroomDetails() {
                       <button
                         className="watch-btn"
                         onClick={() => setWatchingRecording(video)}
-                        data-tooltip="Watch this recorded lecture"
+                        data-tooltip="Watch Recording"
                         title="Watch Recording"
                       >
                         Watch
@@ -757,7 +757,7 @@ function ClassroomDetails() {
                             handleDeleteRecording(video._id, video.title)
                           }
                           disabled={deletingRecordingId === video._id}
-                          data-tooltip="Delete this recorded video"
+                          data-tooltip="Delete recorded"
                           title="Delete recording"
                           aria-label="Delete recording"
                         >
@@ -812,7 +812,7 @@ function ClassroomDetails() {
                         <button
                           className="remove-btn"
                           onClick={() => handleRemoveStudent(student._id)}
-                          data-tooltip="Remove this student from the classroom"
+                          data-tooltip="Remove student"
                           title="Remove student"
                           aria-label={`Remove ${student.name} from classroom`}
                         >
@@ -860,7 +860,7 @@ function ClassroomDetails() {
               <button
                 onClick={handleSaveSessionTitle}
                 disabled={savingSessionTitle}
-                data-tooltip="Save updated session title"
+                data-tooltip="Save updated"
                 title="Save"
                 className="join-btn mt-6 w-full justify-center"
               >
@@ -913,7 +913,7 @@ function ClassroomDetails() {
               <button
                 onClick={handleCreateAnnouncement}
                 disabled={postingAnnouncement}
-                data-tooltip="Publish this announcement to class"
+                data-tooltip="Publish announcement"
                 title="Post"
                 className="join-btn mt-6 w-full justify-center"
               >
@@ -968,7 +968,7 @@ function ClassroomDetails() {
               <button
                 onClick={handleUpdateAnnouncement}
                 disabled={updatingAnnouncement}
-                data-tooltip="Save changes to this announcement"
+                data-tooltip="Save changes"
                 title="Save Changes"
                 className="join-btn mt-6 w-full justify-center"
               >
@@ -1040,7 +1040,7 @@ function ClassroomDetails() {
                 <button
                   type="submit"
                   disabled={uploadingRecording}
-                  data-tooltip="Upload recorded video file to classroom"
+                  data-tooltip="Upload recorded"
                   title="Upload Recording"
                   className="join-btn mt-6 w-full justify-center"
                 >
@@ -1081,7 +1081,7 @@ function ClassroomDetails() {
                 </div>
                 <button
                   onClick={() => setWatchingRecording(null)}
-                  data-tooltip="Close video player"
+                  data-tooltip="Close Player"
                   title="Close"
                   aria-label="Close"
                   className="text-gray-400 hover:text-gray-600"

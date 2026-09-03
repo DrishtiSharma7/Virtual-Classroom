@@ -123,7 +123,7 @@ function ClassroomHome() {
             <Link
               to="/classrooms/create"
               className="create-classroom-btn"
-              data-tooltip="Create a new classroom and invite students"
+              data-tooltip="Create new"
               title="Create Classroom"
             >
               <Plus size={20} />
@@ -136,7 +136,7 @@ function ClassroomHome() {
             <Link
               to="/classrooms/join"
               className="create-classroom-btn"
-              data-tooltip="Enter an invite code to join a classroom"
+              data-tooltip="Enter invite"
               title="Join Classroom"
             >
               <KeyRound size={20} />
@@ -192,7 +192,7 @@ function ClassroomHome() {
                 <Link
                   to={`/classrooms/${room._id}`}
                   className="enter-classroom-btn"
-                  data-tooltip="Open classroom details, stream, and classwork"
+                  data-tooltip="Open classroom"
                   title="Enter Classroom"
                 >
                   Enter Classroom
@@ -203,7 +203,7 @@ function ClassroomHome() {
                   <button
                     onClick={() => handleDelete(room._id)}
                     className="delete-btn"
-                    data-tooltip="Permanently delete this classroom"
+                    data-tooltip="Delete Classroom"
                     title="Delete Classroom"
                     aria-label={`Delete ${room.name}`}
                   >

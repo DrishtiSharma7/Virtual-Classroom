@@ -235,7 +235,7 @@ function AttendanceHome() {
                 onClick={exportExcel}
                 className="export-btn"
                 disabled={filteredData.length === 0}
-                data-tooltip="Export attendance records to Excel spreadsheet"
+                data-tooltip="Export Excel"
                 title={
                   filteredData.length === 0
                     ? "No attendance to export yet"
@@ -358,7 +358,7 @@ function AttendanceHome() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                data-tooltip="Go to previous page"
+                data-tooltip="Previous"
                 title="Previous"
                 className={`pagination-btn ${
                   currentPage === 1
@@ -374,7 +374,7 @@ function AttendanceHome() {
                   <button
                     key={index}
                     onClick={() => setCurrentPage(index + 1)}
-                    data-tooltip={`Go to page ${index + 1}`}
+                    data-tooltip={`Page ${index + 1}`}
                     title={`Page ${index + 1}`}
                     className={`page-btn ${
                       currentPage === index + 1
@@ -392,7 +392,7 @@ function AttendanceHome() {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                data-tooltip="Go to next page"
+                data-tooltip="Next"
                 title="Next"
                 className={`pagination-btn ${
                   currentPage === totalPages
@@ -431,7 +431,7 @@ function AttendanceHome() {
               onClick={exportExcel}
               className="export-btn"
               disabled={filteredData.length === 0}
-              data-tooltip="Export attendance records to Excel spreadsheet"
+              data-tooltip="Export Excel"
               title={
                 filteredData.length === 0
                   ? "No attendance to export yet"
@@ -543,7 +543,7 @@ function AttendanceHome() {
                         <button
                           onClick={() => handleDelete(student.key)}
                           className="delete-btn"
-                          data-tooltip={`Delete ${student.name}'s attendance record`}
+                          data-tooltip="Delete Record"
                           title="Delete record"
                           aria-label={`Delete ${student.name}'s attendance record`}
                         >
@@ -564,7 +564,7 @@ function AttendanceHome() {
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              data-tooltip="Go to previous page"
+              data-tooltip="Previous"
               title="Previous"
               className={`pagination-btn ${
                 currentPage === 1
@@ -580,7 +580,7 @@ function AttendanceHome() {
                 <button
                   key={index}
                   onClick={() => setCurrentPage(index + 1)}
-                  data-tooltip={`Go to page ${index + 1}`}
+                  data-tooltip={`Page ${index + 1}`}
                   title={`Page ${index + 1}`}
                   className={`page-btn ${
                     currentPage === index + 1
@@ -598,7 +598,7 @@ function AttendanceHome() {
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
-              data-tooltip="Go to next page"
+              data-tooltip="Next"
               title="Next"
               className={`pagination-btn ${
                 currentPage === totalPages

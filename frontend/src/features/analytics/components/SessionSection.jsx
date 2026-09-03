@@ -128,7 +128,7 @@ const SessionSection = ({ classroomId, from, to }) => {
                   key={opt.key}
                   type="button"
                   onClick={() => setGroupBy(opt.key)}
-                  data-tooltip={`Group session activity by ${opt.label.toLowerCase()}`}
+                  data-tooltip={opt.label}
                   title={opt.label}
                   className={`rounded-md px-2 py-1 text-xs font-medium ${
                     groupBy === opt.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"

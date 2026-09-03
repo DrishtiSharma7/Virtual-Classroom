@@ -5,7 +5,7 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
       role="switch"
       aria-checked={checked}
       disabled={disabled}
-      data-tooltip={checked ? "Click to disable" : "Click to enable"}
+      data-tooltip={checked ? "Disable" : "Enable"}
       title={checked ? "Enabled" : "Disabled"}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${

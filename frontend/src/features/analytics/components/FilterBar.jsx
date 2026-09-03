@@ -29,7 +29,7 @@ const FilterBar = ({
         onClick={() => setMobileOpen((v) => !v)}
         aria-expanded={mobileOpen}
         aria-controls="analytics-filter-controls"
-        data-tooltip="Toggle filter controls"
+        data-tooltip="Filters"
         title="Filters"
       >
         <SlidersHorizontal size={16} aria-hidden="true" />
@@ -116,7 +116,7 @@ const FilterBar = ({
             type="button"
             onClick={onRefresh}
             className="filter-icon-btn"
-            data-tooltip="Refresh analytics metrics"
+            data-tooltip="Refresh"
             title="Refresh"
             aria-label="Refresh analytics data"
             disabled={refreshing}
@@ -130,7 +130,7 @@ const FilterBar = ({
               type="button"
               onClick={() => setExportOpen((v) => !v)}
               className="filter-icon-btn"
-              data-tooltip="Export analytics reports"
+              data-tooltip="Export"
               title="Export"
               aria-haspopup="true"
               aria-expanded={exportOpen}
@@ -143,7 +143,7 @@ const FilterBar = ({
                 <button
                   type="button"
                   role="menuitem"
-                  data-tooltip="Download metrics as CSV spreadsheet"
+                  data-tooltip="Export CSV"
                   title="Export CSV"
                   onClick={() => {
                     setExportOpen(false);
@@ -155,7 +155,7 @@ const FilterBar = ({
                 <button
                   type="button"
                   role="menuitem"
-                  data-tooltip="Download metrics as PDF document"
+                  data-tooltip="Export PDF"
                   title="Export PDF"
                   onClick={() => {
                     setExportOpen(false);

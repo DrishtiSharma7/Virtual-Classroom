@@ -50,7 +50,7 @@ const StudentDetailModal = ({ studentId, studentName, from, to, onClose }) => {
           </h2>
           <button
             onClick={onClose}
-            data-tooltip="Close student details"
+            data-tooltip="Close Details"
             title="Close"
             aria-label="Close"
           >

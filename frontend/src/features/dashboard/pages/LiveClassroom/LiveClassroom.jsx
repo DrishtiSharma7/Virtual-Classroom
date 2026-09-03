@@ -429,7 +429,7 @@ const StudentZoomModal = ({ participant, hostScreenStreamId, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            data-tooltip="Close zoomed view"
+            data-tooltip="Close View"
             title="Close"
             className="rounded-md p-1.5 text-slate-300 hover:bg-white/10 hover:text-white"
           >
@@ -2370,7 +2370,7 @@ export default function LiveClassroom() {
         <p>{sessionError || "Session not found."}</p>
         <button
           onClick={() => navigate("/classrooms")}
-          data-tooltip="Return to classrooms list"
+          data-tooltip="Classrooms"
           title="Back to Classrooms"
           className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
         >
@@ -2504,7 +2504,7 @@ export default function LiveClassroom() {
           <button
             onClick={handleEndOrLeave}
             disabled={ending}
-            data-tooltip={isHost ? "End session for everyone" : "Leave this session"}
+            data-tooltip={isHost ? "End Session" : "Leave Session"}
             title={isHost ? "End Session" : "Leave Session"}
             className="flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -2566,7 +2566,7 @@ export default function LiveClassroom() {
                               p === "pages" ? null : "pages"
                             )
                           }
-                          data-tooltip="Manage whiteboard pages"
+                          data-tooltip="Manage Pages"
                           title="Pages"
                           className={`flex h-8 items-center gap-1 rounded-md px-1.5 text-xs font-medium transition-colors ${
                             openPanel === "pages"
@@ -2608,7 +2608,7 @@ export default function LiveClassroom() {
                                       switchPage(p.pageId);
                                       setOpenPanel(null);
                                     }}
-                                    data-tooltip={`Switch to ${p.name}`}
+                                    data-tooltip={p.name}
                                     title={p.name}
                                     className={`flex-1 truncate rounded-md px-1.5 py-1 text-left text-xs font-medium transition-colors ${
                                       p.pageId === activePageId
@@ -2621,7 +2621,7 @@ export default function LiveClassroom() {
                                   {pages.length > 1 && (
                                     <button
                                       onClick={() => handleDeletePage(p.pageId)}
-                                      data-tooltip="Delete this whiteboard page"
+                                      data-tooltip="Delete Page"
                                       title="Delete page"
                                       className="hidden h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 group-hover:flex hover:bg-red-50 hover:text-red-500"
                                     >
@@ -2633,7 +2633,7 @@ export default function LiveClassroom() {
                             </div>
                             <button
                               onClick={handleAddPage}
-                              data-tooltip="Add new whiteboard page"
+                              data-tooltip="Add Page"
                               title="Add page"
                               className="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-slate-200 py-1 text-xs text-slate-500 hover:bg-slate-50"
                             >
@@ -2692,7 +2692,7 @@ export default function LiveClassroom() {
                         onClick={() =>
                           setOpenPanel((p) => (p === "color" ? null : "color"))
                         }
-                        data-tooltip="Choose stroke color"
+                        data-tooltip="Stroke Color"
                         title="Color"
                         className="flex h-8 items-center gap-1 rounded-md px-1.5 hover:bg-slate-100"
                       >
@@ -2761,7 +2761,7 @@ export default function LiveClassroom() {
                                 <button
                                   key={s}
                                   onClick={() => setPenSize(s)}
-                                  data-tooltip={`Set pen size to ${s}px`}
+                                  data-tooltip={`${s}px`}
                                   title={`${s}px`}
                                   className={`flex h-6 flex-1 items-center justify-center rounded text-[10px] font-medium transition-colors ${
                                     penSize === s
@@ -2832,7 +2832,7 @@ export default function LiveClassroom() {
                     {isHost && (
                       <button
                         onClick={toggleStudentDraw}
-                        data-tooltip={allowStudentDraw ? "Disable student drawing access" : "Allow students to draw on whiteboard"}
+                        data-tooltip={allowStudentDraw ? "Disable Draw" : "Enable Draw"}
                         title="Allow Students to Draw"
                         className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                           allowStudentDraw
@@ -2857,7 +2857,7 @@ export default function LiveClassroom() {
                       />
                       <button
                         onClick={resetZoom}
-                        data-tooltip="Reset zoom to 100%"
+                        data-tooltip="Reset Zoom"
                         title="Reset zoom"
                         className="w-9 rounded-md py-1 text-[11px] font-medium text-slate-500 hover:bg-slate-100"
                       >
@@ -2990,7 +2990,7 @@ export default function LiveClassroom() {
 
                 <button
                   onClick={toggleFullscreen}
-                  data-tooltip={wbFullscreen ? "Exit fullscreen" : "Fullscreen view"}
+                  data-tooltip={wbFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   title={wbFullscreen ? "Exit fullscreen" : "Fullscreen"}
                   className="absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-500 shadow-sm ring-1 ring-slate-200 backdrop-blur transition-colors hover:bg-white hover:text-slate-700"
                 >
@@ -3086,7 +3086,7 @@ export default function LiveClassroom() {
                         <button
                           key={r.id}
                           onClick={() => handleSendReaction(r.id)}
-                          data-tooltip={`Send ${r.label} reaction`}
+                          data-tooltip={r.label}
                           title={r.label}
                           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 hover:bg-slate-100"
                         >
@@ -3118,7 +3118,7 @@ export default function LiveClassroom() {
               <div className="flex border-b border-slate-100">
                 <button
                   onClick={() => setRightTab("participants")}
-                  data-tooltip="View session participants"
+                  data-tooltip="Participants"
                   title="Participants"
                   className={`flex-1 py-3 text-sm font-semibold ${
                     rightTab === "participants"
@@ -3130,7 +3130,7 @@ export default function LiveClassroom() {
                 </button>
                 <button
                   onClick={() => setRightTab("chat")}
-                  data-tooltip="Open in-call chat"
+                  data-tooltip="Chat"
                   title="Chat"
                   className={`flex-1 py-3 text-sm font-semibold ${
                     rightTab === "chat"
@@ -3304,7 +3304,7 @@ export default function LiveClassroom() {
 
                                 <button
                                   onClick={() => handleKickStudent(p.socketId)}
-                                  data-tooltip="Remove student from session"
+                                  data-tooltip="Remove Student"
                                   title="Remove student"
                                   className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-200"
                                 >
@@ -3316,7 +3316,7 @@ export default function LiveClassroom() {
                                     onClick={() =>
                                       handleForceCameraOff(p.socketId)
                                     }
-                                    data-tooltip="Turn off student camera"
+                                    data-tooltip="Camera Off"
                                     title="Turn off camera"
                                     className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500"
                                   >
@@ -3425,7 +3425,7 @@ export default function LiveClassroom() {
                     <Paperclip size={18} className="text-slate-400" />
                     <button
                       onClick={handleSendMessage}
-                      data-tooltip="Send chat message"
+                      data-tooltip="Send Message"
                       title="Send message"
                       aria-label="Send message"
                       className="rounded-lg bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700"
@@ -3472,7 +3472,7 @@ export default function LiveClassroom() {
                             ? toggleCamera
                             : retryCamera
                         }
-                        data-tooltip="Retry camera stream connection"
+                        data-tooltip="Retry Camera"
                         title="Retry"
                         className="absolute right-1 top-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600 hover:bg-white"
                       >
@@ -3487,7 +3487,7 @@ export default function LiveClassroom() {
                       {cameraDevices.length > 1 && (
                         <button
                           onClick={() => setShowCameraMenu((v) => !v)}
-                          data-tooltip="Switch camera source"
+                          data-tooltip="Switch Camera"
                           title="Switch camera"
                           className="ml-1 shrink-0 rounded p-0.5 hover:bg-white/20"
                         >
@@ -3502,7 +3502,7 @@ export default function LiveClassroom() {
                           <button
                             key={d.deviceId}
                             onClick={() => switchCamera(d.deviceId)}
-                            data-tooltip={`Select ${d.label || `Camera ${i + 1}`}`}
+                            data-tooltip={d.label || `Camera ${i + 1}`}
                             title={d.label || `Camera ${i + 1}`}
                             className={`block w-full truncate rounded px-2 py-1 text-left hover:bg-slate-100 ${
                               activeCameraId === d.deviceId
@@ -3554,7 +3554,7 @@ export default function LiveClassroom() {
                   <button
                     key={p.pageId}
                     onClick={() => setMaterialsPageId(p.pageId)}
-                    data-tooltip={`View whiteboard materials for ${p.name}`}
+                    data-tooltip={p.name}
                     title={p.name}
                     className={`block w-full truncate rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors ${
                       materialsPageId === p.pageId
@@ -3575,7 +3575,7 @@ export default function LiveClassroom() {
                 </span>
                 <button
                   onClick={() => setShowMaterials(false)}
-                  data-tooltip="Close materials viewer"
+                  data-tooltip="Close Materials"
                   title="Close"
                   className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                 >
@@ -3625,7 +3625,7 @@ export default function LiveClassroom() {
               <button
                 type="button"
                 onClick={handleLeaveTemporarily}
-                data-tooltip="Leave room temporarily; attendees stay and you can rejoin"
+                data-tooltip="Leave Room"
                 title="Leave Temporarily"
                 className="flex items-center justify-center gap-2 w-full rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition"
               >
@@ -3637,7 +3637,7 @@ export default function LiveClassroom() {
                 type="button"
                 onClick={handleEndSessionForAll}
                 disabled={ending}
-                data-tooltip="End session and disconnect all attendees"
+                data-tooltip="End Session"
                 title="End Session for Everyone"
                 className="flex items-center justify-center gap-2 w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition"
               >
@@ -3648,7 +3648,7 @@ export default function LiveClassroom() {
               <button
                 type="button"
                 onClick={() => setShowHostExitModal(false)}
-                data-tooltip="Stay in the live session"
+                data-tooltip="Cancel"
                 title="Cancel"
                 className="w-full rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
               >

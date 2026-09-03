@@ -87,7 +87,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         <button
           type="button"
           onClick={handleLogout}
-          data-tooltip="Sign out of your account"
+          data-tooltip="Sign out"
           title="Sign out of your account"
           className="sidebar-link w-full text-red-600 hover:bg-red-50 hover:text-red-700"
         >

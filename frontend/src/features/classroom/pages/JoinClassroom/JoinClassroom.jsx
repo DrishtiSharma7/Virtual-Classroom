@@ -75,7 +75,7 @@ function JoinClassroom() {
           </p>
           <button
             onClick={() => navigate("/classrooms")}
-            data-tooltip="Return to your classrooms list"
+            data-tooltip="Return classrooms"
             title="Back to Classrooms"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
           >
@@ -114,7 +114,7 @@ function JoinClassroom() {
             <button
               type="button"
               onClick={() => navigate(`/classrooms/${joinedClassroom._id}`)}
-              data-tooltip="Open this classroom page"
+              data-tooltip="Open classroom"
               title="Go to Classroom"
               className="flex-1 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
             >
@@ -123,7 +123,7 @@ function JoinClassroom() {
             <button
               type="button"
               onClick={() => navigate("/classrooms")}
-              data-tooltip="Return to your classrooms list"
+              data-tooltip="Return classrooms"
               title="Back to Classrooms"
               className="flex-1 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
@@ -156,7 +156,7 @@ function JoinClassroom() {
                     : "/classrooms"
                 )
               }
-              data-tooltip="Open enrolled classroom page"
+              data-tooltip="Classroom"
               title={alreadyJoinedClassroom._id ? "Go to Classroom" : "Back to Classrooms"}
               className="flex-1 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
             >
@@ -168,7 +168,7 @@ function JoinClassroom() {
               <button
                 type="button"
                 onClick={() => navigate("/classrooms")}
-                data-tooltip="Return to your classrooms list"
+                data-tooltip="Return classrooms"
                 title="Back to Classrooms"
                 className="flex-1 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
               >
@@ -244,7 +244,7 @@ function JoinClassroom() {
             <button
               type="submit"
               disabled={loading}
-              data-tooltip="Submit invite code to enroll in classroom"
+              data-tooltip="Submit invite"
               title="Join Classroom"
               className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] text-sm font-semibold text-white shadow-[0_8px_20px_rgba(79,70,229,0.35)] transition disabled:cursor-not-allowed disabled:opacity-70 hover:enabled:-translate-y-0.5"
             >

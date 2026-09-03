@@ -128,7 +128,7 @@ export default function StudentQuizHome() {
                   <button
                     key={tab.key}
                     onClick={() => setFilter(tab.key)}
-                    data-tooltip={`Filter quizzes: ${tab.label}`}
+                    data-tooltip={tab.label}
                     title={tab.label}
                     className={`filter-tab ${
                       filter === tab.key ? "filter-tab-active" : ""
