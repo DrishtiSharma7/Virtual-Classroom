@@ -45,7 +45,7 @@ function AttendanceHome() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const rowsPerPage = isStudent ? 8 : 10;
+  const rowsPerPage = isStudent ? 6 : 8;
 
   const filteredData = useMemo(() => {
     const q = search.toLowerCase();
