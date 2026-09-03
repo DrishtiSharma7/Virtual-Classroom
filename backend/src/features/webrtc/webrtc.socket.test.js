@@ -191,4 +191,41 @@ describe("WebRTC Socket - Mute/Unmute & Mic Status Controls", () => {
       enabled: true,
     });
   });
+
+  test("Teacher can kick student -> student marked kicked, removed from session, cannot rejoin", async () => {
+    await teacherHandlers["kick-student"]({
+      roomId,
+      targetSocketId: studentSocketId,
+    });
+
+    expect(registry.isKicked(roomId, "student-1")).toBe(true);
+    expect(registry.findParticipant(roomId, studentSocketId)).toBeNull();
+
+    expect(io.to).toHaveBeenCalledWith(studentSocketId);
+    expect(io.to(studentSocketId).emit).toHaveBeenCalledWith(
+      "removed-from-session",
+      {
+        message:
+          "You have been removed from this session by the host and cannot rejoin.",
+      }
+    );
+    expect(io.to(roomId).emit).toHaveBeenCalledWith("user-left", {
+      socketId: studentSocketId,
+      user: { id: "student-1", name: "Student", role: "student" },
+      kicked: true,
+    });
+  });
+
+  test("Non-host cannot kick students", async () => {
+    await studentHandlers["kick-student"]({
+      roomId,
+      targetSocketId: teacherSocketId,
+    });
+
+    expect(studentSocket.emit).toHaveBeenCalledWith("action-denied", {
+      action: "kick-student",
+      message: "Only the host can remove participants.",
+    });
+    expect(registry.isKicked(roomId, "teacher-1")).toBe(false);
+  });
 });

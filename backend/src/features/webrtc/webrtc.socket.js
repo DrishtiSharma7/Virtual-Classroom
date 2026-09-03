@@ -169,7 +169,7 @@ module.exports = (io, socket) => {
 
     registry.removeParticipant(roomId, targetSocketId);
 
-    const targetSocket = io.sockets.sockets.get(targetSocketId);
+    const targetSocket = io.sockets?.sockets?.get?.(targetSocketId);
     if (targetSocket) {
       targetSocket.leave(roomId);
       targetSocket.disconnect(true);
