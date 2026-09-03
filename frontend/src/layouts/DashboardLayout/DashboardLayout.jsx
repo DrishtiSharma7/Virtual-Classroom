@@ -19,7 +19,13 @@ const DashboardLayout = ({ showNavbar = true }) => {
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="dashboard-main">
-        {showNavbar && <TopNavbar setSidebarOpen={setSidebarOpen} />}
+        {showNavbar ? (
+          <TopNavbar setSidebarOpen={setSidebarOpen} />
+        ) : (
+          <div className="lg:hidden">
+            <TopNavbar setSidebarOpen={setSidebarOpen} />
+          </div>
+        )}
 
         <main className="dashboard-content">
           <Outlet />
