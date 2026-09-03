@@ -45,7 +45,7 @@ function AttendanceHome() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const rowsPerPage = 5;
+  const rowsPerPage = isStudent ? 10 : 15;
 
   const filteredData = useMemo(() => {
     const q = search.toLowerCase();
@@ -480,7 +480,7 @@ function AttendanceHome() {
             <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="no-data">
+                  <td colSpan={8} className="no-data">
                     No attendance found.
                   </td>
                 </tr>
