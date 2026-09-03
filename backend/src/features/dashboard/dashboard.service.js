@@ -22,7 +22,7 @@ const getDashboardData = async (user) => {
     ]);
 
     const totalClasses = classrooms.length;
-    const recentClasses = classrooms.slice(0, 5).map((c) => ({
+    const recentClasses = classrooms.slice(0, 4).map((c) => ({
       _id: c._id,
       name: c.name,
       subject: c.subject,
@@ -90,7 +90,7 @@ const getDashboardData = async (user) => {
       })
         .populate("teacher", "name")
         .sort({ createdAt: -1 })
-        .limit(5)
+        .limit(4)
         .select("name subject teacher createdAt")
         .lean(),
       Attendance.countDocuments({

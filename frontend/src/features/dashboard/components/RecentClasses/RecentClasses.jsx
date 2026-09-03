@@ -17,7 +17,7 @@ const RecentClasses = ({ classes = [] }) => {
             </tr>
           </thead>
           <tbody>
-            {classes.map((cls) => (
+            {classes.slice(0, 4).map((cls) => (
               <tr key={cls._id}>
                 <td className="font-semibold text-gray-800">{cls.name}</td>
                 <td className="text-gray-500">{cls.subject}</td>
