@@ -98,6 +98,9 @@ module.exports = (io) => {
       socket.to(roomId).emit("user-joined", {
         socketId: socket.id,
         user: socket.user,
+        cameraEnabled: false,
+        micEnabled: false,
+        forceMuted: false,
       });
 
       console.log(socket.id, "joined room", roomId);

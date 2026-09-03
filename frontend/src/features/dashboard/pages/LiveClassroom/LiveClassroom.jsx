@@ -239,25 +239,37 @@ const ToolbarButton = ({
   </button>
 );
 
-const BottomControl = ({ Icon, label, active, danger, onClick }) => (
+const BottomControl = ({
+  Icon,
+  label,
+  active,
+  danger,
+  disabled,
+  onClick,
+}) => (
   <button
-    onClick={onClick}
+    onClick={disabled ? undefined : onClick}
+    disabled={disabled}
     title={label}
     className={`flex h-14 w-0 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-1.5 text-sm font-medium transition-colors ${
-      danger
-        ? "text-red-500"
-        : active
-          ? "bg-indigo-50 text-indigo-600"
-          : "text-slate-600 hover:bg-slate-100"
+      disabled
+        ? "cursor-not-allowed opacity-60 text-slate-400"
+        : danger
+          ? "text-red-500"
+          : active
+            ? "bg-indigo-50 text-indigo-600"
+            : "text-slate-600 hover:bg-slate-100"
     }`}
   >
     <span
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-        danger
-          ? "bg-red-100 text-red-500"
-          : active
-            ? "bg-indigo-100 text-indigo-600"
-            : "bg-slate-100 text-slate-600"
+        disabled
+          ? "bg-slate-100 text-slate-400"
+          : danger
+            ? "bg-red-100 text-red-500"
+            : active
+              ? "bg-indigo-100 text-indigo-600"
+              : "bg-slate-100 text-slate-600"
       }`}
     >
       <Icon size={19} />
@@ -1343,7 +1355,13 @@ export default function LiveClassroom() {
 
     const reconcileParticipant = (
       prev,
-      { socketId, user, cameraEnabled: theirCameraEnabled }
+      {
+        socketId,
+        user,
+        cameraEnabled: theirCameraEnabled,
+        micEnabled: theirMicEnabled,
+        forceMuted: theirForceMuted,
+      }
     ) => {
       const staleIdx = prev.findIndex(
         (p) => p.user?.id === user?.id && p.socketId !== socketId
@@ -1363,6 +1381,8 @@ export default function LiveClassroom() {
           user,
           videoStreams: {},
           cameraEnabled: !!theirCameraEnabled,
+          micEnabled: !!theirMicEnabled,
+          forceMuted: !!theirForceMuted,
         };
         return next;
       }
@@ -1374,6 +1394,8 @@ export default function LiveClassroom() {
           user,
           videoStreams: {},
           cameraEnabled: !!theirCameraEnabled,
+          micEnabled: !!theirMicEnabled,
+          forceMuted: !!theirForceMuted,
         },
       ];
     };
@@ -1383,12 +1405,34 @@ export default function LiveClassroom() {
         existing.reduce((acc, p) => reconcileParticipant(acc, p), prev)
       );
 
+      const forceMutedIds = existing
+        .filter((p) => p.forceMuted)
+        .map((p) => p.socketId);
+      if (forceMutedIds.length > 0) {
+        setMutedParticipants((prev) => {
+          const next = new Set(prev);
+          forceMutedIds.forEach((id) => next.add(id));
+          return next;
+        });
+      }
+
       existing.forEach(({ socketId }) => createPeerConnection(socketId));
     });
 
-    socket.on("user-joined", ({ socketId, user }) => {
-      setParticipants((prev) => reconcileParticipant(prev, { socketId, user }));
-    });
+    socket.on(
+      "user-joined",
+      ({ socketId, user, cameraEnabled, micEnabled, forceMuted }) => {
+        setParticipants((prev) =>
+          reconcileParticipant(prev, {
+            socketId,
+            user,
+            cameraEnabled,
+            micEnabled,
+            forceMuted,
+          })
+        );
+      }
+    );
 
     socket.on("offer", async ({ sender, offer }) => {
       const pc =
@@ -1482,6 +1526,12 @@ export default function LiveClassroom() {
       delete politeRef.current[socketId];
       delete makingOfferRef.current[socketId];
       setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
+      setMutedParticipants((prev) => {
+        if (!prev.has(socketId)) return prev;
+        const next = new Set(prev);
+        next.delete(socketId);
+        return next;
+      });
     });
 
     socket.on("receive-message", (msg) => {
@@ -1616,6 +1666,14 @@ export default function LiveClassroom() {
       );
     });
 
+    socket.on("mic-status", ({ sender, enabled }) => {
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.socketId === sender ? { ...p, micEnabled: !!enabled } : p
+        )
+      );
+    });
+
     socket.on("force-camera-off", () => {
       const track = localStream.current?.getVideoTracks()[0];
       if (track) track.enabled = false;
@@ -1629,8 +1687,72 @@ export default function LiveClassroom() {
       setForceMuted(true);
     });
 
+    socket.on("force-unmute", async () => {
+      setForceMuted(false);
+      const track = localStream.current?.getAudioTracks()[0];
+      if (track) {
+        track.enabled = true;
+        setMicEnabled(true);
+        socketRef.current?.emit("mic-status", {
+          roomId: sessionId,
+          enabled: true,
+        });
+      } else {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          const audioTrack = stream.getAudioTracks()[0];
+          if (audioTrack) {
+            if (!localStream.current) {
+              localStream.current = new MediaStream();
+            }
+            localStream.current.addTrack(audioTrack);
+            Object.values(peerConnections.current).forEach((pc) => {
+              const alreadyExists = pc
+                .getSenders()
+                .some((sender) => sender.track && sender.track.kind === "audio");
+              if (!alreadyExists) {
+                pc.addTrack(audioTrack, localStream.current);
+              }
+            });
+            audioTrack.enabled = true;
+            setMicEnabled(true);
+            socketRef.current?.emit("mic-status", {
+              roomId: sessionId,
+              enabled: true,
+            });
+          }
+        } catch (err) {
+          console.warn("[Microphone] Could not auto-acquire on unmute:", err);
+        }
+      }
+    });
+
     socket.on("student-muted", ({ socketId }) => {
       setMutedParticipants((prev) => new Set(prev).add(socketId));
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.socketId === socketId
+            ? { ...p, micEnabled: false, forceMuted: true }
+            : p
+        )
+      );
+    });
+
+    socket.on("student-unmuted", ({ socketId }) => {
+      setMutedParticipants((prev) => {
+        const next = new Set(prev);
+        next.delete(socketId);
+        return next;
+      });
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.socketId === socketId
+            ? { ...p, micEnabled: true, forceMuted: false }
+            : p
+        )
+      );
     });
 
     socket.on("removed-from-session", ({ message }) => {
@@ -1865,6 +1987,11 @@ export default function LiveClassroom() {
   };
 
   const toggleMic = async () => {
+    if (!isHost && forceMuted && !micEnabled) {
+      setMediaError("You have been muted by the host and cannot unmute yourself.");
+      return;
+    }
+
     const existingTrack = localStream.current?.getAudioTracks()[0];
 
     if (existingTrack) {
@@ -1872,9 +1999,10 @@ export default function LiveClassroom() {
 
       setMicEnabled(existingTrack.enabled);
 
-      if (existingTrack.enabled) {
-        setForceMuted(false);
-      }
+      socketRef.current?.emit("mic-status", {
+        roomId: sessionId,
+        enabled: existingTrack.enabled,
+      });
 
       return;
     }
@@ -1915,8 +2043,12 @@ export default function LiveClassroom() {
       audioTrack.enabled = true;
 
       setMicEnabled(true);
-      setForceMuted(false);
       setMediaError("");
+
+      socketRef.current?.emit("mic-status", {
+        roomId: sessionId,
+        enabled: true,
+      });
     } catch (err) {
       console.error("[Microphone] Error:", err);
 
@@ -2098,8 +2230,16 @@ export default function LiveClassroom() {
   };
 
   const handleMuteStudent = (targetSocketId) => {
-    if (!isHost || mutedParticipants.has(targetSocketId)) return;
+    if (!isHost) return;
     socketRef.current?.emit("mute-student", {
+      roomId: sessionId,
+      targetSocketId,
+    });
+  };
+
+  const handleUnmuteStudent = (targetSocketId) => {
+    if (!isHost) return;
+    socketRef.current?.emit("unmute-student", {
       roomId: sessionId,
       targetSocketId,
     });
@@ -2807,8 +2947,14 @@ export default function LiveClassroom() {
             <div className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5">
               <BottomControl
                 Icon={micEnabled ? Mic : MicOff}
-                label={forceMuted && !micEnabled ? "Muted by host" : "Mic"}
+                label={
+                  !isHost && forceMuted && !micEnabled
+                    ? "Muted by host"
+                    : "Mic"
+                }
                 active={micEnabled}
+                danger={!isHost && forceMuted && !micEnabled}
+                disabled={!isHost && forceMuted && !micEnabled}
                 onClick={toggleMic}
               />
 
@@ -3059,14 +3205,28 @@ export default function LiveClassroom() {
                             {isHost && !isRowHost && (
                               <>
                                 <button
-                                  onClick={() => handleMuteStudent(p.socketId)}
-                                  disabled={mutedParticipants.has(p.socketId)}
-                                  className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                  onClick={() =>
+                                    p.micEnabled
+                                      ? handleMuteStudent(p.socketId)
+                                      : handleUnmuteStudent(p.socketId)
+                                  }
+                                  title={
+                                    p.micEnabled
+                                      ? "Mute student"
+                                      : mutedParticipants.has(p.socketId)
+                                        ? "Muted by host (Click to unmute)"
+                                        : "Unmute student"
+                                  }
+                                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    p.micEnabled
+                                      ? "bg-red-100 text-red-500 hover:bg-red-200"
+                                      : "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
+                                  }`}
                                 >
-                                  {mutedParticipants.has(p.socketId) ? (
-                                    <Volume2 size={16} />
-                                  ) : (
+                                  {p.micEnabled ? (
                                     <VolumeOff size={16} />
+                                  ) : (
+                                    <Volume2 size={16} />
                                   )}
                                 </button>
 
@@ -3089,19 +3249,19 @@ export default function LiveClassroom() {
                                 )}
                               </>
                             )}
-                            {mutedParticipants.has(p.socketId) ? (
-                              <MicOff
-                                size={16}
-                                className="text-red-400"
-                                role="img"
-                                aria-label="Microphone off"
-                              />
-                            ) : (
+                            {p.micEnabled ? (
                               <Mic
                                 size={16}
                                 className="text-slate-400"
                                 role="img"
                                 aria-label="Microphone on"
+                              />
+                            ) : (
+                              <MicOff
+                                size={16}
+                                className="text-red-400"
+                                role="img"
+                                aria-label="Microphone off"
                               />
                             )}
                             {p.cameraEnabled ? (

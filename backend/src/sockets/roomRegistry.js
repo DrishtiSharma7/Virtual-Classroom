@@ -15,13 +15,35 @@ function getRoom(roomId) {
 
 function addParticipant(roomId, socketId, user, isHost = false) {
   const room = getRoom(roomId);
-  room.set(socketId, { socketId, user, isHost, cameraEnabled: false });
+  room.set(socketId, {
+    socketId,
+    user,
+    isHost,
+    cameraEnabled: false,
+    micEnabled: false,
+    forceMuted: false,
+  });
   return room;
 }
 
 function setParticipantCameraEnabled(roomId, socketId, enabled) {
   const participant = rooms.get(roomId)?.get(socketId);
   if (participant) participant.cameraEnabled = !!enabled;
+}
+
+function setParticipantMicEnabled(roomId, socketId, enabled) {
+  const participant = rooms.get(roomId)?.get(socketId);
+  if (participant) participant.micEnabled = !!enabled;
+}
+
+function setParticipantForceMuted(roomId, socketId, forceMuted) {
+  const participant = rooms.get(roomId)?.get(socketId);
+  if (participant) participant.forceMuted = !!forceMuted;
+}
+
+function isForceMuted(roomId, socketId) {
+  const participant = rooms.get(roomId)?.get(socketId);
+  return participant?.forceMuted === true;
 }
 
 function removeParticipant(roomId, socketId) {
@@ -201,6 +223,9 @@ module.exports = {
   getScreenStreamId,
   setScreenStreamId,
   setParticipantCameraEnabled,
+  setParticipantMicEnabled,
+  setParticipantForceMuted,
+  isForceMuted,
   getRedoStack,
   pushRedo,
   popRedo,

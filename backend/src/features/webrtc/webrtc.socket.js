@@ -56,6 +56,25 @@ module.exports = (io, socket) => {
     });
   });
 
+  socket.on("mic-status", ({ roomId, enabled } = {}) => {
+    if (!roomId) return;
+    if (!registry.findParticipant(roomId, socket.id)) return;
+
+    if (enabled && registry.isForceMuted(roomId, socket.id)) {
+      socket.emit("action-denied", {
+        action: "mic-status",
+        message: "You were muted by the host and cannot unmute yourself.",
+      });
+      return;
+    }
+
+    registry.setParticipantMicEnabled(roomId, socket.id, enabled);
+    socket.to(roomId).emit("mic-status", {
+      sender: socket.id,
+      enabled: !!enabled,
+    });
+  });
+
   socket.on("force-camera-off", ({ roomId, targetSocketId } = {}) => {
     if (!roomId || !targetSocketId) return;
 
@@ -86,9 +105,37 @@ module.exports = (io, socket) => {
       return;
     }
 
-    io.to(targetSocketId).emit("force-mute", { by: socket.id });
+    registry.setParticipantMicEnabled(roomId, targetSocketId, false);
+    registry.setParticipantForceMuted(roomId, targetSocketId, true);
 
+    io.to(targetSocketId).emit("force-mute", { by: socket.id });
     io.to(roomId).emit("student-muted", { socketId: targetSocketId });
+    io.to(roomId).emit("mic-status", {
+      sender: targetSocketId,
+      enabled: false,
+    });
+  });
+
+  socket.on("unmute-student", ({ roomId, targetSocketId }) => {
+    if (!roomId || !targetSocketId) return;
+
+    if (!registry.isTeacher(roomId, socket.id)) {
+      socket.emit("action-denied", {
+        action: "unmute-student",
+        message: "Only the host can unmute participants.",
+      });
+      return;
+    }
+
+    registry.setParticipantForceMuted(roomId, targetSocketId, false);
+    registry.setParticipantMicEnabled(roomId, targetSocketId, true);
+
+    io.to(targetSocketId).emit("force-unmute", { by: socket.id });
+    io.to(roomId).emit("student-unmuted", { socketId: targetSocketId });
+    io.to(roomId).emit("mic-status", {
+      sender: targetSocketId,
+      enabled: true,
+    });
   });
 
   socket.on("kick-student", ({ roomId, targetSocketId }) => {
