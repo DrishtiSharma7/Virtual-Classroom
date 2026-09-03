@@ -48,7 +48,12 @@ const StudentDetailModal = ({ studentId, studentName, from, to, onClose }) => {
           <h2 id="student-detail-title" className="modal-title">
             {detail?.profile?.name || studentName || "Student"}
           </h2>
-          <button onClick={onClose} aria-label="Close">
+          <button
+            onClick={onClose}
+            data-tooltip="Close student details"
+            title="Close"
+            aria-label="Close"
+          >
             <X size={18} />
           </button>
         </div>

@@ -47,6 +47,8 @@ const PerformanceTrendsSection = ({ performanceTrends, loading }) => {
                 key={g.key}
                 type="button"
                 onClick={() => setGranularity(g.key)}
+                data-tooltip={`View trends by ${g.label.toLowerCase()}`}
+                title={g.label}
                 className={`rounded-md px-2 py-1 text-xs font-medium ${
                   granularity === g.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
                 }`}
@@ -63,6 +65,8 @@ const PerformanceTrendsSection = ({ performanceTrends, loading }) => {
               key={m.key}
               type="button"
               onClick={() => setMetric(m.key)}
+              data-tooltip={`Display ${m.label.toLowerCase()} performance trend`}
+              title={m.label}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 metric === m.key
                   ? "bg-[#5b5fef] text-white"

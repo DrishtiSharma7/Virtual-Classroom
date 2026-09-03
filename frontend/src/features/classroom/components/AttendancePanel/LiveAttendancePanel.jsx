@@ -45,6 +45,8 @@ export default function LiveAttendancePanel({ sessionId, onClose }) {
         <button
           onClick={onClose}
           className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          data-tooltip="Close live attendance panel"
+          title="Close live attendance panel"
           aria-label="Close live attendance panel"
         >
           <X size={16} />

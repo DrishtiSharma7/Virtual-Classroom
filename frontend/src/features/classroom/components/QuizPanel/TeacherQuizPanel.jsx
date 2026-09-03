@@ -302,7 +302,12 @@ export default function TeacherQuizPanel(
         <h3 className="text-sm font-bold text-slate-800">Live Quiz Panel</h3>
         <div className="flex items-center gap-2 text-slate-400">
           <MoreVertical size={16} />
-          <button onClick={onClose} aria-label="Close quiz panel">
+          <button
+            onClick={onClose}
+            data-tooltip="Close live quiz panel"
+            title="Close quiz panel"
+            aria-label="Close quiz panel"
+          >
             <X size={16} />
           </button>
         </div>
@@ -322,6 +327,8 @@ export default function TeacherQuizPanel(
               setQuestions([emptyQuestion()]);
               setStage("builder");
             }}
+            data-tooltip="Build a new quiz for this class"
+            title="Build New Quiz"
             className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
             <Plus size={14} /> Build New Quiz
@@ -359,6 +366,8 @@ export default function TeacherQuizPanel(
                 <button
                   onClick={() => handleSelectSaved(q)}
                   disabled={launchingId === q._id}
+                  data-tooltip="Launch this quiz live to attendees"
+                  title="Launch Live"
                   className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60"
                 >
                   <Radio size={12} />
@@ -375,6 +384,8 @@ export default function TeacherQuizPanel(
         <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
           <button
             onClick={() => setStage("select")}
+            data-tooltip="Return to saved quizzes list"
+            title="Back to saved quizzes"
             className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-indigo-600"
           >
             <ArrowLeft size={12} /> Back to saved quizzes
@@ -383,12 +394,15 @@ export default function TeacherQuizPanel(
           <div className="flex items-center gap-2">
             <button
               onClick={handleImportClick}
+              data-tooltip="Import quiz questions from Excel file"
+              title="Import Excel"
               className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
             >
               <Upload size={13} /> Import Excel
             </button>
             <button
               onClick={downloadQuizTemplate}
+              data-tooltip="Download sample Excel quiz template"
               title="Download template"
               className="flex items-center justify-center rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50"
             >
@@ -415,6 +429,8 @@ export default function TeacherQuizPanel(
                 {questions.length > 1 && (
                   <button
                     onClick={() => removeQuestion(qi)}
+                    data-tooltip="Delete this question"
+                    title="Delete question"
                     className="text-slate-400 hover:text-red-500"
                   >
                     <Trash2 size={13} />
@@ -475,6 +491,8 @@ export default function TeacherQuizPanel(
 
           <button
             onClick={addQuestion}
+            data-tooltip="Add another question"
+            title="Add question"
             className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
           >
             <Plus size={13} /> Add question
@@ -483,6 +501,8 @@ export default function TeacherQuizPanel(
           <button
             onClick={handleLaunch}
             disabled={creating}
+            data-tooltip="Start quiz now for students in session"
+            title="Launch Quiz"
             className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
           >
             {creating ? "Launching..." : "Launch Quiz"}
@@ -535,6 +555,8 @@ export default function TeacherQuizPanel(
             {!revealed ? (
               <button
                 onClick={handleReveal}
+                data-tooltip="Show correct answer to all students"
+                title="Reveal Answer"
                 className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
                 Reveal Answer
@@ -542,6 +564,16 @@ export default function TeacherQuizPanel(
             ) : (
               <button
                 onClick={handleNext}
+                data-tooltip={
+                  questionIndex + 1 < quiz.questions.length
+                    ? "Proceed to next question"
+                    : "End quiz and display results"
+                }
+                title={
+                  questionIndex + 1 < quiz.questions.length
+                    ? "Next Question"
+                    : "End & Show Results"
+                }
                 className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 {questionIndex + 1 < quiz.questions.length
@@ -551,6 +583,8 @@ export default function TeacherQuizPanel(
             )}
             <button
               onClick={handleEndQuiz}
+              data-tooltip="Terminate current live quiz"
+              title="End Quiz"
               className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50"
             >
               End
@@ -630,12 +664,16 @@ export default function TeacherQuizPanel(
                 <button
                   onClick={handleExport}
                   disabled={results.perStudent.length === 0}
+                  data-tooltip="Export quiz submissions to Excel"
+                  title="Export to Excel"
                   className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                 >
                   <Download size={14} /> Export to Excel
                 </button>
                 <button
                   onClick={handleStartNewQuiz}
+                  data-tooltip="Start another quiz for attendees"
+                  title="New Quiz"
                   className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700"
                 >
                   New Quiz

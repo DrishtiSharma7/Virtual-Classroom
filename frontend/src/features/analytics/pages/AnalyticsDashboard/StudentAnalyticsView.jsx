@@ -68,6 +68,8 @@ const StudentAnalyticsView = () => {
               type="button"
               className="filter-icon-btn"
               onClick={() => setRefreshKey((k) => k + 1)}
+              data-tooltip="Refresh your analytics stats"
+              title="Refresh"
               aria-label="Refresh"
             >
               <RefreshCw size={16} aria-hidden="true" />
@@ -79,7 +81,13 @@ const StudentAnalyticsView = () => {
         {error && (
           <div className="analytics-error" role="alert">
             {error}
-            <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="analytics-error-retry">
+            <button
+              type="button"
+              onClick={() => setRefreshKey((k) => k + 1)}
+              data-tooltip="Retry loading your analytics"
+              title="Retry"
+              className="analytics-error-retry"
+            >
               Retry
             </button>
           </div>

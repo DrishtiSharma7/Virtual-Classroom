@@ -143,6 +143,8 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
               setQuiz(null);
               onClose?.();
             }}
+            data-tooltip="Close live quiz panel"
+            title="Close quiz panel"
             aria-label="Close quiz panel"
           >
             <X size={16} />
@@ -229,6 +231,8 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
           <button
             onClick={lockAnswer}
             disabled={selected === null || locked}
+            data-tooltip={locked ? "Answer submitted" : "Lock in and submit your selected answer"}
+            title={locked ? "Submitted" : "Submit"}
             className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             {locked ? "Submitted" : "Submit"}

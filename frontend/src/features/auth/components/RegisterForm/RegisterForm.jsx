@@ -142,6 +142,8 @@ function RegisterForm() {
                 type="button"
                 role="radio"
                 aria-checked={formData.role === "teacher"}
+                data-tooltip="Register as a Teacher"
+                title="Teacher"
                 className={roleBtnClass(formData.role === "teacher")}
                 onClick={() => handleRoleSelect("teacher")}
               >
@@ -151,6 +153,8 @@ function RegisterForm() {
                 type="button"
                 role="radio"
                 aria-checked={formData.role === "student"}
+                data-tooltip="Register as a Student"
+                title="Student"
                 className={roleBtnClass(formData.role === "student")}
                 onClick={() => handleRoleSelect("student")}
               >
@@ -220,6 +224,8 @@ function RegisterForm() {
                   type="button"
                   className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center justify-center border-none bg-transparent p-0 text-gray-500"
                   onClick={() => setShowPassword((v) => !v)}
+                  data-tooltip={showPassword ? "Hide password text" : "Show password text"}
+                  title={showPassword ? "Hide password" : "Show password"}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   aria-pressed={showPassword}
                 >
@@ -249,6 +255,8 @@ function RegisterForm() {
                   type="button"
                   className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center justify-center border-none bg-transparent p-0 text-gray-500"
                   onClick={() => setShowConfirmPassword((v) => !v)}
+                  data-tooltip={showConfirmPassword ? "Hide password text" : "Show password text"}
+                  title={showConfirmPassword ? "Hide password" : "Show password"}
                   aria-label={
                     showConfirmPassword ? "Hide password" : "Show password"
                   }
@@ -289,6 +297,8 @@ function RegisterForm() {
               <button
                 type="submit"
                 disabled={loading}
+                data-tooltip="Create your new account"
+                title="Create Account"
                 className="mt-1 h-11 w-full rounded-[30px] border-none bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] text-sm font-semibold text-white shadow-[0_8px_20px_rgba(79,70,229,0.35)] transition-[transform,box-shadow,opacity] duration-200 hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_12px_26px_rgba(79,70,229,0.4)] active:enabled:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 lg:h-[52px] lg:text-[17px]"
               >
                 {loading ? "Registering..." : "Create Account"}

@@ -89,6 +89,8 @@ function CreateClassroom() {
           </p>
           <button
             onClick={() => navigate("/classrooms")}
+            data-tooltip="Return to your classrooms list"
+            title="Back to Classrooms"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
           >
             Back to Classrooms
@@ -125,6 +127,8 @@ function CreateClassroom() {
                 type="button"
                 onClick={handleCopyCode}
                 aria-label="Copy join code"
+                data-tooltip="Copy unique classroom join code"
+                title="Copy join code"
                 className="rounded-lg border border-gray-200 p-1.5 text-gray-500 transition hover:bg-gray-100"
               >
                 {copied ? (
@@ -151,6 +155,8 @@ function CreateClassroom() {
             <button
               type="button"
               onClick={() => navigate(`/classrooms/${createdClassroom._id}`)}
+              data-tooltip="Open newly created classroom page"
+              title="Go to Classroom"
               className="flex-1 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
             >
               Go to Classroom
@@ -158,6 +164,8 @@ function CreateClassroom() {
             <button
               type="button"
               onClick={() => navigate("/classrooms")}
+              data-tooltip="Return to your classrooms list"
+              title="View All Classrooms"
               className="flex-1 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
               View All Classrooms
@@ -261,6 +269,8 @@ function CreateClassroom() {
             <button
               type="submit"
               disabled={loading}
+              data-tooltip="Submit details to create this new virtual classroom"
+              title="Create Classroom"
               className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] text-sm font-semibold text-white shadow-[0_8px_20px_rgba(79,70,229,0.35)] transition disabled:cursor-not-allowed disabled:opacity-70 hover:enabled:-translate-y-0.5"
             >
               {loading ? (

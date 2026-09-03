@@ -157,7 +157,13 @@ const TeacherAnalyticsView = () => {
         {error && (
           <div className="analytics-error" role="alert">
             {error}
-            <button type="button" onClick={handleRefresh} className="analytics-error-retry">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              data-tooltip="Retry fetching teacher analytics"
+              title="Retry"
+              className="analytics-error-retry"
+            >
               Retry
             </button>
           </div>

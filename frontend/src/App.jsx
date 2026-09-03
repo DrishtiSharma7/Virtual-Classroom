@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import AppRouter from "./routes/AppRouter";
+import GlobalTooltip from "./components/GlobalTooltip/GlobalTooltip";
 
 const Toaster = lazy(() =>
   import("react-hot-toast").then((mod) => ({ default: mod.Toaster }))
@@ -11,6 +12,7 @@ function App() {
       <Suspense fallback={null}>
         <Toaster position="top-right" />
       </Suspense>
+      <GlobalTooltip />
       <AppRouter />
     </>
   );

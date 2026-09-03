@@ -181,6 +181,8 @@ export default function StudentRecordingsHome() {
                 <h2 className="modal-title">{watching.title}</h2>
                 <button
                   onClick={() => setWatching(null)}
+                  data-tooltip="Close video player"
+                  title="Close"
                   aria-label="Close"
                   className="text-gray-400 hover:text-gray-600"
                 >

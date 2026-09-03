@@ -186,6 +186,8 @@ export default function TeacherRecordingsHome() {
             <button
               onClick={openUpload}
               disabled={loadingClassrooms || classrooms.length === 0}
+              data-tooltip="Upload recorded video for this class"
+              title="Upload Recording"
               className="export-btn"
             >
               <Upload size={18} /> Upload Recording
@@ -277,6 +279,7 @@ export default function TeacherRecordingsHome() {
                           <div className="action-buttons">
                             <button
                               onClick={() => setWatching(r)}
+                              data-tooltip="Watch this session recording"
                               title="Watch recording"
                               className="view-btn"
                             >
@@ -285,6 +288,7 @@ export default function TeacherRecordingsHome() {
                             <button
                               onClick={() => handleDelete(r)}
                               disabled={deletingId === r._id}
+                              data-tooltip="Permanently delete this recording"
                               title="Delete recording"
                               className="delete-btn"
                             >
@@ -315,6 +319,8 @@ export default function TeacherRecordingsHome() {
                 <h2 className="modal-title">Upload Recording</h2>
                 <button
                   onClick={() => setShowUpload(false)}
+                  data-tooltip="Close upload modal"
+                  title="Close"
                   aria-label="Close"
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -358,6 +364,8 @@ export default function TeacherRecordingsHome() {
               <button
                 onClick={handleUpload}
                 disabled={uploading}
+                data-tooltip="Upload video file to classroom recordings"
+                title="Upload"
                 className="export-btn w-full justify-center"
               >
                 {uploading ? (
@@ -383,6 +391,8 @@ export default function TeacherRecordingsHome() {
                 <h2 className="modal-title">{watching.title}</h2>
                 <button
                   onClick={() => setWatching(null)}
+                  data-tooltip="Close video player"
+                  title="Close"
                   aria-label="Close"
                   className="text-gray-400 hover:text-gray-600"
                 >

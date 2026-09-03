@@ -131,6 +131,8 @@ function LoginForm() {
                   type="button"
                   className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center border-none bg-transparent p-0 text-gray-400 hover:text-gray-500"
                   onClick={() => setShowPassword(!showPassword)}
+                  data-tooltip={showPassword ? "Hide password text" : "Show password text"}
+                  title={showPassword ? "Hide password" : "Show password"}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -161,6 +163,8 @@ function LoginForm() {
               <div className="mb-5 flex gap-3">
                 <button
                   type="button"
+                  data-tooltip="Sign in as a Teacher"
+                  title="Teacher"
                   className={
                     role === "teacher"
                       ? "flex h-[50px] flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] border-transparent bg-gradient-to-br from-[#5c60f3] to-[#4b4fd6] text-sm font-semibold text-white shadow-[0_8px_20px_rgba(91,95,239,0.28)] transition-all duration-200 sm:text-[15px]"
@@ -174,6 +178,8 @@ function LoginForm() {
 
                 <button
                   type="button"
+                  data-tooltip="Sign in as a Student"
+                  title="Student"
                   className={
                     role === "student"
                       ? "flex h-[50px] flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] border-transparent bg-gradient-to-br from-[#5c60f3] to-[#4b4fd6] text-sm font-semibold text-white shadow-[0_8px_20px_rgba(91,95,239,0.28)] transition-all duration-200 sm:text-[15px]"
@@ -190,6 +196,8 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
+                data-tooltip="Log in to your account"
+                title="Login"
                 className="mb-5 h-[54px] w-full rounded-full border-none bg-gradient-to-br from-[#5b5fef] to-[#4347d9] text-[17px] font-bold text-white transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(75,79,214,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? "Logging in..." : "Login"}

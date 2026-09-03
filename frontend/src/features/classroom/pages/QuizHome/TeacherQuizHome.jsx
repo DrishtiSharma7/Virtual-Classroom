@@ -301,6 +301,7 @@ export default function TeacherQuizHome() {
           <div className="header-buttons">
             <button
               onClick={downloadQuizTemplate}
+              data-tooltip="Download Excel quiz question template"
               title="Download the Excel template"
               className="secondary-btn"
             >
@@ -309,6 +310,7 @@ export default function TeacherQuizHome() {
             <button
               onClick={handleQuickImportClick}
               disabled={loadingClassrooms || classrooms.length === 0}
+              data-tooltip="Import quiz questions from an Excel file"
               title="Import questions from an Excel file"
               className="secondary-btn"
             >
@@ -317,6 +319,8 @@ export default function TeacherQuizHome() {
             <button
               onClick={openBuilder}
               disabled={loadingClassrooms || classrooms.length === 0}
+              data-tooltip="Create a new quiz for your classroom"
+              title="New Quiz"
               className="export-btn"
             >
               <Plus size={18} /> New Quiz
@@ -447,6 +451,11 @@ export default function TeacherQuizHome() {
                           <div className="action-buttons">
                             <button
                               onClick={() => handleToggleRetake(q)}
+                              data-tooltip={
+                                q.openForRetake
+                                  ? "Close self-attempt retake for students"
+                                  : "Open quiz for students to self-attempt"
+                              }
                               title={
                                 q.openForRetake
                                   ? "Close retake"
@@ -465,6 +474,7 @@ export default function TeacherQuizHome() {
                             </button>
                             <button
                               onClick={() => navigate(`/quizzes/${q._id}`)}
+                              data-tooltip="View quiz details and responses"
                               title="View quiz"
                               className="view-btn"
                             >
@@ -473,6 +483,7 @@ export default function TeacherQuizHome() {
                             <button
                               onClick={() => handleExport(q)}
                               disabled={exportingId === q._id}
+                              data-tooltip="Export student results to Excel"
                               title="Export results to Excel"
                               className="download-btn"
                             >
@@ -490,6 +501,7 @@ export default function TeacherQuizHome() {
                             </button>
                             <button
                               onClick={() => handleDelete(q._id)}
+                              data-tooltip="Permanently delete this quiz"
                               title="Delete quiz"
                               className="delete-btn"
                             >
@@ -514,6 +526,8 @@ export default function TeacherQuizHome() {
                 <h2 className="text-lg font-bold text-gray-900">New Quiz</h2>
                 <button
                   onClick={() => setShowBuilder(false)}
+                  data-tooltip="Close quiz builder modal"
+                  title="Close"
                   aria-label="Close"
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -566,12 +580,16 @@ export default function TeacherQuizHome() {
               <div className="mb-4 flex items-center gap-2">
                 <button
                   onClick={handleImportClick}
+                  data-tooltip="Import questions from Excel sheet"
+                  title="Import from Excel"
                   className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-slate-50"
                 >
                   <Upload size={13} /> Import from Excel
                 </button>
                 <button
                   onClick={downloadQuizTemplate}
+                  data-tooltip="Download sample Excel template"
+                  title="Download template"
                   className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-slate-50"
                 >
                   <Download size={13} /> Download template
@@ -591,6 +609,8 @@ export default function TeacherQuizHome() {
                       {questions.length > 1 && (
                         <button
                           onClick={() => removeQuestion(qi)}
+                          data-tooltip="Delete this question"
+                          title="Delete question"
                           className="text-gray-400 hover:text-red-500"
                         >
                           <Trash2 size={13} />
@@ -655,6 +675,8 @@ export default function TeacherQuizHome() {
 
                 <button
                   onClick={addQuestion}
+                  data-tooltip="Add another question to quiz"
+                  title="Add question"
                   className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 py-1.5 text-xs font-medium text-gray-500 hover:bg-slate-50"
                 >
                   <Plus size={13} /> Add question
@@ -664,6 +686,8 @@ export default function TeacherQuizHome() {
               <div className="mt-5 flex items-center gap-2">
                 <button
                   onClick={() => setShowBuilder(false)}
+                  data-tooltip="Discard changes and exit"
+                  title="Cancel"
                   className="flex-1 rounded-xl border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-slate-50"
                 >
                   Cancel
@@ -671,6 +695,8 @@ export default function TeacherQuizHome() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
+                  data-tooltip="Save and publish this quiz"
+                  title="Save Quiz"
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:opacity-60"
                 >
                   {saving ? (

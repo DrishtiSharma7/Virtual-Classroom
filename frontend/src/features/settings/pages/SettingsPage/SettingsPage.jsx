@@ -216,6 +216,8 @@ const SettingsPage = () => {
           <button
             type="submit"
             disabled={savingSection === "profile"}
+            data-tooltip="Save updated profile changes"
+            title="Save changes"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
           >
             {savingSection === "profile" ? (
@@ -298,6 +300,8 @@ const SettingsPage = () => {
           <button
             type="submit"
             disabled={savingSection === "password"}
+            data-tooltip="Save new account password"
+            title="Update password"
             className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
           >
             {savingSection === "password" ? (
