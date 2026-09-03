@@ -252,12 +252,15 @@ function AttendanceHome() {
             />
           </div>
 
-          <div className="filter-card">
-            <div className="filter-grid">
-              <div className="search-wrapper">
-                <Search size={16} className="search-icon" />
+          <div className="filter-card w-full block">
+            <div className="filter-grid w-full block">
+              <div className="search-wrapper relative w-full block">
+                <Search
+                  size={18}
+                  className="search-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
                 <input
-                  className="search-input"
+                  className="search-input w-full block"
                   type="text"
                   placeholder="Search by Class or Session..."
                   value={search}
@@ -442,13 +445,16 @@ function AttendanceHome() {
 
 
 
-        <div className="filter-card">
-          <div className="filter-grid">
-            <div className="search-wrapper">
-              <Search size={16} className="search-icon" />
+        <div className="filter-card w-full block">
+          <div className="filter-grid w-full block">
+            <div className="search-wrapper relative w-full block">
+              <Search
+                size={18}
+                className="search-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
 
               <input
-                className="search-input"
+                className="search-input w-full block"
                 type="text"
                 placeholder="Search by Name or Email..."
                 value={search}

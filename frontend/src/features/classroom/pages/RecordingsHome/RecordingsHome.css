@@ -36,7 +36,7 @@
   @apply grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4;
 }
 
-.filter-card {
+.recordings-page .filter-card {
   @apply bg-white rounded-xl shadow p-3 mb-4 flex flex-wrap items-center gap-3;
 }
 
