@@ -68,3 +68,103 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.trim()) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const emailTrimmed = email.trim();
+    const user = await User.findOne({
+      $or: [
+        { email: emailTrimmed },
+        { email: emailTrimmed.toLowerCase() },
+      ],
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "No account found with this email address",
+      });
+    }
+
+    const resetToken = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        type: "password_reset",
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    res.json({
+      message: "Email verified. You can now reset your password.",
+      resetToken,
+      email: user.email,
+      name: user.name,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword, resetToken } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ message: "New password is required" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    let user = null;
+
+    if (resetToken) {
+      try {
+        const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+        if (decoded.type !== "password_reset") {
+          return res.status(400).json({ message: "Invalid reset token" });
+        }
+        user = await User.findById(decoded.id);
+      } catch (tokenErr) {
+        return res.status(400).json({
+          message:
+            "Reset session has expired or is invalid. Please verify your email again.",
+        });
+      }
+    } else if (email) {
+      const emailTrimmed = email.trim();
+      user = await User.findOne({
+        $or: [
+          { email: emailTrimmed },
+          { email: emailTrimmed.toLowerCase() },
+        ],
+      });
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Email or reset token is required" });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({
+      message: "Password updated successfully. You can now log in.",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

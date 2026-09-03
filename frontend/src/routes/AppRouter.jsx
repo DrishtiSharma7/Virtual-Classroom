@@ -6,6 +6,7 @@ import DashboardLayout from "../layouts/DashboardLayout/DashboardLayout";
 
 import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
+import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
 import LandingPage from "../features/marketing/pages/LandingPage/LandingPage";
 
 const ClassroomHome = lazy(() => import("../features/classroom/pages/ClassroomHome/ClassroomHome"));
@@ -44,6 +45,7 @@ function AppRouter() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             </Route>
           </Route>
 

@@ -127,7 +127,7 @@
 }
 
 .announcement-item {
-  @apply border-b last:border-none py-4;
+  @apply border-b last:border-none py-2;
 }
 
 .announcement-item h4 {

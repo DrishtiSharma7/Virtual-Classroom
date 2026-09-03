@@ -10,4 +10,14 @@ export const registerUser = async (data) => {
   return response.data;
 };
 
-export default { loginUser, registerUser };
+export const forgotPassword = async (email) => {
+  const response = await api.post("/auth/forgot-password", { email });
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await api.post("/auth/reset-password", payload);
+  return response.data;
+};
+
+export default { loginUser, registerUser, forgotPassword, resetPassword };
