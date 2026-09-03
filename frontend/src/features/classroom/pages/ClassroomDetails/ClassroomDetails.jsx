@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -14,6 +14,8 @@ import {
   Trash2,
   UploadCloud,
   Pencil,
+  Play,
+  Loader2,
   X,
 } from "lucide-react";
 
@@ -25,6 +27,12 @@ import {
   updateAnnouncement,
   deleteAnnouncement,
 } from "../../api/announcement.api";
+import {
+  uploadRecording,
+  deleteRecording,
+  getClassroomRecordings,
+  getRecordingUrl,
+} from "../../api/recording.api";
 import { useNavigate } from "react-router-dom";
 import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
@@ -61,6 +69,18 @@ function ClassroomDetails() {
   const [editAnnouncementError, setEditAnnouncementError] = useState("");
   const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
 
+  const [recordings, setRecordings] = useState([]);
+  const [loadingRecordings, setLoadingRecordings] = useState(false);
+  const [showUploadRecording, setShowUploadRecording] = useState(false);
+  const [recordingTitle, setRecordingTitle] = useState("");
+  const [recordingDescription, setRecordingDescription] = useState("");
+  const [recordingFile, setRecordingFile] = useState(null);
+  const [uploadingRecording, setUploadingRecording] = useState(false);
+  const [recordingUploadError, setRecordingUploadError] = useState("");
+  const [watchingRecording, setWatchingRecording] = useState(null);
+  const [deletingRecordingId, setDeletingRecordingId] = useState(null);
+  const recordingFileInputRef = useRef(null);
+
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const role = user?.role;
   const isTeacher = role === "teacher";
@@ -68,6 +88,7 @@ function ClassroomDetails() {
   useEffect(() => {
     fetchClassroom();
     fetchAnnouncements();
+    fetchRecordings();
   }, [classroomId]);
 
   const fetchClassroom = async () => {
@@ -88,6 +109,18 @@ function ClassroomDetails() {
       setAnnouncements(data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchRecordings = async () => {
+    try {
+      setLoadingRecordings(true);
+      const data = await getClassroomRecordings(classroomId);
+      setRecordings(data);
+    } catch (err) {
+      console.error("Could not load recordings:", err);
+    } finally {
+      setLoadingRecordings(false);
     }
   };
 
@@ -235,8 +268,67 @@ function ClassroomDetails() {
     }
   };
 
-  const handleUploadRecording = () => {
-    navigate(`/recordings?classroomId=${classroom._id}&upload=1`);
+  const handleOpenUploadRecording = () => {
+    setRecordingTitle("");
+    setRecordingDescription("");
+    setRecordingFile(null);
+    setRecordingUploadError("");
+    if (recordingFileInputRef.current) {
+      recordingFileInputRef.current.value = "";
+    }
+    setShowUploadRecording(true);
+  };
+
+  const handleUploadRecordingSubmit = async (e) => {
+    e.preventDefault();
+    if (!recordingTitle.trim()) {
+      setRecordingUploadError("Please provide a title for this recording.");
+      return;
+    }
+    if (!recordingFile) {
+      setRecordingUploadError("Please choose a video file to upload.");
+      return;
+    }
+
+    try {
+      setUploadingRecording(true);
+      setRecordingUploadError("");
+
+      const formData = new FormData();
+      formData.append("classroom", classroomId);
+      formData.append("title", recordingTitle.trim());
+      formData.append("description", recordingDescription.trim());
+      formData.append("file", recordingFile);
+
+      const res = await uploadRecording(formData);
+      setRecordings((prev) => [res.recording, ...prev]);
+      setShowUploadRecording(false);
+      toast.success("Recording uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      setRecordingUploadError(
+        err.response?.data?.message || "Failed to upload recording."
+      );
+    } finally {
+      setUploadingRecording(false);
+    }
+  };
+
+  const handleDeleteRecording = async (recordingId, title) => {
+    if (!window.confirm(`Delete recording "${title}"?`)) return;
+    try {
+      setDeletingRecordingId(recordingId);
+      await deleteRecording(recordingId);
+      setRecordings((prev) => prev.filter((r) => r._id !== recordingId));
+      toast.success("Recording deleted.");
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        err.response?.data?.message || "Failed to delete recording."
+      );
+    } finally {
+      setDeletingRecordingId(null);
+    }
   };
 
   const handleRemoveStudent = (studentId) => {
@@ -276,7 +368,6 @@ function ClassroomDetails() {
   };
 
   const students = classroom.students || [];
-  const recordings = classroom.recordings || [];
   const sessionTitle = classroom.sessionTitle?.trim()
     ? classroom.sessionTitle
     : `${classroom.subject} Live Session`;
@@ -464,7 +555,7 @@ function ClassroomDetails() {
                 {isTeacher && (
                   <button
                     className="inline-add-btn"
-                    onClick={handleUploadRecording}
+                    onClick={handleOpenUploadRecording}
                     title="Upload Recording"
                   >
                     <UploadCloud size={16} />
@@ -473,18 +564,63 @@ function ClassroomDetails() {
                 )}
               </div>
 
-              {recordings.length === 0 ? (
+              {loadingRecordings ? (
+                <p className="empty-text">Loading recordings...</p>
+              ) : recordings.length === 0 ? (
                 <p className="empty-text">No recordings found.</p>
               ) : (
-                recordings.slice(0, 5).map((video, index) => (
-                  <div key={video._id || index} className="recording-row">
-                    <div>
-                      <h4>{video.title}</h4>
-
-                      <p>Recorded Lecture</p>
+                recordings.map((video) => (
+                  <div
+                    key={video._id}
+                    className="recording-row flex items-center justify-between gap-3"
+                  >
+                    <div
+                      className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                      onClick={() => setWatchingRecording(video)}
+                      title="Click to watch recording"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
+                        <Play size={16} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-slate-800 truncate hover:text-indigo-600 transition-colors">
+                          {video.title}
+                        </h4>
+                        <p className="text-xs text-gray-500 truncate">
+                          {video.description || "Recorded Lecture"} •{" "}
+                          {new Date(video.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
 
-                    <button className="watch-btn">Watch</button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        className="watch-btn"
+                        onClick={() => setWatchingRecording(video)}
+                      >
+                        Watch
+                      </button>
+                      {isTeacher && (
+                        <button
+                          className="edit-icon-btn text-red-400 hover:text-red-600 hover:bg-red-50"
+                          onClick={() =>
+                            handleDeleteRecording(video._id, video.title)
+                          }
+                          disabled={deletingRecordingId === video._id}
+                          title="Delete recording"
+                          aria-label="Delete recording"
+                        >
+                          {deletingRecordingId === video._id ? (
+                            <Loader2
+                              size={15}
+                              className="animate-spin text-red-600"
+                            />
+                          ) : (
+                            <Trash2 size={15} />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -674,6 +810,122 @@ function ClassroomDetails() {
               >
                 {updatingAnnouncement ? "Saving..." : "Save Changes"}
               </button>
+            </div>
+          </div>
+        )}
+
+        {showUploadRecording && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <div className="modal-header">
+                <h2 className="modal-title">Upload Recording</h2>
+                <button
+                  onClick={() => setShowUploadRecording(false)}
+                  aria-label="Close"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {recordingUploadError && (
+                <p className="form-error">{recordingUploadError}</p>
+              )}
+
+              <form onSubmit={handleUploadRecordingSubmit}>
+                <div className="form-field">
+                  <label className="form-label">Title</label>
+                  <input
+                    value={recordingTitle}
+                    onChange={(e) => setRecordingTitle(e.target.value)}
+                    placeholder="e.g. Week 4 — Introduction to React"
+                    className="form-input"
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="form-label">Description (optional)</label>
+                  <input
+                    value={recordingDescription}
+                    onChange={(e) => setRecordingDescription(e.target.value)}
+                    placeholder="Topics discussed in this lecture..."
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="form-label">Video File</label>
+                  <input
+                    ref={recordingFileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) =>
+                      setRecordingFile(e.target.files?.[0] || null)
+                    }
+                    className="form-input"
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Supports MP4, WebM, MOV, AVI (up to 500MB)
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={uploadingRecording}
+                  className="join-btn mt-6 w-full justify-center"
+                >
+                  {uploadingRecording ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Uploading Video...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <UploadCloud size={18} />
+                      <span>Upload Recording</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {watchingRecording && (
+          <div
+            className="modal-overlay"
+            onClick={() => setWatchingRecording(null)}
+          >
+            <div
+              className="modal-card max-w-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div>
+                  <h2 className="modal-title">{watchingRecording.title}</h2>
+                  {watchingRecording.description && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {watchingRecording.description}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setWatchingRecording(null)}
+                  aria-label="Close"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <video
+                key={watchingRecording._id}
+                src={getRecordingUrl(watchingRecording.fileUrl)}
+                controls
+                autoPlay
+                className="w-full rounded-xl bg-black max-h-[70vh]"
+              />
             </div>
           </div>
         )}

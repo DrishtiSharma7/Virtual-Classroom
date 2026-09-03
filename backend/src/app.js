@@ -16,11 +16,12 @@ const settingsRoutes = require("./features/settings/settings.routes");
 const whiteboardRoutes = require("./features/whiteboard/whiteboard.routes");
 const analyticsRoutes = require("./features/analytics/analytics.routes");
 const announcementRoutes = require("./features/announcement/announcement.routes");
+const path = require("path");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/api/auth", authRoutes);
 
@@ -58,5 +59,12 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/announcements", announcementRoutes);
+
+app.use((err, req, res, next) => {
+  console.error("Server error:", err.message);
+  res.status(err.status || 400).json({
+    message: err.message || "An unexpected error occurred.",
+  });
+});
 
 module.exports = app;
