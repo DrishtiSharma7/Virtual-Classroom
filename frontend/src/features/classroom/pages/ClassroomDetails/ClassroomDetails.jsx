@@ -22,6 +22,8 @@ import { getClassroomById, updateClassroom } from "../../api/classroom.api";
 import {
   createAnnouncement,
   getClassroomAnnouncements,
+  updateAnnouncement,
+  deleteAnnouncement,
 } from "../../api/announcement.api";
 import { useNavigate } from "react-router-dom";
 import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
@@ -50,6 +52,14 @@ function ClassroomDetails() {
   const [announcementDescription, setAnnouncementDescription] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [announcementError, setAnnouncementError] = useState("");
+
+  const [showEditAnnouncement, setShowEditAnnouncement] = useState(false);
+  const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
+  const [editAnnouncementTitle, setEditAnnouncementTitle] = useState("");
+  const [editAnnouncementDescription, setEditAnnouncementDescription] = useState("");
+  const [updatingAnnouncement, setUpdatingAnnouncement] = useState(false);
+  const [editAnnouncementError, setEditAnnouncementError] = useState("");
+  const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const role = user?.role;
@@ -165,6 +175,63 @@ function ClassroomDetails() {
       );
     } finally {
       setPostingAnnouncement(false);
+    }
+  };
+
+  const handleOpenEditAnnouncement = (item) => {
+    setEditingAnnouncementId(item._id);
+    setEditAnnouncementTitle(item.title || "");
+    setEditAnnouncementDescription(item.description || "");
+    setEditAnnouncementError("");
+    setShowEditAnnouncement(true);
+  };
+
+  const handleUpdateAnnouncement = async () => {
+    if (!editAnnouncementTitle.trim()) {
+      setEditAnnouncementError("Give this announcement a title.");
+      return;
+    }
+    try {
+      setUpdatingAnnouncement(true);
+      setEditAnnouncementError("");
+      const res = await updateAnnouncement(editingAnnouncementId, {
+        title: editAnnouncementTitle.trim(),
+        description: editAnnouncementDescription.trim(),
+      });
+      setAnnouncements((prev) =>
+        prev.map((a) =>
+          a._id === editingAnnouncementId ? res.announcement : a
+        )
+      );
+      setShowEditAnnouncement(false);
+      toast.success("Announcement updated.");
+    } catch (err) {
+      console.error(err);
+      setEditAnnouncementError(
+        err.response?.data?.message || "Unable to update announcement."
+      );
+    } finally {
+      setUpdatingAnnouncement(false);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (announcementId) => {
+    if (!window.confirm("Are you sure you want to delete this announcement?"))
+      return;
+    try {
+      setDeletingAnnouncementId(announcementId);
+      await deleteAnnouncement(announcementId);
+      setAnnouncements((prev) =>
+        prev.filter((a) => a._id !== announcementId)
+      );
+      toast.success("Announcement deleted.");
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        err.response?.data?.message || "Unable to delete announcement."
+      );
+    } finally {
+      setDeletingAnnouncementId(null);
     }
   };
 
@@ -354,9 +421,33 @@ function ClassroomDetails() {
               ) : (
                 announcements.map((item) => (
                   <div key={item._id} className="announcement-item">
-                    <h4>{item.title}</h4>
-
-                    {item.description && <p>{item.description}</p>}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h4>{item.title}</h4>
+                        {item.description && <p>{item.description}</p>}
+                      </div>
+                      {isTeacher && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            className="edit-icon-btn"
+                            onClick={() => handleOpenEditAnnouncement(item)}
+                            title="Edit announcement"
+                            aria-label="Edit announcement"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            className="edit-icon-btn text-red-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDeleteAnnouncement(item._id)}
+                            disabled={deletingAnnouncementId === item._id}
+                            title="Delete announcement"
+                            aria-label="Delete announcement"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -531,6 +622,57 @@ function ClassroomDetails() {
                 className="join-btn mt-6 w-full justify-center"
               >
                 {postingAnnouncement ? "Posting..." : "Post"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showEditAnnouncement && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <div className="modal-header">
+                <h2 className="modal-title">Edit Announcement</h2>
+                <button
+                  onClick={() => setShowEditAnnouncement(false)}
+                  aria-label="Close"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {editAnnouncementError && (
+                <p className="form-error">{editAnnouncementError}</p>
+              )}
+
+              <div className="form-field">
+                <label className="form-label">Title</label>
+                <input
+                  value={editAnnouncementTitle}
+                  onChange={(e) => setEditAnnouncementTitle(e.target.value)}
+                  placeholder="e.g. Class rescheduled to 4 PM"
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-label">Description (optional)</label>
+                <input
+                  value={editAnnouncementDescription}
+                  onChange={(e) =>
+                    setEditAnnouncementDescription(e.target.value)
+                  }
+                  placeholder="Add more details..."
+                  className="form-input"
+                />
+              </div>
+
+              <button
+                onClick={handleUpdateAnnouncement}
+                disabled={updatingAnnouncement}
+                className="join-btn mt-6 w-full justify-center"
+              >
+                {updatingAnnouncement ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>

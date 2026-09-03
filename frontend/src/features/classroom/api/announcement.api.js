@@ -9,3 +9,13 @@ export const getClassroomAnnouncements = async (classroomId) => {
   const response = await api.get(`/announcements/classroom/${classroomId}`);
   return response.data;
 };
+
+export const updateAnnouncement = async (id, payload) => {
+  const response = await api.put(`/announcements/${id}`, payload);
+  return response.data;
+};
+
+export const deleteAnnouncement = async (id) => {
+  const response = await api.delete(`/announcements/${id}`);
+  return response.data;
+};

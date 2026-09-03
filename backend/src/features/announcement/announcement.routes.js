@@ -18,4 +18,18 @@ router.get(
   announcementController.getAnnouncements,
 );
 
+router.put(
+  "/:id",
+  authMiddleware,
+  roleMiddleware("teacher"),
+  announcementController.updateAnnouncement,
+);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  roleMiddleware("teacher"),
+  announcementController.deleteAnnouncement,
+);
+
 module.exports = router;
