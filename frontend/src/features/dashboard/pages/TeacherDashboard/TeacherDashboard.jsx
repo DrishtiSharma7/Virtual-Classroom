@@ -5,8 +5,9 @@ import StatCard from "../../components/StatCard/StatCard";
 import RecentClasses from "../../components/RecentClasses/RecentClasses";
 import QuickActions from "../../components/QuickActions/QuickActions";
 import { useNavigate } from "react-router-dom";
-import { createSession, startSession } from "../../../auth/api/session.api";
+import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import { LayoutDashboard, Users, Video, CircleCheckBig } from "lucide-react";
+import toast from "react-hot-toast";
 
 import "./TeacherDashboard.css";
 
@@ -37,6 +38,20 @@ const TeacherDashboard = () => {
   const handleStartSession = async () => {
     try {
       const classroom = dashboard?.recentClasses?.[0];
+      if (!classroom) {
+        toast.error("No classroom found. Please create one first.");
+        return;
+      }
+
+      // Check if this classroom already has an active live session
+      const sessionsRes = await getSessionsByClassroom(classroom._id);
+      const existingLive = sessionsRes.data?.find((s) => s.status === "live");
+
+      if (existingLive) {
+        toast.success("Rejoining your active live session...");
+        navigate(`/live/${existingLive._id}`);
+        return;
+      }
 
       const createResponse = await createSession({
         classroom: classroom._id,
@@ -45,14 +60,15 @@ const TeacherDashboard = () => {
         startTime: new Date(),
       });
 
-      const sessionId = createResponse.data.session._id;
+      const session = createResponse.data.session;
+      if (!createResponse.data.alreadyLive) {
+        await startSession(session._id);
+      }
 
-      await startSession(sessionId);
-
-      navigate(`/live/${sessionId}`);
+      navigate(`/live/${session._id}`);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.message || err.message);
     }
   };
 

@@ -34,7 +34,7 @@ import {
   getRecordingUrl,
 } from "../../api/recording.api";
 import { useNavigate } from "react-router-dom";
-import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
+import { createSession, startSession, endSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 import StatCard from "../../../dashboard/components/StatCard/StatCard";
 
@@ -47,6 +47,7 @@ function ClassroomDetails() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const [liveSession, setLiveSession] = useState(null);
   const [startingSession, setStartingSession] = useState(false);
 
   const [showEditSession, setShowEditSession] = useState(false);
@@ -89,7 +90,22 @@ function ClassroomDetails() {
     fetchClassroom();
     fetchAnnouncements();
     fetchRecordings();
+    fetchLiveSession();
+
+    // Periodically poll for live session status (every 8 seconds)
+    const interval = setInterval(fetchLiveSession, 8000);
+    return () => clearInterval(interval);
   }, [classroomId]);
+
+  const fetchLiveSession = async () => {
+    try {
+      const res = await getSessionsByClassroom(classroomId);
+      const active = res.data?.find((s) => s.status === "live");
+      setLiveSession(active || null);
+    } catch (err) {
+      console.error("Could not fetch active live session:", err);
+    }
+  };
 
   const fetchClassroom = async () => {
     try {
@@ -140,43 +156,78 @@ function ClassroomDetails() {
     try {
       setStartingSession(true);
 
+      // Check if there is already an active live session running
+      const res = await getSessionsByClassroom(classroom._id);
+      const existingLive = res.data?.find((s) => s.status === "live");
+
+      if (existingLive) {
+        setLiveSession(existingLive);
+        toast.success("Rejoining ongoing live session...");
+        navigate(`/live/${existingLive._id}`);
+        return;
+      }
+
       const createRes = await createSession({
         classroom: classroom._id,
-        title: `${classroom.subject} Live Session`,
+        title: sessionTitleInput.trim() || `${classroom.subject} Live Session`,
         description: `Live class for ${classroom.name}`,
         startTime: new Date(),
       });
 
       const session = createRes.data.session;
 
-      await startSession(session._id);
+      if (!createRes.data.alreadyLive) {
+        await startSession(session._id);
+      }
 
       navigate(`/live/${session._id}`);
     } catch (err) {
       console.error(err);
-
-      alert(err.response?.data?.message || "Unable to start session.");
+      toast.error(err.response?.data?.message || "Unable to start session.");
     } finally {
       setStartingSession(false);
     }
   };
 
-  const handleJoinSession = async () => {
-  try {
-    const res = await getSessionsByClassroom(classroom._id);
-    const liveSession = res.data?.find((s) => s.status === "live");
-
-    if (!liveSession) {
-      alert("No live session running right now.");
+  const handleJoinOrRejoinSession = async () => {
+    if (liveSession) {
+      navigate(`/live/${liveSession._id}`);
       return;
     }
 
-    navigate(`/live/${liveSession._id}`);
-  } catch (err) {
-    console.error(err);
-    alert(err.response?.data?.message || "Unable to join session.");
-  }
-};
+    try {
+      const res = await getSessionsByClassroom(classroom._id);
+      const active = res.data?.find((s) => s.status === "live");
+
+      if (!active) {
+        toast.error("No live session running right now.");
+        return;
+      }
+
+      setLiveSession(active);
+      navigate(`/live/${active._id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Unable to join session.");
+    }
+  };
+
+  const handleEndLiveSessionFromClassroom = async () => {
+    if (!liveSession) return;
+    const confirmEnd = window.confirm(
+      "Are you sure you want to end this live session for all students?"
+    );
+    if (!confirmEnd) return;
+
+    try {
+      await endSession(liveSession._id);
+      setLiveSession(null);
+      toast.success("Live session ended successfully.");
+    } catch (err) {
+      console.error("Failed to end session:", err);
+      toast.error(err.response?.data?.message || "Failed to end session.");
+    }
+  };
 
   const handlePostAnnouncement = () => {
     setAnnouncementTitle("");
@@ -390,12 +441,31 @@ function ClassroomDetails() {
             <div className="class-meta">
               <span className="meta-chip">Room Code : {classroom.code}</span>
               <span className="meta-chip">{students.length} Students</span>
-              <span className="meta-chip active">Active</span>
+              {liveSession ? (
+                <span className="meta-chip bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1.5 border border-emerald-300">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  Live Session Running
+                </span>
+              ) : (
+                <span className="meta-chip active">Active</span>
+              )}
             </div>
           </div>
 
+          {isTeacher && liveSession && (
+            <button
+              className="live-btn bg-emerald-600 hover:bg-emerald-700 shadow-lg flex items-center gap-2"
+              onClick={handleJoinOrRejoinSession}
+            >
+              <Video size={18} />
+              Rejoin Live Session
+            </button>
+          )}
 
-          {isTeacher && (
+          {isTeacher && !liveSession && (
             <button
               className="live-btn"
               onClick={handleStartSession}
@@ -448,11 +518,17 @@ function ClassroomDetails() {
                   <Video size={20} />
                   Today's Live Session
                 </span>
+                {liveSession && (
+                  <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 border border-emerald-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                    Live Now
+                  </span>
+                )}
               </div>
 
               <div className="session-title-row">
-                <h3>{sessionTitle}</h3>
-                {isTeacher && (
+                <h3>{liveSession ? liveSession.title : sessionTitle}</h3>
+                {isTeacher && !liveSession && (
                   <button
                     className="edit-icon-btn"
                     onClick={handleOpenEditSession}
@@ -464,24 +540,53 @@ function ClassroomDetails() {
                 )}
               </div>
 
-              <p>Join today's scheduled live lecture.</p>
+              <p>
+                {liveSession
+                  ? "Students are currently in this session. Rejoin to continue teaching."
+                  : "Join today's scheduled live lecture."}
+              </p>
 
               <div className="session-footer">
                 <div className="session-time">
                   <Clock3 size={16} />
-                  Today • 2:00 PM - 3:00 PM
+                  {liveSession
+                    ? `Started at ${new Date(liveSession.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                    : "Today • 2:00 PM - 3:00 PM"}
                 </div>
 
                 {isStudent && (
-                  <button className="join-btn" onClick={handleJoinSession}>
-                    Join Session
+                  <button className="join-btn" onClick={handleJoinOrRejoinSession}>
+                    {liveSession ? "Join Live Session" : "Join Session"}
                     <ArrowRight size={18} />
                   </button>
                 )}
 
-                {isTeacher && (
-                  <button className="join-btn" onClick={handleStartSession}>
-                    Go Live Now
+                {isTeacher && liveSession && (
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                    <button
+                      className="join-btn bg-emerald-600 hover:bg-emerald-700 font-semibold shadow"
+                      onClick={handleJoinOrRejoinSession}
+                    >
+                      Rejoin Live Session
+                      <ArrowRight size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline text-center"
+                      onClick={handleEndLiveSessionFromClassroom}
+                    >
+                      End session for all students
+                    </button>
+                  </div>
+                )}
+
+                {isTeacher && !liveSession && (
+                  <button
+                    className="join-btn"
+                    onClick={handleStartSession}
+                    disabled={startingSession}
+                  >
+                    {startingSession ? "Starting..." : "Go Live Now"}
                     <ArrowRight size={18} />
                   </button>
                 )}

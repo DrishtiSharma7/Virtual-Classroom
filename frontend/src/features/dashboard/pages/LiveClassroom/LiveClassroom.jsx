@@ -63,6 +63,7 @@ import {
   CameraOff,
   Volume2,
   VolumeOff,
+  AlertTriangle,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
@@ -2295,16 +2296,54 @@ export default function LiveClassroom() {
     );
   };
 
-  const handleEndOrLeave = async () => {
+  const [showHostExitModal, setShowHostExitModal] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (session?.status === "live") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [session?.status]);
+
+  const handleEndOrLeave = () => {
+    if (isHost) {
+      setShowHostExitModal(true);
+    } else {
+      handleLeaveTemporarily();
+    }
+  };
+
+  const handleLeaveTemporarily = () => {
+    try {
+      socketRef.current?.emit("leave-call", { roomId: sessionId });
+      socketRef.current?.emit("leave-room", { roomId: sessionId });
+      localStreamRef.current?.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current?.getTracks().forEach((track) => track.stop());
+    } catch (err) {
+      console.error("Error leaving room:", err);
+    } finally {
+      setShowHostExitModal(false);
+      navigate(
+        session?.classroom?._id
+          ? `/classrooms/${session.classroom._id}`
+          : "/classrooms"
+      );
+    }
+  };
+
+  const handleEndSessionForAll = async () => {
     try {
       setEnding(true);
-      if (isHost) {
-        await endSession(sessionId);
-      }
+      await endSession(sessionId);
     } catch (err) {
-      console.log(err);
+      console.error("Failed to end session:", err);
     } finally {
       setEnding(false);
+      setShowHostExitModal(false);
       navigate(
         session?.classroom?._id
           ? `/classrooms/${session.classroom._id}`
@@ -3507,6 +3546,61 @@ export default function LiveClassroom() {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHostExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center gap-3 text-amber-600 mb-3">
+              <div className="rounded-full bg-amber-100 p-2 text-amber-600">
+                <AlertTriangle size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-800">
+                  Leave or End Session?
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {participants.length > 1
+                    ? `${participants.length - 1} student(s) currently in this session`
+                    : "You are the host of this live session"}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-5 leading-relaxed">
+              If you leave temporarily, students remain in the room and you can rejoin at any time. If you end the session, it will close for everyone.
+            </p>
+
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={handleLeaveTemporarily}
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+              >
+                <LogOut size={16} />
+                Leave Temporarily (Rejoin Later)
+              </button>
+
+              <button
+                type="button"
+                onClick={handleEndSessionForAll}
+                disabled={ending}
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition"
+              >
+                <X size={16} />
+                {ending ? "Ending Session..." : "End Session for Everyone"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowHostExitModal(false)}
+                className="w-full rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+              >
+                Cancel (Stay in Session)
+              </button>
             </div>
           </div>
         </div>

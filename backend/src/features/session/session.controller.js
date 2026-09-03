@@ -20,6 +20,19 @@ exports.createSession = async (req, res) => {
       });
     }
 
+    const activeSession = await Session.findOne({
+      classroom: req.body.classroom,
+      status: "live",
+    });
+
+    if (activeSession) {
+      return res.status(200).json({
+        message: "Active live session already in progress",
+        session: activeSession,
+        alreadyLive: true,
+      });
+    }
+
     const session = await Session.create({
       classroom: req.body.classroom,
 
