@@ -36,11 +36,19 @@ function AttendanceHome() {
   usePageMeta("Attendance");
   const { role, user } = useSelector((state) => state.auth);
   const isStudent = role === "student";
-  const [attendance, setAttendance] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { id: classroomId } = useParams();
+  const cacheKey = `cached_attendance_${isStudent ? "student" : "teacher"}_${classroomId || "all"}`;
+  const [attendance, setAttendance] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(attendance.length === 0);
   const [error, setError] = useState("");
   const [classroomLabel, setClassroomLabel] = useState("");
-  const { id: classroomId } = useParams();
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -139,6 +147,7 @@ function AttendanceHome() {
         }));
 
         setAttendance(normalized);
+        sessionStorage.setItem(cacheKey, JSON.stringify(normalized));
         return;
       }
 
@@ -159,9 +168,12 @@ function AttendanceHome() {
       }));
 
       setAttendance(normalized);
+      sessionStorage.setItem(cacheKey, JSON.stringify(normalized));
     } catch (err) {
       console.error(err);
-      setError("Failed to load attendance. Please try again.");
+      if (attendance.length === 0) {
+        setError("Failed to load attendance. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -171,17 +183,27 @@ function AttendanceHome() {
     fetchAttendance();
   }, [classroomId, isStudent]);
 
-  if (loading) {
+  if (loading && attendance.length === 0) {
     return (
       <div className="attendance-page">
-        <div className="attendance-container">
-          <p role="status">Loading attendance…</p>
+        <div className="attendance-container animate-pulse">
+          <div className="h-10 w-64 bg-gray-200 rounded-xl mb-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="h-24 bg-white rounded-2xl shadow-sm border border-gray-100" />
+            <div className="h-24 bg-white rounded-2xl shadow-sm border border-gray-100" />
+            <div className="h-24 bg-white rounded-2xl shadow-sm border border-gray-100" />
+          </div>
+          <div className="h-64 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+            <div className="h-8 bg-gray-100 rounded-lg w-full" />
+            <div className="h-8 bg-gray-100 rounded-lg w-full" />
+            <div className="h-8 bg-gray-100 rounded-lg w-full" />
+          </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && attendance.length === 0) {
     return (
       <div className="attendance-page">
         <div className="attendance-container">

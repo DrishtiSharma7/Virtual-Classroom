@@ -19,11 +19,18 @@ import { getClassroomQuizzes } from "../../api/quiz.api";
 export default function StudentQuizHome() {
   const navigate = useNavigate();
 
-  const [classrooms, setClassrooms] = useState([]);
-  const [classroomId, setClassroomId] = useState("");
+  const [classrooms, setClassrooms] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_classrooms");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [classroomId, setClassroomId] = useState(() => classrooms[0]?._id || "");
   const [quizzes, setQuizzes] = useState([]);
 
-  const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+  const [loadingClassrooms, setLoadingClassrooms] = useState(classrooms.length === 0);
   const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const [filter, setFilter] = useState("all");
 
@@ -31,10 +38,15 @@ export default function StudentQuizHome() {
     (async () => {
       try {
         const data = await getMyClassrooms();
-        setClassrooms(data);
-        if (data.length > 0) setClassroomId(data[0]._id);
+        if (Array.isArray(data)) {
+          setClassrooms(data);
+          localStorage.setItem("cached_classrooms", JSON.stringify(data));
+          if (!classroomId && data.length > 0) setClassroomId(data[0]._id);
+        }
       } catch {
-        toast.error("Could not load your classrooms.");
+        if (classrooms.length === 0) {
+          toast.error("Could not load your classrooms.");
+        }
       } finally {
         setLoadingClassrooms(false);
       }
@@ -83,7 +95,10 @@ export default function StudentQuizHome() {
         </div>
 
         {loadingClassrooms ? (
-          <p className="loading-text">Loading classrooms...</p>
+          <div className="animate-pulse space-y-3 p-4">
+            <div className="h-10 w-64 bg-gray-200 rounded-xl" />
+            <div className="h-28 w-full bg-gray-100 rounded-2xl" />
+          </div>
         ) : classrooms.length === 0 ? (
           <div className="no-data">
             You haven't joined a classroom yet. Join one to see its quizzes.
@@ -146,7 +161,11 @@ export default function StudentQuizHome() {
             </div>
 
             {loadingQuizzes ? (
-              <p className="loading-text">Loading quizzes...</p>
+              <div className="animate-pulse space-y-3 p-6 bg-white rounded-2xl border border-gray-100">
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+              </div>
             ) : visibleQuizzes.length === 0 ? (
               <div className="no-data">No quizzes here yet.</div>
             ) : (

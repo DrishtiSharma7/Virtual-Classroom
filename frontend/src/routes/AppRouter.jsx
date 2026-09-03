@@ -18,7 +18,7 @@ const LiveClassroom = lazy(() => import("../features/dashboard/pages/LiveClassro
 const QuizHome = lazy(() => import("../features/classroom/pages/QuizHome/QuizHome"));
 const QuizDetail = lazy(() => import("../features/classroom/pages/QuizHome/QuizDetail"));
 const RecordingsHome = lazy(() => import("../features/classroom/pages/RecordingsHome/RecordingsHome"));
-const Dashboard = lazy(() => import("../features/dashboard/Dashboard"));
+import Dashboard from "../features/dashboard/Dashboard";
 const AnalyticsDashboard = lazy(() => import("../features/analytics/pages/AnalyticsDashboard/AnalyticsDashboard"));
 const SettingsPage = lazy(() => import("../features/settings/pages/SettingsPage/SettingsPage"));
 

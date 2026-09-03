@@ -9,11 +9,19 @@ import { createSession, startSession, getSessionsByClassroom } from "../../../au
 import { LayoutDashboard, Users, Video, CircleCheckBig } from "lucide-react";
 import toast from "react-hot-toast";
 
+import DashboardSkeleton from "../../components/DashboardSkeleton";
 import "./TeacherDashboard.css";
 
 const TeacherDashboard = () => {
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_teacher_dashboard");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(!dashboard);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +31,13 @@ const TeacherDashboard = () => {
   const loadDashboard = async () => {
     try {
       const response = await getDashboard();
-      setDashboard(response.data);
+      if (response?.data) {
+        setDashboard(response.data);
+        localStorage.setItem(
+          "cached_teacher_dashboard",
+          JSON.stringify(response.data)
+        );
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -31,8 +45,8 @@ const TeacherDashboard = () => {
     }
   };
 
-  if (loading) {
-    return <div className="dashboard-loading">Loading...</div>;
+  if (loading && !dashboard) {
+    return <DashboardSkeleton />;
   }
 
   const handleStartSession = async () => {

@@ -26,11 +26,21 @@ export default function TeacherRecordingsHome() {
   const [searchParams] = useSearchParams();
   const autoOpenedRef = useRef(false);
 
-  const [classrooms, setClassrooms] = useState([]);
-  const [classroomId, setClassroomId] = useState("");
+  const [classrooms, setClassrooms] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_classrooms");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [classroomId, setClassroomId] = useState(() => {
+    const preselect = searchParams.get("classroomId");
+    return preselect || classrooms[0]?._id || "";
+  });
   const [recordings, setRecordings] = useState([]);
 
-  const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+  const [loadingClassrooms, setLoadingClassrooms] = useState(classrooms.length === 0);
   const [loadingRecordings, setLoadingRecordings] = useState(false);
 
   const [showUpload, setShowUpload] = useState(false);
@@ -48,16 +58,21 @@ export default function TeacherRecordingsHome() {
     (async () => {
       try {
         const data = await getMyClassrooms();
-        setClassrooms(data);
-        const preselect = searchParams.get("classroomId");
-        const match = preselect && data.find((c) => c._id === preselect);
-        if (match) {
-          setClassroomId(match._id);
-        } else if (data.length > 0) {
-          setClassroomId(data[0]._id);
+        if (Array.isArray(data)) {
+          setClassrooms(data);
+          localStorage.setItem("cached_classrooms", JSON.stringify(data));
+          const preselect = searchParams.get("classroomId");
+          const match = preselect && data.find((c) => c._id === preselect);
+          if (match) {
+            setClassroomId(match._id);
+          } else if (!classroomId && data.length > 0) {
+            setClassroomId(data[0]._id);
+          }
         }
       } catch {
-        toast.error("Could not load your classrooms.");
+        if (classrooms.length === 0) {
+          toast.error("Could not load your classrooms.");
+        }
       } finally {
         setLoadingClassrooms(false);
       }
@@ -179,7 +194,10 @@ export default function TeacherRecordingsHome() {
         </div>
 
         {loadingClassrooms ? (
-          <p className="loading-text">Loading classrooms...</p>
+          <div className="animate-pulse space-y-3 p-4">
+            <div className="h-10 w-64 bg-gray-200 rounded-xl" />
+            <div className="h-28 w-full bg-gray-100 rounded-2xl" />
+          </div>
         ) : classrooms.length === 0 ? (
           <div className="no-data">
             You don't have any classrooms yet. Create one to start uploading
@@ -218,7 +236,11 @@ export default function TeacherRecordingsHome() {
             </div>
 
             {loadingRecordings ? (
-              <p className="loading-text">Loading recordings...</p>
+              <div className="animate-pulse space-y-3 p-6 bg-white rounded-2xl border border-gray-100">
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+              </div>
             ) : recordings.length === 0 ? (
               <div className="no-data">
                 No recordings uploaded for this classroom yet.

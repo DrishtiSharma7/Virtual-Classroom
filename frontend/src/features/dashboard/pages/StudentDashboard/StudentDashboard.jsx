@@ -8,11 +8,19 @@ import QuickActions from "../../components/QuickActions/QuickActions";
 
 import { Layers, Goal, CheckSquare } from "lucide-react";
 
+import DashboardSkeleton from "../../components/DashboardSkeleton";
 import "./StudentDashboard.css";
 
 const StudentDashboard = () => {
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_student_dashboard");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(!dashboard);
 
   useEffect(() => {
     loadDashboard();
@@ -21,7 +29,13 @@ const StudentDashboard = () => {
   const loadDashboard = async () => {
     try {
       const response = await getDashboard();
-      setDashboard(response.data);
+      if (response?.data) {
+        setDashboard(response.data);
+        localStorage.setItem(
+          "cached_student_dashboard",
+          JSON.stringify(response.data)
+        );
+      }
     } catch (err) {
       console.log(err);
     } finally {
@@ -29,8 +43,8 @@ const StudentDashboard = () => {
     }
   };
 
-  if (loading) {
-    return <div className="dashboard-loading">Loading...</div>;
+  if (loading && !dashboard) {
+    return <DashboardSkeleton />;
   }
 
   return (

@@ -74,11 +74,11 @@ exports.getMyClassrooms = async (req, res) => {
     if (req.user.role === "teacher") {
       classrooms = await Classroom.find({
         teacher: req.user.id,
-      });
+      }).lean();
     } else {
       classrooms = await Classroom.find({
         students: req.user.id,
-      });
+      }).lean();
     }
     res.json(classrooms);
   } catch (err) {
@@ -92,7 +92,8 @@ exports.getClassroomById = async (req, res) => {
   try {
     const classroom = await Classroom.findById(req.params.id)
       .populate("teacher", "name email")
-      .populate("students", "name email");
+      .populate("students", "name email")
+      .lean();
     if (!classroom) {
       return res.status(404).json({
         message: "Classroom not found",

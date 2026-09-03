@@ -39,4 +39,7 @@ const classroomSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+classroomSchema.index({ teacher: 1 });
+classroomSchema.index({ students: 1 });
+
 module.exports = mongoose.model("Classroom", classroomSchema);

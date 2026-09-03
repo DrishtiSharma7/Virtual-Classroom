@@ -14,8 +14,15 @@ import usePageMeta from "../../../../hooks/usePageMeta";
 
 function ClassroomHome() {
   usePageMeta("My Classrooms");
-  const [classrooms, setClassrooms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [classrooms, setClassrooms] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_classrooms");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(classrooms.length === 0);
   const [error, setError] = useState("");
 
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -29,10 +36,15 @@ function ClassroomHome() {
   const fetchClassrooms = async () => {
     try {
       const data = await getMyClassrooms();
-      setClassrooms(data);
+      if (Array.isArray(data)) {
+        setClassrooms(data);
+        localStorage.setItem("cached_classrooms", JSON.stringify(data));
+      }
     } catch (err) {
       console.error(err);
-      setError("Failed to load classrooms");
+      if (classrooms.length === 0) {
+        setError("Failed to load classrooms");
+      }
     } finally {
       setLoading(false);
     }
@@ -46,18 +58,47 @@ function ClassroomHome() {
 
     try {
       await deleteClassroom(id);
-      setClassrooms((prev) => prev.filter((room) => room._id !== id));
+      const updated = classrooms.filter((room) => room._id !== id);
+      setClassrooms(updated);
+      localStorage.setItem("cached_classrooms", JSON.stringify(updated));
       alert("Classroom deleted successfully");
     } catch (error) {
       console.error(error);
     }
   };
 
-  if (loading) {
-    return <div className="classroom-loading">Loading...</div>;
+  if (loading && classrooms.length === 0) {
+    return (
+      <div className="classroom-page">
+        <div className="classroom-container">
+          <div className="classroom-header">
+            <div>
+              <h1 className="classroom-title">My Classrooms</h1>
+              <p className="classroom-subtitle">
+                {isTeacher
+                  ? "Manage all your classrooms from one place."
+                  : "Access all your enrolled classes."}
+              </p>
+            </div>
+          </div>
+          <div className="classroom-grid">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="animate-pulse bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4"
+              >
+                <div className="h-6 w-3/4 rounded bg-gray-200" />
+                <div className="h-4 w-1/2 rounded bg-gray-100" />
+                <div className="h-10 w-full rounded-xl bg-gray-100" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (error) {
+  if (error && classrooms.length === 0) {
     return <div className="classroom-error">{error}</div>;
   }
 

@@ -41,9 +41,16 @@ import StatCard from "../../../dashboard/components/StatCard/StatCard";
 function ClassroomDetails() {
   const { classroomId } = useParams();
 
-  const [classroom, setClassroom] = useState(null);
+  const [classroom, setClassroom] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem(`cached_classroom_${classroomId}`);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   usePageMeta(classroom?.name || "Classroom");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!classroom);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -111,9 +118,15 @@ function ClassroomDetails() {
     try {
       const data = await getClassroomById(classroomId);
       setClassroom(data);
+      sessionStorage.setItem(
+        `cached_classroom_${classroomId}`,
+        JSON.stringify(data)
+      );
     } catch (err) {
       console.error(err);
-      setError("Unable to load classroom.");
+      if (!classroom) {
+        setError("Unable to load classroom.");
+      }
     } finally {
       setLoading(false);
     }
@@ -140,11 +153,21 @@ function ClassroomDetails() {
     }
   };
 
-  if (loading) {
-    return <div className="classroom-loading">Loading...</div>;
+  if (loading && !classroom) {
+    return (
+      <div className="classroom-detail-page p-6 max-w-7xl mx-auto animate-pulse">
+        <div className="h-44 w-full rounded-2xl bg-white p-6 shadow-sm border border-gray-100 mb-6 space-y-4">
+          <div className="h-7 w-64 rounded bg-gray-200" />
+          <div className="h-4 w-40 rounded bg-gray-100" />
+          <div className="h-10 w-48 rounded-xl bg-gray-200" />
+        </div>
+        <div className="h-12 w-full rounded-xl bg-gray-100 mb-6" />
+        <div className="h-64 w-full rounded-2xl bg-white p-6 shadow-sm border border-gray-100" />
+      </div>
+    );
   }
 
-  if (error) {
+  if (error && !classroom) {
     return <div className="classroom-error">{error}</div>;
   }
 

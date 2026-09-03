@@ -5,16 +5,22 @@ import StudentQuizHome from "./StudentQuizHome";
 import usePageMeta from "../../../../hooks/usePageMeta";
 
 export default function QuizHome() {
-  const { role } = useSelector((state) => state.auth);
+  const { role, user } = useSelector((state) => state.auth);
   usePageMeta("Quizzes");
 
-  if (!role) {
+  const currentRole =
+    role ||
+    localStorage.getItem("role") ||
+    user?.role ||
+    JSON.parse(localStorage.getItem("user") || "null")?.role;
+
+  if (!currentRole) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <h2 className="flex justify-center items-center min-h-screen">Loading...</h2>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#5b5fef] border-t-transparent" />
       </div>
     );
   }
 
-  return role === "teacher" ? <TeacherQuizHome /> : <StudentQuizHome />;
+  return currentRole === "teacher" ? <TeacherQuizHome /> : <StudentQuizHome />;
 }
