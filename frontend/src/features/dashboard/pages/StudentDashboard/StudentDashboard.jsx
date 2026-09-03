@@ -30,7 +30,7 @@ const StudentDashboard = () => {
   };
 
   if (loading) {
-    return <h2>Loading...</h2>;
+    return <div className="dashboard-loading">Loading...</div>;
   }
 
   return (

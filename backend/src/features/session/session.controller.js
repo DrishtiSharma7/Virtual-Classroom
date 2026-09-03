@@ -92,6 +92,17 @@ exports.getSessionById = async (req, res) => {
       });
     }
 
+    if (
+      session.kickedStudents?.some(
+        (s) => s.toString() === req.user.id || s.equals?.(req.user.id),
+      )
+    ) {
+      return res.status(403).json({
+        message:
+          "You have been removed from this session by the host and cannot rejoin.",
+      });
+    }
+
     res.json(session);
   } catch (err) {
     res.status(500).json({

@@ -29,3 +29,7 @@
 .activity-list li {
   @apply flex items-start before:content-['•'] before:mr-2 before:text-gray-400;
 }
+
+.dashboard-loading {
+  @apply flex justify-center items-center min-h-screen;
+}

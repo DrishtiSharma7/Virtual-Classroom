@@ -1,3 +1,7 @@
+jest.mock("../session/session.model", () => ({
+  findByIdAndUpdate: jest.fn().mockResolvedValue({}),
+}));
+
 const registerWebRTCEvents = require("./webrtc.socket");
 const registry = require("../../sockets/roomRegistry");
 

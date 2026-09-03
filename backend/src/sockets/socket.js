@@ -26,6 +26,14 @@ module.exports = (io) => {
       if (socket.rooms.has(roomId))
         return;
 
+      if (registry.isKicked(roomId, socket.user?.id)) {
+        socket.emit("session-error", {
+          message:
+            "You have been removed from this session by the host and cannot rejoin.",
+        });
+        return;
+      }
+
       let isHost = false;
       let session;
       let classroom;

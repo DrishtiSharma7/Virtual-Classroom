@@ -17,6 +17,17 @@ async function getAuthorizedSession(sessionId, user) {
     throw new SessionAccessError("Session not found", 404);
   }
 
+  if (
+    session.kickedStudents?.some(
+      (s) => s.toString() === user.id || s.equals?.(user.id),
+    )
+  ) {
+    throw new SessionAccessError(
+      "You have been removed from this session by the host and cannot rejoin.",
+      403,
+    );
+  }
+
   const classroom = session.classroom;
   const isHost = classroom.teacher.toString() === user.id;
   const isMember =

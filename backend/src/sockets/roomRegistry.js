@@ -5,6 +5,7 @@ const redoStacks = new Map();
 const activePages = new Map();
 const screenSharing = new Map();
 const screenStreamIds = new Map();
+const kickedParticipants = new Map();
 
 function getRoom(roomId) {
   if (!rooms.has(roomId)) {
@@ -201,6 +202,19 @@ function clearRedo(roomId, pageId) {
   redoStacks.delete(redoKey(roomId, pageId));
 }
 
+function kickParticipant(roomId, userId) {
+  if (!roomId || !userId) return;
+  if (!kickedParticipants.has(roomId)) {
+    kickedParticipants.set(roomId, new Set());
+  }
+  kickedParticipants.get(roomId).add(userId.toString());
+}
+
+function isKicked(roomId, userId) {
+  if (!roomId || !userId) return false;
+  return kickedParticipants.get(roomId)?.has(userId.toString()) === true;
+}
+
 module.exports = {
   addParticipant,
   removeParticipant,
@@ -226,6 +240,8 @@ module.exports = {
   setParticipantMicEnabled,
   setParticipantForceMuted,
   isForceMuted,
+  kickParticipant,
+  isKicked,
   getRedoStack,
   pushRedo,
   popRedo,

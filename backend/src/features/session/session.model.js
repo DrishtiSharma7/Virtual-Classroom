@@ -38,6 +38,13 @@ const sessionSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    kickedStudents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
 
   {

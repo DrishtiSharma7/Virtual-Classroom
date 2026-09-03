@@ -138,7 +138,7 @@ module.exports = (io, socket) => {
     });
   });
 
-  socket.on("kick-student", ({ roomId, targetSocketId }) => {
+  socket.on("kick-student", async ({ roomId, targetSocketId }) => {
     if (!roomId || !targetSocketId) return;
 
     if (!registry.isTeacher(roomId, socket.id)) {
@@ -151,8 +151,20 @@ module.exports = (io, socket) => {
 
     const target = registry.findParticipant(roomId, targetSocketId);
 
+    if (target?.user?.id) {
+      registry.kickParticipant(roomId, target.user.id);
+      try {
+        const Session = require("../session/session.model");
+        await Session.findByIdAndUpdate(roomId, {
+          $addToSet: { kickedStudents: target.user.id },
+        });
+      } catch (err) {
+        console.error("Error persisting kicked student to session:", err.message);
+      }
+    }
+
     io.to(targetSocketId).emit("removed-from-session", {
-      message: "You have been removed from this session by the host.",
+      message: "You have been removed from this session by the host and cannot rejoin.",
     });
 
     registry.removeParticipant(roomId, targetSocketId);
