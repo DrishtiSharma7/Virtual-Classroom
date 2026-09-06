@@ -725,10 +725,11 @@ function ClassroomDetails() {
 
 
 
-            <div className="section-card">
+            {/* Section: Announcements */}
+            <div className="section-card announcements-card">
               <div className="section-title">
                 <span className="section-title-left">
-                  <Megaphone size={20} />
+                  <Megaphone size={19} />
                   Announcements
                 </span>
                 {isTeacher && (
@@ -738,62 +739,71 @@ function ClassroomDetails() {
                     data-tooltip="Post new"
                     title="Post Announcement"
                   >
-                    <Plus size={18} />
+                    <Plus size={16} />
                     New
                   </button>
                 )}
               </div>
 
-              {announcements.length === 0 ? (
-                <p className="empty-text">No announcements available.</p>
-              ) : (
-                announcements.map((item) => (
-                  <div key={item._id} className="announcement-item">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 mt-0.5">
-                          <Megaphone size={16} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4>{item.title}</h4>
-                          {item.description && <p>{item.description}</p>}
-                        </div>
-                      </div>
-                      {isTeacher && (
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            className="edit-icon-btn"
-                            onClick={() => handleOpenEditAnnouncement(item)}
-                            data-tooltip="Edit Announcement"
-                            title="Edit announcement"
-                            aria-label="Edit announcement"
-                          >
-                            <Pencil size={15} />
-                          </button>
-                          <button
-                            className="edit-icon-btn text-red-400 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => handleDeleteAnnouncement(item._id)}
-                            disabled={deletingAnnouncementId === item._id}
-                            data-tooltip="Permanently delete"
-                            title="Delete announcement"
-                            aria-label="Delete announcement"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
+              <div className="announcements-list">
+                {announcements.length === 0 ? (
+                  <div className="empty-box">
+                    <p className="empty-text">No announcements available.</p>
                   </div>
-                ))
-              )}
+                ) : (
+                  announcements.map((item) => (
+                    <div key={item._id} className="announcement-item py-2 shrink-0">
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 mt-0.5">
+                            <Megaphone size={15} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-sm font-semibold text-slate-800 truncate" title={item.title}>
+                              {item.title}
+                            </h4>
+                            {item.description && (
+                              <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {isTeacher && (
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <button
+                              className="edit-icon-btn p-1"
+                              onClick={() => handleOpenEditAnnouncement(item)}
+                              data-tooltip="Edit Announcement"
+                              title="Edit announcement"
+                              aria-label="Edit announcement"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              className="edit-icon-btn p-1 text-red-400 hover:text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteAnnouncement(item._id)}
+                              disabled={deletingAnnouncementId === item._id}
+                              data-tooltip="Permanently delete"
+                              title="Delete announcement"
+                              aria-label="Delete announcement"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
-
-
-            <div className="section-card">
+            {/* Section: Recordings */}
+            <div className="section-card recordings-card">
               <div className="section-title">
                 <span className="section-title-left">
-                  <PlayCircle size={20} />
+                  <PlayCircle size={19} />
                   Recordings
                 </span>
                 {isTeacher && (
@@ -803,75 +813,81 @@ function ClassroomDetails() {
                     data-tooltip="Upload recorded"
                     title="Upload Recording"
                   >
-                    <UploadCloud size={16} />
+                    <UploadCloud size={15} />
                     Upload
                   </button>
                 )}
               </div>
 
-              {loadingRecordings ? (
-                <p className="empty-text">Loading recordings...</p>
-              ) : recordings.length === 0 ? (
-                <p className="empty-text">No recordings found.</p>
-              ) : (
-                recordings.map((video) => (
-                  <div
-                    key={video._id}
-                    className="recording-row flex items-center justify-between gap-3"
-                  >
-                    <div
-                      className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-                      onClick={() => setWatchingRecording(video)}
-                      title="Click to watch recording"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
-                        <Play size={16} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-semibold text-slate-800 truncate hover:text-indigo-600 transition-colors">
-                          {video.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 truncate">
-                          {video.description || "Recorded Lecture"} •{" "}
-                          {new Date(video.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        className="watch-btn"
-                        onClick={() => setWatchingRecording(video)}
-                        data-tooltip="Watch Recording"
-                        title="Watch Recording"
-                      >
-                        Watch
-                      </button>
-                      {isTeacher && (
-                        <button
-                          className="edit-icon-btn text-red-400 hover:text-red-600 hover:bg-red-50"
-                          onClick={() =>
-                            handleDeleteRecording(video._id, video.title)
-                          }
-                          disabled={deletingRecordingId === video._id}
-                          data-tooltip="Delete recorded"
-                          title="Delete recording"
-                          aria-label="Delete recording"
-                        >
-                          {deletingRecordingId === video._id ? (
-                            <Loader2
-                              size={15}
-                              className="animate-spin text-red-600"
-                            />
-                          ) : (
-                            <Trash2 size={15} />
-                          )}
-                        </button>
-                      )}
-                    </div>
+              <div className="recordings-list">
+                {loadingRecordings ? (
+                  <div className="empty-box">
+                    <p className="empty-text">Loading recordings...</p>
                   </div>
-                ))
-              )}
+                ) : recordings.length === 0 ? (
+                  <div className="empty-box">
+                    <p className="empty-text">No recordings found.</p>
+                  </div>
+                ) : (
+                  recordings.map((video) => (
+                    <div
+                      key={video._id}
+                      className="recording-row flex items-center justify-between gap-2.5 py-2 shrink-0"
+                    >
+                      <div
+                        className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
+                        onClick={() => setWatchingRecording(video)}
+                        title="Click to watch recording"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
+                          <Play size={14} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-semibold text-slate-800 truncate hover:text-indigo-600 transition-colors" title={video.title}>
+                            {video.title}
+                          </h4>
+                          <p className="text-[11px] text-gray-500 truncate">
+                            {video.description || "Recorded Lecture"} •{" "}
+                            {new Date(video.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          className="watch-btn text-xs px-2.5 py-1"
+                          onClick={() => setWatchingRecording(video)}
+                          data-tooltip="Watch Recording"
+                          title="Watch Recording"
+                        >
+                          Watch
+                        </button>
+                        {isTeacher && (
+                          <button
+                            className="edit-icon-btn p-1 text-red-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() =>
+                              handleDeleteRecording(video._id, video.title)
+                            }
+                            disabled={deletingRecordingId === video._id}
+                            data-tooltip="Delete recorded"
+                            title="Delete recording"
+                            aria-label="Delete recording"
+                          >
+                            {deletingRecordingId === video._id ? (
+                              <Loader2
+                                size={14}
+                                className="animate-spin text-red-600"
+                              />
+                            ) : (
+                              <Trash2 size={14} />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
           </div>

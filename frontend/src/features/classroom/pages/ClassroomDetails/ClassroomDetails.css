@@ -58,6 +58,19 @@
   @apply bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5;
 }
 
+.announcements-card,
+.recordings-card {
+  height: 240px;
+  min-height: 240px;
+  max-height: 240px;
+  @apply flex flex-col overflow-hidden;
+}
+
+.announcements-card .section-title,
+.recordings-card .section-title {
+  @apply mb-2.5 sm:mb-3 shrink-0;
+}
+
 .section-title {
   @apply flex items-center justify-between gap-2 text-sm sm:text-base font-bold text-slate-800 mb-3 sm:mb-4;
 }
@@ -126,9 +139,41 @@
   @apply inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-colors;
 }
 
+.announcements-list,
+.recordings-list {
+  @apply divide-y divide-gray-100 overflow-y-auto pr-1 flex-1 min-h-0 flex flex-col;
+}
+
+.empty-box {
+  @apply flex-1 h-full min-h-[120px] flex items-center justify-center py-4 text-center;
+}
+
+.empty-box .empty-text {
+  @apply py-0 text-xs text-gray-400;
+}
+
 .students-list {
   @apply divide-y divide-gray-100 overflow-y-auto pr-1;
-  max-height: 420px;
+  max-height: 505px;
+}
+
+.announcements-list::-webkit-scrollbar,
+.recordings-list::-webkit-scrollbar,
+.students-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.announcements-list::-webkit-scrollbar-track,
+.recordings-list::-webkit-scrollbar-track,
+.students-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.announcements-list::-webkit-scrollbar-thumb,
+.recordings-list::-webkit-scrollbar-thumb,
+.students-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .student-row {
