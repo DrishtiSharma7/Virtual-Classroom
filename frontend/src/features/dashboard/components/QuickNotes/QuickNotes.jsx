@@ -61,9 +61,23 @@ const QuickNotes = () => {
     try {
       setLoading(true);
       const data = await getNotes();
-      setNotes(sortNotes(data));
+      const sorted = sortNotes(data);
+      setNotes(sorted);
+      try {
+        localStorage.setItem("cached_quick_notes", JSON.stringify(sorted));
+      } catch {}
     } catch (err) {
-      console.error("Failed to load notes:", err);
+      if (err.response?.status === 404) {
+        // Backend /api/notes endpoint not yet deployed/restarted; load from localStorage fallback
+        try {
+          const cached = localStorage.getItem("cached_quick_notes");
+          if (cached) {
+            setNotes(JSON.parse(cached));
+          }
+        } catch {}
+      } else {
+        console.error("Failed to load notes:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -76,12 +90,33 @@ const QuickNotes = () => {
 
     try {
       setSubmitting(true);
-      const newNote = await createNote({
-        text: trimmed,
-        isImportant: isImportantNew,
-      });
+      let newNote;
+      try {
+        newNote = await createNote({
+          text: trimmed,
+          isImportant: isImportantNew,
+        });
+      } catch (err) {
+        if (err.response?.status === 404) {
+          newNote = {
+            _id: "local_" + Date.now(),
+            text: trimmed,
+            isImportant: isImportantNew,
+            isCompleted: false,
+            createdAt: new Date().toISOString(),
+          };
+        } else {
+          throw err;
+        }
+      }
 
-      setNotes((prev) => sortNotes([newNote, ...prev]));
+      setNotes((prev) => {
+        const updated = sortNotes([newNote, ...prev]);
+        try {
+          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
       setInputText("");
       setIsImportantNew(false);
       toast.success("Note saved!");
@@ -98,15 +133,23 @@ const QuickNotes = () => {
       setActiveDropdownId(null);
       const nextImportant = !note.isImportant;
 
-      setNotes((prev) =>
-        sortNotes(
+      setNotes((prev) => {
+        const updated = sortNotes(
           prev.map((n) =>
             n._id === note._id ? { ...n, isImportant: nextImportant } : n
           )
-        )
-      );
+        );
+        try {
+          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
 
-      await updateNote(note._id, { isImportant: nextImportant });
+      try {
+        await updateNote(note._id, { isImportant: nextImportant });
+      } catch (err) {
+        if (err.response?.status !== 404) throw err;
+      }
       toast.success(
         nextImportant ? "Marked as Important ⭐" : "Unmarked as Important"
       );
@@ -121,13 +164,21 @@ const QuickNotes = () => {
     try {
       const nextCompleted = !note.isCompleted;
 
-      setNotes((prev) =>
-        prev.map((n) =>
+      setNotes((prev) => {
+        const updated = prev.map((n) =>
           n._id === note._id ? { ...n, isCompleted: nextCompleted } : n
-        )
-      );
+        );
+        try {
+          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
 
-      await updateNote(note._id, { isCompleted: nextCompleted });
+      try {
+        await updateNote(note._id, { isCompleted: nextCompleted });
+      } catch (err) {
+        if (err.response?.status !== 404) throw err;
+      }
     } catch (err) {
       console.error("Error toggling completed:", err);
       loadNotes();
@@ -153,12 +204,20 @@ const QuickNotes = () => {
     }
 
     try {
-      setNotes((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, text: trimmed } : n))
-      );
+      setNotes((prev) => {
+        const updated = prev.map((n) => (n._id === id ? { ...n, text: trimmed } : n));
+        try {
+          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
       setEditingId(null);
 
-      await updateNote(id, { text: trimmed });
+      try {
+        await updateNote(id, { text: trimmed });
+      } catch (err) {
+        if (err.response?.status !== 404) throw err;
+      }
       toast.success("Note updated");
     } catch (err) {
       console.error("Error updating note:", err);
@@ -170,8 +229,18 @@ const QuickNotes = () => {
   const handleDelete = async (id) => {
     try {
       setActiveDropdownId(null);
-      setNotes((prev) => prev.filter((n) => n._id !== id));
-      await deleteNote(id);
+      setNotes((prev) => {
+        const updated = prev.filter((n) => n._id !== id);
+        try {
+          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+      try {
+        await deleteNote(id);
+      } catch (err) {
+        if (err.response?.status !== 404) throw err;
+      }
       toast.success("Note removed");
     } catch (err) {
       console.error("Error deleting note:", err);

@@ -9,18 +9,36 @@ import RegisterPage from "../features/auth/pages/RegisterPage";
 import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
 import LandingPage from "../features/marketing/pages/LandingPage/LandingPage";
 
-const ClassroomHome = lazy(() => import("../features/classroom/pages/ClassroomHome/ClassroomHome"));
-const ClassroomDetails = lazy(() => import("../features/classroom/pages/ClassroomDetails/ClassroomDetails"));
-const CreateClassroom = lazy(() => import("../features/classroom/pages/CreateClassroom/CreateClassroom"));
-const JoinClassroom = lazy(() => import("../features/classroom/pages/JoinClassroom/JoinClassroom"));
-const AttendanceHome = lazy(() => import("../features/classroom/pages/AttendanceHome/AttendanceHome"));
-const LiveClassroom = lazy(() => import("../features/dashboard/pages/LiveClassroom/LiveClassroom"));
-const QuizHome = lazy(() => import("../features/classroom/pages/QuizHome/QuizHome"));
-const QuizDetail = lazy(() => import("../features/classroom/pages/QuizHome/QuizDetail"));
-const RecordingsHome = lazy(() => import("../features/classroom/pages/RecordingsHome/RecordingsHome"));
+function lazyWithRetry(componentImport) {
+  return lazy(async () => {
+    try {
+      const mod = await componentImport();
+      sessionStorage.removeItem("chunk_retry_" + window.location.pathname);
+      return mod;
+    } catch (error) {
+      const hasRetried = sessionStorage.getItem("chunk_retry_" + window.location.pathname);
+      if (!hasRetried) {
+        sessionStorage.setItem("chunk_retry_" + window.location.pathname, "true");
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw error;
+    }
+  });
+}
+
+const ClassroomHome = lazyWithRetry(() => import("../features/classroom/pages/ClassroomHome/ClassroomHome"));
+const ClassroomDetails = lazyWithRetry(() => import("../features/classroom/pages/ClassroomDetails/ClassroomDetails"));
+const CreateClassroom = lazyWithRetry(() => import("../features/classroom/pages/CreateClassroom/CreateClassroom"));
+const JoinClassroom = lazyWithRetry(() => import("../features/classroom/pages/JoinClassroom/JoinClassroom"));
+const AttendanceHome = lazyWithRetry(() => import("../features/classroom/pages/AttendanceHome/AttendanceHome"));
+const LiveClassroom = lazyWithRetry(() => import("../features/dashboard/pages/LiveClassroom/LiveClassroom"));
+const QuizHome = lazyWithRetry(() => import("../features/classroom/pages/QuizHome/QuizHome"));
+const QuizDetail = lazyWithRetry(() => import("../features/classroom/pages/QuizHome/QuizDetail"));
+const RecordingsHome = lazyWithRetry(() => import("../features/classroom/pages/RecordingsHome/RecordingsHome"));
 import Dashboard from "../features/dashboard/Dashboard";
-const AnalyticsDashboard = lazy(() => import("../features/analytics/pages/AnalyticsDashboard/AnalyticsDashboard"));
-const SettingsPage = lazy(() => import("../features/settings/pages/SettingsPage/SettingsPage"));
+const AnalyticsDashboard = lazyWithRetry(() => import("../features/analytics/pages/AnalyticsDashboard/AnalyticsDashboard"));
+const SettingsPage = lazyWithRetry(() => import("../features/settings/pages/SettingsPage/SettingsPage"));
 
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";

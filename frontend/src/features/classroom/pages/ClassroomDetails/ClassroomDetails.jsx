@@ -101,16 +101,16 @@ function ClassroomDetails() {
 
   const [attendancePercentage, setAttendancePercentage] = useState(null);
 
-  useEffect(() => {
-    fetchClassroom();
-    fetchAnnouncements();
-    fetchRecordings();
-    fetchLiveSession();
-    fetchAttendance();
-
-    const interval = setInterval(fetchLiveSession, 8000);
-    return () => clearInterval(interval);
-  }, [classroomId]);
+  const userColorMap = useMemo(() => {
+    const participants = [];
+    if (classroom?.teacher) {
+      participants.push(classroom.teacher);
+    }
+    if (Array.isArray(classroom?.students)) {
+      participants.push(...classroom.students);
+    }
+    return buildUserColorMap(participants);
+  }, [classroom]);
 
   const fetchAttendance = async () => {
     try {
@@ -198,6 +198,17 @@ function ClassroomDetails() {
       setLoadingRecordings(false);
     }
   };
+
+  useEffect(() => {
+    fetchClassroom();
+    fetchAnnouncements();
+    fetchRecordings();
+    fetchLiveSession();
+    fetchAttendance();
+
+    const interval = setInterval(fetchLiveSession, 8000);
+    return () => clearInterval(interval);
+  }, [classroomId]);
 
   if (loading && !classroom) {
     return (
@@ -490,17 +501,6 @@ function ClassroomDetails() {
   const sessionTitle = classroom.sessionTitle?.trim()
     ? classroom.sessionTitle
     : `${classroom.subject} Live Session`;
-
-  const userColorMap = useMemo(() => {
-    const participants = [];
-    if (classroom?.teacher) {
-      participants.push(classroom.teacher);
-    }
-    if (Array.isArray(classroom?.students)) {
-      participants.push(...classroom.students);
-    }
-    return buildUserColorMap(participants);
-  }, [classroom?.teacher, classroom?.students]);
 
   const teacherKey = String(
     classroom?.teacher?._id ||

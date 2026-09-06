@@ -16,15 +16,12 @@ import useAuth from "../../../auth/hooks/useAuth";
 import "./Sidebar.css";
 
 const prefetchRoutes = () => {
-  try {
-    import("../../../classroom/pages/ClassroomHome/ClassroomHome");
-    import("../../../classroom/pages/AttendanceHome/AttendanceHome");
-    import("../../../classroom/pages/QuizHome/QuizHome");
-    import("../../../classroom/pages/RecordingsHome/RecordingsHome");
-    import("../../../analytics/pages/AnalyticsDashboard/AnalyticsDashboard");
-    import("../../../settings/pages/SettingsPage/SettingsPage");
-  } catch {
-  }
+  import("../../../classroom/pages/ClassroomHome/ClassroomHome").catch(() => {});
+  import("../../../classroom/pages/AttendanceHome/AttendanceHome").catch(() => {});
+  import("../../../classroom/pages/QuizHome/QuizHome").catch(() => {});
+  import("../../../classroom/pages/RecordingsHome/RecordingsHome").catch(() => {});
+  import("../../../analytics/pages/AnalyticsDashboard/AnalyticsDashboard").catch(() => {});
+  import("../../../settings/pages/SettingsPage/SettingsPage").catch(() => {});
 };
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -53,11 +50,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     navigate("/login", { replace: true });
   };
 
-  const handleNavClick = (e, path) => {
-    e.preventDefault();
-    if (location.pathname !== path) {
-      navigate(path);
-    }
+  const handleNavClick = () => {
     setSidebarOpen(false);
   };
 
@@ -120,7 +113,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           <NavLink
             key={index}
             to={item.path}
-            onClick={(e) => handleNavClick(e, item.path)}
+            onClick={handleNavClick}
             onPointerEnter={prefetchRoutes}
             onTouchStart={prefetchRoutes}
             className={({ isActive }) =>
