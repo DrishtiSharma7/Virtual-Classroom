@@ -1,9 +1,13 @@
 import React from "react";
+import { GraduationCap } from "lucide-react";
 import "./WelcomeBanner.css";
 
 const WelcomeBanner = ({ name, role }) => {
   return (
     <div className="banner-container">
+      {/* Subtle background watermark */}
+      <GraduationCap className="banner-watermark" aria-hidden="true" />
+
       <div className="banner-content">
         <h2 className="banner-heading">Welcome back, {name || "User"}! 👋</h2>
 
@@ -13,8 +17,11 @@ const WelcomeBanner = ({ name, role }) => {
             : "Continue learning, join your classes, and track your progress."}
         </p>
       </div>
-      <div className="banner-illustration">
-        <span className="text-7xl opacity-80">🎓</span>
+
+      <div className="banner-illustration" aria-hidden="true">
+        <div className="banner-cap-card">
+          <GraduationCap className="banner-cap-icon" strokeWidth={1.75} />
+        </div>
       </div>
     </div>
   );

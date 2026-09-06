@@ -28,7 +28,7 @@ export function SettingsRow({ label, description, children }) {
           {label}
         </p>
         {description && (
-          <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{description}</p>
         )}
       </div>
       <div className="flex-shrink-0">{children}</div>

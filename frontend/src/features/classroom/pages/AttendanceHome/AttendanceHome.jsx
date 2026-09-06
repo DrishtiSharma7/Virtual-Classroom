@@ -53,7 +53,7 @@ function AttendanceHome() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const rowsPerPage = isStudent ? 6 : 8;
+  const rowsPerPage = 10;
 
   const filteredData = useMemo(() => {
     const q = search.toLowerCase();
@@ -221,7 +221,7 @@ function AttendanceHome() {
         <div className="attendance-container">
           <div className="attendance-header">
             <div>
-              <h1 className="attendance-title">
+              <h1 className="attendance-title hidden lg:flex">
                 <CalendarCheck className="text-indigo-600" size={26} />
                 My Attendance
               </h1>
@@ -320,8 +320,8 @@ function AttendanceHome() {
                   paginatedData.map((row) => (
                     <tr key={row.key} className="table-row">
                       <td className="table-cell">
-                        <p className="student-name">{row.classroomName}</p>
-                        <p>{row.sessionTitle}</p>
+                        <p className="student-name leading-tight">{row.classroomName}</p>
+                        <p className="text-xs text-slate-500 leading-tight">{row.sessionTitle}</p>
                       </td>
                       <td className="table-cell">
                         {row.sessionDate
@@ -416,7 +416,7 @@ function AttendanceHome() {
 
         <div className="attendance-header">
           <div>
-            <h1 className="attendance-title">
+            <h1 className="attendance-title hidden lg:flex">
               <CalendarCheck className="text-indigo-600" size={26} />
               Attendance Dashboard
             </h1>
@@ -525,7 +525,7 @@ function AttendanceHome() {
                   <tr key={student.key} className="table-row">
                     <td className="table-cell">
                       <div>
-                        <p className="student-name">{student.name}</p>
+                        <p className="student-name leading-tight">{student.name}</p>
                       </div>
                     </td>
                     <td className="table-cell">{student.email}</td>
@@ -547,7 +547,7 @@ function AttendanceHome() {
                           title="Delete record"
                           aria-label={`Delete ${student.name}'s attendance record`}
                         >
-                          <Trash2 size={18} className="delete-icon" />
+                          <Trash2 size={16} className="delete-icon" />
                         </button>
                       </div>
                     </td>

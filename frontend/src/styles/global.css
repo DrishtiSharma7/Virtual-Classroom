@@ -14,8 +14,17 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    min-height: 100%;
+  }
+
   body {
     font-family: "Inter", "Poppins", sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    background-color: #f4f3f3;
+    min-height: 100%;
   }
 }

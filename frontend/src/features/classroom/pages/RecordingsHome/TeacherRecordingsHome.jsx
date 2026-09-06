@@ -173,7 +173,7 @@ export default function TeacherRecordingsHome() {
       <div className="recordings-container">
         <div className="recordings-header">
           <div>
-            <h1 className="recordings-title">
+            <h1 className="recordings-title hidden lg:flex">
               <Video className="text-indigo-600" size={26} />
               Recordings
             </h1>

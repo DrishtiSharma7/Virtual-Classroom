@@ -62,7 +62,7 @@ const AttendanceSection = ({ classroomId, from, to, onSelectStudent }) => {
       from,
       to,
       page,
-      limit: 8,
+      limit: 10,
       sort,
       order,
       search: debouncedSearch,

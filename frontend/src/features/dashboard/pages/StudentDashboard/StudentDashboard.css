@@ -1,33 +1,13 @@
-.dashboard-layout {
-  @apply min-h-screen bg-[#f4f3f3] flex;
-}
-
-.dashboard-main-content {
-  @apply flex-1 pl-64 flex flex-col;
-}
-
 .student-dashboard-viewport {
-  @apply p-8 pt-0 pb-4 flex-1 space-y-6 max-w-7xl w-full mx-auto;
+  @apply w-full flex-1 px-0 py-0 pb-0 lg:pb-3 lg:px-8 lg:pt-0 space-y-3 sm:space-y-4 max-w-7xl mx-auto;
 }
 
 .student-stats-grid {
-  @apply grid grid-cols-1 lg:grid-cols-3 gap-4;
+  @apply grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4;
 }
 
 .dashboard-split-section {
-  @apply flex flex-col lg:flex-row gap-4;
-}
-
-.student-activity-card {
-  @apply bg-white p-6 rounded-2xl border border-gray-100 shadow-md w-full lg:w-80;
-}
-
-.activity-list {
-  @apply space-y-4 text-sm text-gray-700 font-medium;
-}
-
-.activity-list li {
-  @apply flex items-start before:content-['•'] before:mr-2 before:text-gray-400;
+  @apply flex flex-col lg:flex-row gap-3 sm:gap-4 mb-0 lg:mb-2;
 }
 
 .dashboard-loading {

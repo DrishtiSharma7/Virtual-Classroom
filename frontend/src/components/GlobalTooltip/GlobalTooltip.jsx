@@ -386,6 +386,8 @@ const GlobalTooltip = () => {
     };
 
     const handlePointerOver = (e) => {
+      // Touch devices should not trigger hover tooltips to avoid click interference
+      if (e.pointerType === "touch") return;
       const targetBtn = e.target.closest(
         'button, [data-tooltip], [role="button"]'
       );
@@ -404,6 +406,8 @@ const GlobalTooltip = () => {
     };
 
     const handleFocusIn = (e) => {
+      // Don't show tooltip on touch focus
+      if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return;
       const targetBtn = e.target.closest(
         'button, [data-tooltip], [role="button"]'
       );

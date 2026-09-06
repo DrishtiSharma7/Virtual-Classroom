@@ -43,7 +43,7 @@ const StudentAnalyticsView = () => {
       <div className="analytics-container">
         <header className="analytics-header">
           <div>
-            <h1 className="analytics-title">
+            <h1 className="analytics-title hidden lg:flex">
               <ChartColumn className="analytics-title-icon" size={26} />
               My Analytics
             </h1>

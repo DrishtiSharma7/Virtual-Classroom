@@ -26,11 +26,10 @@ const TopNavbar = ({ setSidebarOpen }) => {
     <header className="navbar-container">
       <div className="navbar-left">
         <button
-          className="navbar-menu-btn"
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Open menu"
-          data-tooltip="Open navigation"
-          title="Open navigation menu"
+          type="button"
+          className="navbar-menu-btn cursor-pointer"
+          onClick={() => setSidebarOpen((prev) => !prev)}
+          aria-label="Toggle navigation menu"
         >
           <Menu size={24} />
         </button>

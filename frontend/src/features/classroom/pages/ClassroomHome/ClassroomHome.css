@@ -1,5 +1,5 @@
 .classroom-page {
-  @apply min-h-screen bg-[#f4f3f3] p-8 pt-0;
+  @apply min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4;
 }
 
 .classroom-container {
@@ -7,27 +7,27 @@
 }
 
 .classroom-header {
-  @apply flex justify-between items-center mb-8;
+  @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2.5 sm:mb-3;
 }
 
 .classroom-title {
-  @apply text-2xl font-bold text-slate-800;
+  @apply hidden lg:block text-2xl font-bold text-slate-800;
 }
 
 .classroom-subtitle {
-  @apply text-slate-500 mt-1;
+  @apply text-sm sm:text-base text-slate-500 lg:mt-0.5;
 }
 
 .create-classroom-btn {
-  @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl transition;
+  @apply inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-sm font-semibold transition shadow-sm w-full sm:w-auto;
 }
 
 .classroom-grid {
-  @apply grid md:grid-cols-2 xl:grid-cols-3 gap-6;
+  @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6;
 }
 
 .classroom-card {
-  @apply bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6;
+  @apply bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition p-5 sm:p-6;
 }
 
 .classroom-card-header {
@@ -35,43 +35,43 @@
 }
 
 .classroom-name {
-  @apply text-xl font-bold text-slate-800;
+  @apply text-xl mt-1 sm:text-xl font-bold text-slate-800;
 }
 
 .classroom-status {
-  @apply bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full whitespace-nowrap;
+  @apply bg-green-100 text-green-700 text-xs sm:text-sm px-3 py-1 rounded-full whitespace-nowrap font-semibold;
 }
 
 .classroom-subject {
-  @apply text-gray-500 mt-1;
+  @apply text-sm sm:text-base text-gray-500 mt-1 font-medium;
 }
 
 .classroom-details {
-  @apply mt-6 space-y-4;
+  @apply mt-4 sm:mt-5 space-y-2.5 sm:space-y-3;
 }
 
 .classroom-detail-row {
-  @apply flex justify-between items-center gap-4;
+  @apply flex justify-between items-center gap-4 text-sm sm:text-base;
 }
 
 .classroom-detail-label {
-  @apply flex items-center gap-2 text-gray-500;
+  @apply flex items-center gap-2 text-gray-500 font-medium;
 }
 
 .classroom-detail-value {
-  @apply font-semibold text-slate-800;
+  @apply font-semibold text-slate-800 text-sm sm:text-base;
 }
 
 .classroom-enter-delete {
-  @apply mt-6 flex items-center gap-3;
+  @apply mt-5 mb-1 sm:mt-6 flex items-center gap-3;
 }
 
 .enter-classroom-btn {
-  @apply flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-xl transition;
+  @apply flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 sm:py-3 px-4 rounded-xl text-sm sm:text-base font-semibold transition shadow-sm hover:shadow;
 }
 
 .delete-btn {
-  @apply !w-auto !flex-none p-2 rounded-xl text-red-500 hover:bg-red-100 hover:text-red-700 transition;
+  @apply !w-auto !flex-none p-2.5 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition;
 }
 
 .delete-icon {
@@ -83,68 +83,28 @@
 }
 
 .classroom-error {
-  @apply text-center text-red-500 mt-10;
+  @apply text-center text-red-500 mt-10 text-sm;
 }
 
 .classroom-empty {
-  @apply bg-white rounded-2xl p-8 text-center text-gray-500 shadow-sm mb-6;
+  @apply bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center text-gray-500 shadow-sm mb-6 border border-gray-100 text-sm sm:text-base;
 }
 
 @media (max-width: 639px) {
-  .classroom-page {
-    @apply p-4;
-  }
-
   .classroom-header {
-    @apply flex-col items-start gap-4 mb-6;
-  }
-
-  .classroom-title {
-    @apply text-xl;
-  }
-
-  .create-classroom-btn {
-    @apply justify-center;
-  }
-
-  .classroom-grid {
-    @apply grid-cols-1 gap-4;
+    @apply flex-col items-start gap-3 mb-4;
   }
 
   .classroom-card {
     @apply p-5;
   }
 
-  .classroom-card-header {
-    @apply items-start;
-  }
-
   .classroom-name {
-    @apply text-lg;
-  }
-
-  .classroom-details {
-    @apply mt-5 space-y-4;
-  }
-
-  .classroom-enter-delete {
-    @apply mt-5 flex items-center gap-3;
-  }
-
-  .enter-classroom-btn {
-    @apply flex-1;
-  }
-
-  .delete-btn {
-    @apply !w-auto !flex-none p-2;
+    @apply text-xl font-bold;
   }
 }
 
 @media (min-width: 640px) and (max-width: 1023px) {
-  .classroom-page {
-    @apply px-4 pt-2 pb-4;
-  }
-
   .classroom-grid {
     @apply grid-cols-2 gap-5;
   }
@@ -152,7 +112,7 @@
 
 @media (min-width: 1024px) {
   .classroom-page {
-    @apply px-8 pt-5 pb-8;
+    @apply px-8 pt-4 pb-4;
   }
 
   .classroom-grid {

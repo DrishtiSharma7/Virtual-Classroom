@@ -4,6 +4,7 @@ import WelcomeBanner from "../../components/WelcomeBanner/WelcomeBanner";
 import StatCard from "../../components/StatCard/StatCard";
 import RecentClasses from "../../components/RecentClasses/RecentClasses";
 import QuickActions from "../../components/QuickActions/QuickActions";
+import QuickNotes from "../../components/QuickNotes/QuickNotes";
 import { useNavigate } from "react-router-dom";
 import { createSession, startSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import { LayoutDashboard, Users, Video, CircleCheckBig } from "lucide-react";
@@ -127,20 +128,7 @@ const TeacherDashboard = () => {
 
       <div className="dashboard-split-section">
         <RecentClasses classes={dashboard?.recentClasses || []} />
-
-        <div className="teacher-activity-card">
-          <h3 className="section-title">Recent Activity</h3>
-
-          {dashboard?.recentActivity?.length > 0 ? (
-            <ul className="activity-list">
-              {dashboard.recentActivity.map((activity, index) => (
-                <li key={index}>{activity}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>No recent activity</p>
-          )}
-        </div>
+        <QuickNotes />
       </div>
 
     </div>

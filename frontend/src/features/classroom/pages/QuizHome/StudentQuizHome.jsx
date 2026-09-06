@@ -83,7 +83,7 @@ export default function StudentQuizHome() {
       <div className="quiz-container">
         <div className="quiz-header">
           <div>
-            <h1 className="quiz-title">
+            <h1 className="quiz-title hidden lg:flex">
               <ClipboardList className="text-indigo-600" size={26} />
               Quizzes
             </h1>

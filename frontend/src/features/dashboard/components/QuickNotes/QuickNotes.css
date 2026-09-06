@@ -1,0 +1,162 @@
+.quick-notes-container {
+  @apply bg-white p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm w-full lg:w-96 flex flex-col;
+  min-height: 240px;
+}
+
+.quick-notes-header {
+  @apply flex items-center justify-between mb-3.5 pb-2.5 border-b border-gray-100;
+}
+
+.quick-notes-title-group {
+  @apply flex items-center gap-2;
+}
+
+.quick-notes-icon {
+  @apply text-indigo-600;
+}
+
+.quick-notes-title {
+  @apply text-base font-bold text-gray-900;
+}
+
+.quick-notes-count-badge {
+  @apply text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600;
+}
+
+.quick-notes-important-badge {
+  @apply text-[11px] px-1.5 py-0.5 rounded-md font-semibold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1;
+}
+
+/* Input Form */
+.quick-notes-form {
+  @apply mt-3 relative flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl p-1 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 transition-all;
+}
+
+.quick-notes-input {
+  @apply flex-1 bg-transparent px-2.5 py-1.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none;
+}
+
+.quick-notes-star-toggle {
+  @apply p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-gray-100 transition;
+}
+
+.quick-notes-star-toggle.active {
+  @apply text-amber-500 bg-amber-50;
+}
+
+.quick-notes-submit-btn {
+  @apply p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0;
+}
+
+/* List */
+.quick-notes-list {
+  @apply space-y-2 overflow-y-auto pr-1 flex-1;
+  max-height: 280px;
+}
+
+/* Slim scrollbar */
+.quick-notes-list::-webkit-scrollbar {
+  width: 4px;
+}
+.quick-notes-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.quick-notes-list::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+.quick-notes-list::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* Note Item */
+.quick-notes-item {
+  @apply flex items-start gap-2.5 p-2.5 rounded-xl border border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm transition relative;
+}
+
+.quick-notes-item.important {
+  @apply border-amber-200 bg-amber-50/30;
+}
+
+.quick-notes-item.completed {
+  @apply opacity-65 bg-gray-50/70;
+}
+
+.quick-notes-checkbox {
+  @apply mt-0.5 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition;
+}
+
+.quick-notes-body {
+  @apply flex-1 min-w-0;
+}
+
+.quick-notes-text {
+  @apply text-sm text-gray-800 break-words leading-snug font-normal;
+}
+
+.quick-notes-item.completed .quick-notes-text {
+  @apply line-through text-gray-400;
+}
+
+.quick-notes-meta {
+  @apply flex items-center gap-2 mt-1;
+}
+
+.quick-notes-time {
+  @apply text-[11px] text-gray-400 font-medium;
+}
+
+/* Menu & Dropdown */
+.quick-notes-menu-btn {
+  @apply p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition shrink-0 cursor-pointer;
+}
+
+.quick-notes-dropdown {
+  @apply absolute right-2 top-8 z-30 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1 text-sm text-gray-700;
+}
+
+.quick-notes-dropdown-item {
+  @apply w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-gray-50 active:bg-gray-100 text-xs font-medium transition cursor-pointer;
+}
+
+.quick-notes-dropdown-item.danger {
+  @apply text-red-600 hover:bg-red-50;
+}
+
+/* Inline Edit */
+.quick-notes-edit-form {
+  @apply flex-1 flex items-center gap-1.5;
+}
+
+.quick-notes-edit-input {
+  @apply flex-1 text-sm bg-gray-50 border border-indigo-300 rounded-lg px-2 py-1 focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500;
+}
+
+.quick-notes-edit-btn {
+  @apply p-1 rounded-md text-xs font-semibold transition cursor-pointer;
+}
+
+.quick-notes-edit-save {
+  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+}
+
+.quick-notes-edit-cancel {
+  @apply bg-gray-100 text-gray-600 hover:bg-gray-200;
+}
+
+/* Empty State */
+.quick-notes-empty {
+  @apply flex flex-col items-center justify-center py-7 text-center text-gray-400;
+}
+
+.quick-notes-empty-icon {
+  @apply text-gray-300 mb-1.5;
+}
+
+.quick-notes-empty-text {
+  @apply text-xs font-medium text-gray-500;
+}
+
+.quick-notes-empty-subtext {
+  @apply text-[11px] text-gray-400 mt-0.5 max-w-[200px];
+}

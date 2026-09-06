@@ -1,5 +1,5 @@
 .analytics-page {
-  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+  @apply min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4;
 }
 
 .analytics-container {
@@ -7,11 +7,11 @@
 }
 
 .analytics-header {
-  @apply mb-6 flex flex-wrap items-center justify-between gap-3;
+  @apply mb-2.5 sm:mb-3 flex flex-wrap items-center justify-between gap-2;
 }
 
 .analytics-title {
-  @apply flex items-center gap-2 text-2xl font-bold text-slate-800;
+  @apply hidden lg:flex items-center gap-2 text-2xl font-bold text-slate-800;
 }
 
 .analytics-title-icon {
@@ -19,17 +19,17 @@
 }
 
 .analytics-subtitle {
-  @apply mt-1 max-w-2xl text-sm text-slate-500;
+  @apply text-sm sm:text-base text-slate-500 lg:mt-0.5 max-w-2xl;
 }
 
 .analytics-error {
-  @apply mb-6 flex items-center justify-between gap-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-600;
+  @apply mb-4 sm:mb-6 flex items-center justify-between gap-3 rounded-xl sm:rounded-2xl border border-red-100 bg-red-50 p-3 sm:p-4 text-sm text-red-600;
 }
 
 .analytics-error-retry {
-  @apply rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold hover:bg-red-100;
+  @apply rounded-lg border border-red-200 px-3 py-1.5 text-xs sm:text-sm font-semibold hover:bg-red-100;
 }
 
 .analytics-empty-state {
-  @apply flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center;
+  @apply flex flex-col items-center justify-center rounded-xl sm:rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-12 sm:px-6 sm:py-20 text-center;
 }

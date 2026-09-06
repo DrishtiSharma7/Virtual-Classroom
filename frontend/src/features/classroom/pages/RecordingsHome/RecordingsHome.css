@@ -1,7 +1,7 @@
 
 
 .recordings-page {
-  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+  @apply min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4;
 }
 
 .recordings-container {
@@ -9,23 +9,23 @@
 }
 
 .recordings-header {
-  @apply flex justify-between items-center mb-6 flex-wrap gap-4;
+  @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2.5 sm:mb-3;
 }
 
 .recordings-title {
-  @apply flex items-center gap-2 text-2xl font-bold text-slate-800;
+  @apply hidden lg:flex items-center gap-2 text-2xl font-bold text-slate-800;
 }
 
 .recordings-subtitle {
-  @apply text-slate-500;
+  @apply text-sm sm:text-base text-slate-500 lg:mt-0.5;
 }
 
 .header-buttons {
-  @apply flex flex-wrap gap-3;
+  @apply flex items-center gap-2 w-full sm:w-auto;
 }
 
 .export-btn {
-  @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl transition;
+  @apply inline-flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-sm font-semibold transition shadow-sm w-full sm:w-auto;
 }
 
 .export-btn:disabled {
@@ -33,23 +33,23 @@
 }
 
 .recordings-stats-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4;
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-2.5 sm:mb-3;
 }
 
 .recordings-page .filter-card {
-  @apply bg-white rounded-xl shadow p-3 mb-4 flex flex-wrap items-center gap-3;
+  @apply bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm p-2.5 sm:p-3 mb-2.5 sm:mb-3 flex flex-wrap items-center gap-2 sm:gap-2.5;
 }
 
 .filter-label {
-  @apply text-sm font-medium text-gray-600;
+  @apply text-xs sm:text-sm font-medium text-gray-600;
 }
 
 .classroom-select {
-  @apply border rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500;
+  @apply border border-gray-200 rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm;
 }
 
 .table-wrapper {
-  @apply bg-white rounded-2xl shadow overflow-x-auto;
+  @apply bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-x-auto;
 }
 
 .recordings-table {
@@ -57,31 +57,31 @@
 }
 
 .table-head {
-  @apply bg-gray-200;
+  @apply bg-gray-100;
 }
 
 .table-heading {
-  @apply px-6 py-4 text-left;
+  @apply px-3.5 py-2 text-left text-sm sm:text-[15px] font-bold text-slate-800 whitespace-nowrap;
 }
 
 .table-cell {
-  @apply px-6 py-2;
+  @apply px-3.5 py-2 text-xs sm:text-sm text-gray-800 align-middle;
 }
 
 .table-row {
-  @apply border-t hover:bg-gray-50;
+  @apply border-t border-gray-100 hover:bg-gray-50/80;
 }
 
 .entity-name {
-  @apply font-semibold;
+  @apply font-semibold leading-tight text-xs sm:text-sm text-slate-800;
 }
 
 .action-buttons {
-  @apply flex justify-center gap-2;
+  @apply flex justify-center gap-1;
 }
 
 .view-btn {
-  @apply p-2 rounded-lg hover:bg-blue-100;
+  @apply p-1 rounded hover:bg-blue-50 text-blue-600 transition inline-flex items-center justify-center;
 }
 
 .view-icon {
@@ -89,7 +89,7 @@
 }
 
 .delete-btn {
-  @apply p-2 rounded-lg hover:bg-red-100;
+  @apply p-1 rounded hover:bg-red-50 text-red-600 transition inline-flex items-center justify-center;
 }
 
 .delete-icon {
@@ -97,7 +97,7 @@
 }
 
 .no-data {
-  @apply text-center py-12 text-gray-500 rounded-2xl border border-dashed border-gray-300 bg-white;
+  @apply text-center py-8 text-xs sm:text-sm text-gray-500 rounded-xl sm:rounded-2xl border border-dashed border-gray-300 bg-white;
 }
 
 .loading-text {
@@ -109,11 +109,11 @@
 }
 
 .modal-card {
-  @apply w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl;
+  @apply w-full max-w-lg rounded-2xl bg-white p-5 sm:p-6 shadow-xl;
 }
 
 .modal-card-wide {
-  @apply w-full max-w-3xl rounded-2xl bg-white p-4 shadow-xl;
+  @apply w-full max-w-3xl rounded-2xl bg-white p-4 sm:p-6 shadow-xl;
 }
 
 .modal-header {
@@ -121,15 +121,15 @@
 }
 
 .modal-title {
-  @apply text-lg font-bold text-gray-900;
+  @apply text-base sm:text-lg font-bold text-gray-900;
 }
 
 .form-field {
-  @apply mb-4;
+  @apply mb-3 sm:mb-4;
 }
 
 .form-label {
-  @apply mb-1 block text-xs font-medium text-gray-600;
+  @apply mb-1 block text-xs sm:text-sm font-medium text-gray-600;
 }
 
 .form-input {
@@ -141,23 +141,7 @@
 }
 
 @media (max-width: 768px) {
-  .recordings-page {
-    @apply p-4;
-  }
-
   .recordings-header {
-    @apply flex-col items-start gap-4;
-  }
-
-  .header-buttons {
-    @apply w-full flex-col;
-  }
-
-  .export-btn {
-    @apply justify-center w-full;
-  }
-
-  .recordings-stats-grid {
-    @apply grid-cols-1;
+    @apply flex-col items-start gap-3;
   }
 }

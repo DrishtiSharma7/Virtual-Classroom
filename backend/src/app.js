@@ -16,6 +16,7 @@ const settingsRoutes = require("./features/settings/settings.routes");
 const whiteboardRoutes = require("./features/whiteboard/whiteboard.routes");
 const analyticsRoutes = require("./features/analytics/analytics.routes");
 const announcementRoutes = require("./features/announcement/announcement.routes");
+const noteRoutes = require("./features/note/note.routes");
 const path = require("path");
 const app = express();
 
@@ -59,6 +60,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/notes", noteRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Server error:", err.message);

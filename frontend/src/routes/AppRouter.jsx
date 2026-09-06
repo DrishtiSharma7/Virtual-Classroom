@@ -51,20 +51,17 @@ function AppRouter() {
 
 
           <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout showNavbar={true} />}>
+            <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/classrooms/create" element={
+              <Route
+                path="/classrooms/create"
+                element={
                   <RoleRoute allow={["teacher"]}>
                     <CreateClassroom />
                   </RoleRoute>
                 }
               />
               <Route path="/classrooms/join" element={<JoinClassroom />} />
-            </Route>
-          </Route>
-
-          <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout showNavbar={false} />}>
               <Route path="/classrooms" element={<ClassroomHome />} />
               <Route path="/classrooms/:classroomId" element={<ClassroomDetails />} />
               <Route path="/attendance" element={<AttendanceHome />} />

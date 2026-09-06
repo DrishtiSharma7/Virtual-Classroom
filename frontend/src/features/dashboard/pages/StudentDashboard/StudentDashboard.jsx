@@ -5,6 +5,7 @@ import WelcomeBanner from "../../components/WelcomeBanner/WelcomeBanner";
 import StatCard from "../../components/StatCard/StatCard";
 import RecentClasses from "../../components/RecentClasses/RecentClasses";
 import QuickActions from "../../components/QuickActions/QuickActions";
+import QuickNotes from "../../components/QuickNotes/QuickNotes";
 
 import { Layers, Goal, CheckSquare } from "lucide-react";
 
@@ -80,14 +81,7 @@ const StudentDashboard = () => {
 
       <div className="dashboard-split-section">
         <RecentClasses classes={dashboard?.myClasses || []} />
-
-        <div className="student-activity-card">
-          <h3 className="section-title">Recent Activity</h3>
-
-          <ul className="activity-list">
-            <li>No recent activity</li>
-          </ul>
-        </div>
+        <QuickNotes />
       </div>
 
     </div>

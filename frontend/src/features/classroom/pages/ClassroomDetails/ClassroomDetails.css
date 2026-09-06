@@ -1,5 +1,5 @@
 .details-page {
-  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+  @apply min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4;
 }
 
 .details-container {
@@ -7,27 +7,27 @@
 }
 
 .back-btn {
-  @apply inline-flex items-center gap-2 text-indigo-600 font-medium hover:text-indigo-700 mb-5;
+  @apply inline-flex items-center gap-1.5 text-sm text-indigo-600 font-semibold hover:text-indigo-700 mb-2 sm:mb-2.5;
 }
 
 .class-banner {
-  @apply bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-4 pl-6 text-white flex justify-between items-center shadow-lg mb-4;
+  @apply bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl md:rounded-3xl p-3.5 sm:p-4 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-md mb-2.5 sm:mb-3;
 }
 
 .class-title {
-  @apply text-2xl font-bold;
+  @apply text-xl sm:text-2xl font-bold;
 }
 
 .class-subject {
-  @apply mt-1 text-indigo-100 text-lg;
+  @apply mt-0.5 text-indigo-100 text-sm sm:text-lg;
 }
 
 .class-meta {
-  @apply flex flex-wrap gap-3 mt-3;
+  @apply flex flex-wrap gap-2 sm:gap-2.5 mt-2;
 }
 
 .meta-chip {
-  @apply bg-white/20 backdrop-blur px-4 py-2 rounded-full text-sm;
+  @apply bg-white/20 backdrop-blur px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium;
 }
 
 .meta-chip.active {
@@ -35,31 +35,31 @@
 }
 
 .live-btn {
-  @apply flex items-center gap-2 bg-white text-indigo-700 font-semibold px-6 py-3 rounded-xl hover:bg-indigo-50 transition;
+  @apply inline-flex items-center justify-center gap-2 bg-white text-indigo-700 font-semibold px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl text-sm sm:text-base hover:bg-indigo-50 transition w-full sm:w-auto shadow-sm;
 }
 
 .classroom-details-stats-grid {
-  @apply grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6;
+  @apply grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mb-2.5 sm:mb-3;
 }
 
 .details-grid {
-  @apply grid lg:grid-cols-3 gap-6;
+  @apply grid lg:grid-cols-3 gap-3 sm:gap-4;
 }
 
 .left-section {
-  @apply lg:col-span-2 space-y-6;
+  @apply lg:col-span-2 space-y-3 sm:space-y-4;
 }
 
 .right-section {
-  @apply space-y-6;
+  @apply space-y-3 sm:space-y-4;
 }
 
 .section-card {
-  @apply bg-white rounded-2xl shadow p-5;
+  @apply bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm p-3.5 sm:p-4;
 }
 
 .section-title {
-  @apply flex items-center justify-between gap-2 text-sm font-semibold text-slate-800 mb-5;
+  @apply flex items-center justify-between gap-2 text-sm sm:text-base font-semibold text-slate-800 mb-3 sm:mb-5;
 }
 
 .section-title-left {
@@ -67,19 +67,19 @@
 }
 
 .section-card h3 {
-  @apply text-xl font-bold text-slate-800;
+  @apply text-lg sm:text-xl font-bold text-slate-800;
 }
 
 .section-card p {
-  @apply text-gray-500 mt-2;
+  @apply text-sm text-gray-500 mt-1 sm:mt-2;
 }
 
 .session-footer {
-  @apply flex flex-wrap items-center justify-between gap-3 mt-1;
+  @apply flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 mt-1;
 }
 
 .session-time {
-  @apply flex items-center gap-2 text-gray-500;
+  @apply flex items-center gap-1.5 text-sm text-gray-500;
 }
 
 .session-title-row {
@@ -95,7 +95,7 @@
 }
 
 .modal-card {
-  @apply w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl;
+  @apply w-full max-w-lg rounded-2xl bg-white p-5 sm:p-6 shadow-xl;
 }
 
 .modal-header {
@@ -103,7 +103,11 @@
 }
 
 .modal-title {
-  @apply text-lg font-bold text-gray-900;
+  @apply text-base sm:text-lg font-bold text-gray-900;
+}
+
+.modal-close-btn {
+  @apply rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition;
 }
 
 .form-field {
@@ -122,65 +126,101 @@
   @apply mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600;
 }
 
-.join-btn {
-  @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl transition;
+.announcement-form {
+  @apply flex flex-col gap-3 sm:gap-4;
 }
 
 .announcement-item {
-  @apply border-b last:border-none py-2;
+  @apply border-b border-gray-100 pb-3 sm:pb-4 last:border-0 last:pb-0;
 }
 
-.announcement-item h4 {
-  @apply font-semibold text-slate-800;
+.announcement-header {
+  @apply flex items-start justify-between gap-2;
 }
 
-.announcement-item p {
-  @apply text-sm text-gray-500 mt-1;
+.announcement-title {
+  @apply text-sm sm:text-base font-semibold text-slate-800;
+}
+
+.announcement-body {
+  @apply text-sm text-gray-600 mt-1 whitespace-pre-wrap;
+}
+
+.announcement-actions {
+  @apply flex items-center gap-1 shrink-0;
+}
+
+.announcement-action-btn {
+  @apply p-1 text-gray-400 hover:text-indigo-600 rounded transition;
+}
+
+.announcement-delete-btn {
+  @apply p-1 text-gray-400 hover:text-red-600 rounded transition;
 }
 
 .inline-add-btn {
   @apply flex items-center gap-1 rounded-lg bg-gray-300 px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-400 active:bg-gray-400 transition-colors;
 }
 
-.student-row {
-  @apply flex items-center justify-between border-b last:border-none py-2;
+.recording-item {
+  @apply flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50/80 transition;
 }
 
-.student-left {
-  @apply flex items-center gap-4;
+.recording-info {
+  @apply flex items-center gap-3 min-w-0;
 }
 
-.student-left svg {
-  @apply text-indigo-600;
+.recording-meta {
+  @apply min-w-0;
 }
 
-.student-left h4 {
-  @apply font-semibold text-slate-800;
+.recording-name {
+  @apply text-sm font-semibold text-slate-800 truncate;
 }
 
-.student-left p {
-  @apply text-sm text-gray-500;
+.recording-date {
+  @apply text-xs sm:text-sm text-gray-400 mt-0.5;
+}
+
+.recording-actions {
+  @apply flex items-center gap-2 shrink-0;
+}
+
+.watch-btn {
+  @apply bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg transition;
+}
+
+.student-list-item {
+  @apply flex items-center justify-between gap-3 py-2.5 border-b border-gray-50 last:border-0;
+}
+
+.student-info {
+  @apply flex items-center gap-2.5 min-w-0;
+}
+
+.student-avatar {
+  @apply w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0;
+}
+
+.student-details {
+  @apply min-w-0;
+}
+
+.student-fullname {
+  @apply text-sm font-medium text-slate-800 truncate;
+}
+
+.student-email {
+  @apply text-xs text-gray-400 truncate;
+}
+
+.student-badge {
+  @apply text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0 font-medium;
 }
 
 .students-list {
   @apply mt-2 overflow-y-auto pr-2;
   max-height: 420px;
-}
-
-.recording-row {
-  @apply flex justify-between items-center border-b last:border-none py-4;
-}
-
-.recording-row h4 {
-  @apply font-semibold text-slate-800;
-}
-
-.recording-row p {
-  @apply text-sm text-gray-500 mt-1;
-}
-
-.watch-btn {
-  @apply bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg transition;
 }
 
 .empty-text {
@@ -196,49 +236,7 @@
 }
 
 @media (max-width: 1024px) {
-  .details-page {
-    @apply p-5;
-  }
-
-  .class-banner {
-    @apply flex-col items-start gap-6;
-  }
-
-  .live-btn {
-    @apply w-full justify-center;
-  }
-
   .details-grid {
     @apply grid-cols-1;
-  }
-}
-
-@media (max-width: 640px) {
-  .details-page {
-    @apply p-3;
-  }
-
-  .class-title {
-    @apply text-2xl;
-  }
-
-  .class-subject {
-    @apply text-base;
-  }
-
-  .classroom-details-stats-grid {
-    @apply grid-cols-1;
-  }
-
-  .recording-row {
-    @apply flex-col items-start gap-3;
-  }
-
-  .watch-btn {
-    @apply w-full text-center justify-center;
-  }
-
-  .student-row {
-    @apply flex-col items-start gap-3;
   }
 }

@@ -3,7 +3,7 @@
 }
 
 .sidebar-header {
-  @apply flex items-center pl-6 pt-6 space-x-3;
+  @apply flex items-center justify-between pl-6 pr-3 pt-6;
 }
 
 .sidebar-logo-icon {
@@ -15,11 +15,13 @@
 }
 
 .sidebar-nav {
-  @apply flex-1 py-6 px-4 space-y-1;
+  @apply flex-1 py-4 px-4 space-y-1 overflow-y-auto;
 }
 
 .sidebar-link {
-  @apply w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-black transition-colors font-medium text-lg;
+  @apply w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-black transition-colors font-medium text-base sm:text-lg cursor-pointer select-none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .sidebar-link.active {
@@ -37,16 +39,26 @@
 .sidebar-container {
   @apply fixed top-0 left-0 w-64 h-screen bg-white border-r border-gray-100 flex flex-col z-50;
 
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
+  transform: translate3d(-100%, 0, 0);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .sidebar-container.open {
-  transform: translateX(0);
+  transform: translate3d(0, 0, 0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 @screen lg {
   .sidebar-container {
     @apply translate-x-0;
+    transform: none;
+    transition: none;
+    will-change: auto;
+    visibility: visible;
+    pointer-events: auto;
   }
 }

@@ -1,5 +1,6 @@
 .dashboard-layout {
   @apply flex min-h-screen bg-[#f4f3f3];
+  min-height: 100dvh;
 }
 
 .dashboard-main {
@@ -7,7 +8,7 @@
 }
 
 .dashboard-content {
-  @apply flex-1 p-2 sm:p-5 lg:p-6;
+  @apply flex-1;
 }
 
 .mobile-header {
@@ -20,6 +21,8 @@
 
 .sidebar-overlay {
   @apply fixed inset-0 bg-black/40 z-40 lg:hidden;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.18s ease-out;
 }
 
 @media (max-width: 639px) {
@@ -28,7 +31,10 @@
   }
 
   .dashboard-content {
-    padding: 12px;
+    padding-top: 2px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 0;
   }
 }
 
@@ -38,7 +44,10 @@
   }
 
   .dashboard-content {
-    padding: 20px;
+    padding-top: 4px;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-bottom: 0;
   }
 }
 
@@ -48,6 +57,6 @@
   }
 
   .dashboard-content {
-    padding: 2px;
+    padding: 0 0 0 0;
   }
 }

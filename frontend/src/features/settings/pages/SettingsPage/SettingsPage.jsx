@@ -151,10 +151,10 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
-        <p className="text-sm text-slate-500 mt-1">
+    <div className="max-w-6xl mx-auto px-0 sm:px-2 py-0 lg:pt-3 lg:pb-4">
+      <div className="mb-2.5 sm:mb-3">
+        <h1 className="hidden lg:block text-2xl font-bold text-slate-800">Settings</h1>
+        <p className="text-sm sm:text-base text-slate-500 lg:mt-0.5">
           Manage your account and{" "}
           {role === "teacher" ? "classroom" : "learning"} preferences.
         </p>
