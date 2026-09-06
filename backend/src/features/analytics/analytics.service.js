@@ -9,16 +9,6 @@ const User = require("../auth/auth.model");
 const DEFAULT_RANGE_DAYS = 30;
 const MOST_ACTIVE_LIMIT = 5;
 
-// ---------------------------------------------------------------------------
-// Shared formula/threshold constants (surfaced to the frontend via tooltips)
-// ---------------------------------------------------------------------------
-// Attendance % (per scope)      = present attendance docs (isPresent) / total attendance docs x 100
-// Quiz score %  (per response)  = response.score / quiz.questions.length x 100
-// Quiz participation %          = distinct students with >=1 response / enrolled students x 100
-// Avg session duration          = avg(endTime - startTime) over status:"ended" sessions in range
-// Engagement score              = 0.6 x avgAttendance% + 0.4 x quizParticipation%
-//   (chat is intentionally excluded: Chat docs are deleted when a session ends,
-//   so there is no reliable historical chat signal to compute from)
 const ATTENDANCE_BANDS = [
   { min: 90, status: "Excellent" },
   { min: 75, status: "Good" },
@@ -82,8 +72,6 @@ function resolveDateRange(fromQuery, toQuery) {
   return { from, to };
 }
 
-// The equal-length window immediately preceding [from, to), used for every
-// KPI's trend % and for "changed by X%" insights.
 function getPreviousPeriod(from, to) {
   const spanMs = to.getTime() - from.getTime();
   const prevTo = new Date(from.getTime() - 1);
@@ -91,8 +79,6 @@ function getPreviousPeriod(from, to) {
   return { from: prevFrom, to: prevTo };
 }
 
-// Returns null (never a fake 0%/Infinity) when there isn't enough data on
-// both sides to say something meaningful.
 function pctChange(current, previous) {
   if (previous === null || previous === undefined) return null;
   if (previous === 0) return current === 0 ? 0 : null;
@@ -138,9 +124,6 @@ async function getEndedSessions(classroomIds, from, to) {
   }).sort({ startTime: 1 });
 }
 
-// ---------------------------------------------------------------------------
-// Core per-scope metric bundle, reused by overview + trend/previous-period math
-// ---------------------------------------------------------------------------
 async function computeScopeMetrics(classroomIds, from, to) {
   const classrooms = await Classroom.find({ _id: { $in: classroomIds } }).select(
     "students",
@@ -151,10 +134,6 @@ async function computeScopeMetrics(classroomIds, from, to) {
   const sessions = await getEndedSessions(classroomIds, from, to);
   const sessionIds = sessions.map((s) => s._id);
 
-  // A student's "eligible sessions" is scoped to the classroom(s) they're
-  // actually enrolled in, not the combined session count across every
-  // classroom in view — otherwise "All Classes" would apply one classroom's
-  // session count to students who were never enrolled in it.
   const sessionCountByClassroom = new Map();
   sessions.forEach((s) => {
     const key = s.classroom.toString();
@@ -451,9 +430,6 @@ function buildInsights(current, previous) {
   return insights;
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/overview
-// ---------------------------------------------------------------------------
 async function getOverview({ teacherId, classroomId, from, to }) {
   const classroomIds = await resolveClassroomScope(teacherId, classroomId);
   const range = resolveDateRange(from, to);
@@ -569,9 +545,6 @@ async function getOverview({ teacherId, classroomId, from, to }) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/attendance
-// ---------------------------------------------------------------------------
 async function getAttendanceAnalytics({
   teacherId,
   classroomId,
@@ -685,9 +658,6 @@ async function getAttendanceAnalytics({
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/sessions
-// ---------------------------------------------------------------------------
 async function getSessionAnalytics({
   teacherId,
   classroomId,
@@ -805,9 +775,6 @@ async function getSessionAnalytics({
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/quizzes
-// ---------------------------------------------------------------------------
 async function getQuizAnalytics({
   teacherId,
   classroomId,
@@ -863,10 +830,6 @@ async function getQuizAnalytics({
   const lowest = scorePcts.length ? Math.min(...scorePcts) : 0;
 
   const enrolledStudentIds = await getEnrolledStudentIds(classroomIds);
-  // Participation is scoped to the roster of the classroom each quiz
-  // actually belongs to — not the combined roster of every classroom in
-  // view, which would dilute a single-classroom quiz's participation rate
-  // with students who were never eligible to take it.
   const classroomsForRoster = await Classroom.find({
     _id: { $in: classroomIds },
   }).select("students");
@@ -892,7 +855,6 @@ async function getQuizAnalytics({
     ? completionRates.reduce((a, b) => a + b, 0) / completionRates.length
     : 0;
 
-  // Quiz comparison: per-quiz avg score / participation / accuracy
   const comparison = quizzes.map((q) => {
     const qResponses = responsesByQuiz.get(q._id.toString()) || [];
     const total = q.questions.length || 0;
@@ -928,7 +890,6 @@ async function getQuizAnalytics({
     .filter((p) => p.value !== null)
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 
-  // Question difficulty (optionally scoped to one quiz)
   const scopedQuizzes = quizId ? quizzes.filter((q) => q._id.toString() === quizId) : quizzes;
   const questionDifficultyRows = [];
   scopedQuizzes.forEach((q) => {
@@ -955,7 +916,6 @@ async function getQuizAnalytics({
     });
   });
 
-  // Student ranking
   const students = enrolledStudentIds.length
     ? await User.find({ _id: { $in: enrolledStudentIds } }).select("name email")
     : [];
@@ -1035,9 +995,6 @@ async function getQuizAnalytics({
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/classes
-// ---------------------------------------------------------------------------
 async function getClassComparison({ teacherId, from, to }) {
   const range = resolveDateRange(from, to);
   const classrooms = await Classroom.find({ teacher: teacherId });
@@ -1067,9 +1024,6 @@ async function getClassComparison({ teacherId, from, to }) {
   return { classes: rows };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/students/:studentId  (teacher) and /me (student)
-// ---------------------------------------------------------------------------
 async function buildStudentDetail({ studentId, classroomIds, from, to }) {
   const range = resolveDateRange(from, to);
   const student = await User.findById(studentId).select("name email");

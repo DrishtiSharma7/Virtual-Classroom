@@ -1,7 +1,3 @@
-// Re-buckets an already-fetched daily {date, value} series into weekly/monthly
-// points on the client, so switching the granularity in the UI needs no new
-// network request. Percentage-style metrics are averaged per bucket; raw
-// counts (sessionActivity) are summed.
 function bucketKey(dateStr, granularity) {
   const d = new Date(dateStr);
   if (granularity === "month") return dateStr.slice(0, 7);

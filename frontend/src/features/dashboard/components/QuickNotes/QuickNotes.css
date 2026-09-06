@@ -27,7 +27,6 @@
   @apply text-[11px] px-1.5 py-0.5 rounded-md font-semibold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1;
 }
 
-/* Input Form */
 .quick-notes-form {
   @apply mt-3 relative flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl p-1 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 transition-all;
 }
@@ -48,13 +47,11 @@
   @apply p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0;
 }
 
-/* List */
 .quick-notes-list {
   @apply space-y-2 overflow-y-auto pr-1 flex-1;
   max-height: 280px;
 }
 
-/* Slim scrollbar */
 .quick-notes-list::-webkit-scrollbar {
   width: 4px;
 }
@@ -69,7 +66,6 @@
   background: #cbd5e1;
 }
 
-/* Note Item */
 .quick-notes-item {
   @apply flex items-start gap-2.5 p-2.5 rounded-xl border border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm transition relative;
 }
@@ -106,7 +102,6 @@
   @apply text-[11px] text-gray-400 font-medium;
 }
 
-/* Menu & Dropdown */
 .quick-notes-menu-btn {
   @apply p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition shrink-0 cursor-pointer;
 }
@@ -123,7 +118,6 @@
   @apply text-red-600 hover:bg-red-50;
 }
 
-/* Inline Edit */
 .quick-notes-edit-form {
   @apply flex-1 flex items-center gap-1.5;
 }
@@ -144,7 +138,6 @@
   @apply bg-gray-100 text-gray-600 hover:bg-gray-200;
 }
 
-/* Empty State */
 .quick-notes-empty {
   @apply flex flex-col items-center justify-center py-7 text-center text-gray-400;
 }

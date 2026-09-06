@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# ==============================================================================
-# Virtual Classroom - AWS EC2 (Ubuntu) Setup Script
-# Run this script on a fresh Ubuntu 22.04 / 24.04 EC2 instance (t2.micro / t3.micro)
-# ==============================================================================
 set -e
 
 echo ">>> [1/5] Updating packages..."

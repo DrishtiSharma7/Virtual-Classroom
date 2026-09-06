@@ -22,7 +22,7 @@ import "../LoginForm/LoginForm.css";
 function ForgotPasswordForm() {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1); // 1: Email, 2: New Password, 3: Success
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -114,7 +114,6 @@ function ForgotPasswordForm() {
 
       <main className="relative z-10 flex min-h-[calc(100vh-100px)] items-center justify-center px-4 py-6 sm:px-5">
         <div className="animate-card-fade-in flex w-full max-w-[1050px] flex-col overflow-hidden rounded-[18px] bg-[#e5e9f9] shadow-[0_20px_50px_rgba(0,0,0,0.08)] sm:rounded-3xl md:min-h-[560px] md:flex-row">
-          {/* Left Decorative Banner */}
           <section className="hidden flex-1 flex-row items-center justify-between gap-3 bg-[#e5e9f9] px-5 py-5 text-left sm:flex-col sm:items-center sm:justify-center sm:gap-0 sm:px-8 sm:py-9 sm:text-center md:px-5 md:py-12 lg:flex">
             <div className="flex flex-col sm:order-2 sm:items-center">
               <h2 className="mb-1.5 text-lg font-bold leading-tight text-gray-900 sm:mb-3.5 sm:text-2xl md:text-[28px]">
@@ -140,7 +139,6 @@ function ForgotPasswordForm() {
             </picture>
           </section>
 
-          {/* Right Form Card */}
           <section className="flex flex-1 flex-col items-center justify-center rounded-t-[18px] bg-white px-5 py-8 shadow-[0_20px_50px_rgba(0,0,0,0.12)] sm:rounded-t-3xl sm:px-8 sm:py-9 md:rounded-l-3xl md:rounded-tr-none md:px-8 md:py-8">
             <div className="w-full max-w-[400px]">
               <Link
@@ -151,7 +149,6 @@ function ForgotPasswordForm() {
                 Back to Sign In
               </Link>
 
-              {/* STEP 1: VERIFY EMAIL */}
               {step === 1 && (
                 <form onSubmit={handleVerifyEmail}>
                   <div className="mb-2 flex items-center gap-2">
@@ -221,7 +218,6 @@ function ForgotPasswordForm() {
                 </form>
               )}
 
-              {/* STEP 2: SET NEW PASSWORD */}
               {step === 2 && (
                 <form onSubmit={handleResetPassword}>
                   <div className="mb-2 flex items-center gap-2">
@@ -334,7 +330,6 @@ function ForgotPasswordForm() {
                 </form>
               )}
 
-              {/* STEP 3: SUCCESS CONFIRMATION */}
               {step === 3 && (
                 <div className="text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">

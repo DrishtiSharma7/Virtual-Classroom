@@ -58,7 +58,6 @@ const TeacherDashboard = () => {
         return;
       }
 
-      // Check if this classroom already has an active live session
       const sessionsRes = await getSessionsByClassroom(classroom._id);
       const existingLive = sessionsRes.data?.find((s) => s.status === "live");
 
@@ -92,7 +91,6 @@ const TeacherDashboard = () => {
       <h1 className="sr-only">Teacher Dashboard</h1>
       <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
-
       <div className="teacher-stats-grid">
         <StatCard
           icon={<LayoutDashboard />}
@@ -124,7 +122,6 @@ const TeacherDashboard = () => {
       </div>
 
       <QuickActions handleStartSession={handleStartSession} />
-
 
       <div className="dashboard-split-section">
         <RecentClasses classes={dashboard?.recentClasses || []} />

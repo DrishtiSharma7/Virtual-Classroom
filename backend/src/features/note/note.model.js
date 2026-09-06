@@ -29,7 +29,6 @@ const noteSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for fast retrieval: user notes sorted by important first, then recently created
 noteSchema.index({ user: 1, isImportant: -1, createdAt: -1 });
 
 module.exports = mongoose.model("Note", noteSchema);

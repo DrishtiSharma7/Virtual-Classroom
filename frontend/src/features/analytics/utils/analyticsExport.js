@@ -8,8 +8,6 @@ const filenameSafe = (value) =>
     .replace(/^-+|-+$/g, "")
     .toLowerCase();
 
-// Builds one workbook with a sheet per section, using only data already
-// loaded in the current view (respects whatever filters are active).
 export const exportAnalyticsToExcel = ({
   scopeLabel,
   dateRangeLabel,
@@ -76,8 +74,6 @@ export const exportAnalyticsToExcel = ({
   XLSX.writeFile(workbook, `analytics-${filenameSafe(scopeLabel)}.xlsx`);
 };
 
-// A clean text/table PDF summary (KPIs + insights + top rows) — not a chart
-// screenshot, so it renders reliably regardless of chart layout timing.
 export const exportAnalyticsToPdf = ({
   scopeLabel,
   dateRangeLabel,

@@ -108,7 +108,6 @@ function ClassroomDetails() {
     fetchLiveSession();
     fetchAttendance();
 
-    // Periodically poll for live session status (every 8 seconds)
     const interval = setInterval(fetchLiveSession, 8000);
     return () => clearInterval(interval);
   }, [classroomId]);
@@ -226,7 +225,6 @@ function ClassroomDetails() {
     try {
       setStartingSession(true);
 
-      // Check if there is already an active live session running
       const res = await getSessionsByClassroom(classroom._id);
       const existingLive = res.data?.find((s) => s.status === "live");
 
@@ -522,8 +520,6 @@ function ClassroomDetails() {
           Back to Classrooms
         </Link>
 
-
-
         <div className="class-banner">
           <div>
             <h1 className="class-title">{classroom.name}</h1>
@@ -595,8 +591,6 @@ function ClassroomDetails() {
           )}
         </div>
 
-
-
         <div className="classroom-details-stats-grid">
           <StatCard
             icon={<Users size={22} />}
@@ -622,13 +616,9 @@ function ClassroomDetails() {
           />
         </div>
 
-
-
         <div className="details-grid">
 
-
           <div className="left-section">
-
 
             <div className="section-card">
               <div className="section-title">
@@ -723,9 +713,6 @@ function ClassroomDetails() {
               </div>
             </div>
 
-
-
-            {/* Section: Announcements */}
             <div className="section-card announcements-card">
               <div className="section-title">
                 <span className="section-title-left">
@@ -799,7 +786,6 @@ function ClassroomDetails() {
               </div>
             </div>
 
-            {/* Section: Recordings */}
             <div className="section-card recordings-card">
               <div className="section-title">
                 <span className="section-title-left">
@@ -891,8 +877,6 @@ function ClassroomDetails() {
             </div>
 
           </div>
-
-
 
           <div className="right-section">
             {classroom.teacher && (

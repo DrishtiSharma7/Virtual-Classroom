@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from "react";
 import "./GlobalTooltip.css";
 
 const PHRASE_MAP = {
-  // Navigation & General
   "toggle navigation menu": "Menu",
   "log out of your account": "Logout",
   "logout": "Logout",
@@ -26,7 +25,6 @@ const PHRASE_MAP = {
   "go to next page": "Next",
   "go to previous page": "Previous",
 
-  // Classroom & Sessions
   "create a new classroom for your students": "Create Classroom",
   "create a new classroom": "Create Classroom",
   "create new classroom": "Create Classroom",
@@ -58,7 +56,6 @@ const PHRASE_MAP = {
   "remove student from this classroom": "Remove Student",
   "remove student": "Remove Student",
 
-  // Attendance
   "export attendance records to excel spreadsheet": "Export Excel",
   "export attendance records to excel": "Export Excel",
   "export attendance to excel": "Export Excel",
@@ -69,7 +66,6 @@ const PHRASE_MAP = {
   "close live attendance panel": "Close Panel",
   "close attendance panel": "Close Panel",
 
-  // Quizzes
   "download excel quiz question template": "Download Template",
   "download sample excel quiz template": "Download Template",
   "download sample excel template": "Download Template",
@@ -128,7 +124,6 @@ const PHRASE_MAP = {
   "end quiz and display results": "End Quiz",
   "terminate current live quiz": "End Quiz",
 
-  // Recordings
   "upload recorded video for this class": "Upload Recording",
   "upload recorded video lecture": "Upload Recording",
   "upload recording": "Upload Recording",
@@ -141,7 +136,6 @@ const PHRASE_MAP = {
   "close video player": "Close Player",
   "upload video file to classroom recordings": "Upload Video",
 
-  // Live Classroom
   "end session for everyone": "End Session",
   "leave this session": "Leave Session",
   "leave session": "Leave Session",
@@ -179,7 +173,6 @@ const PHRASE_MAP = {
   "stay in the live session": "Cancel",
   "close zoomed view": "Close View",
 
-  // Analytics & Filter
   "toggle filter controls": "Filters",
   "refresh analytics metrics": "Refresh",
   "refresh your analytics stats": "Refresh",
@@ -192,7 +185,6 @@ const PHRASE_MAP = {
   "export pdf": "Export PDF",
   "close student details": "Close Details",
 
-  // Auth & Settings
   "sign in as a teacher": "Teacher",
   "sign in as a student": "Student",
   "register as a teacher": "Teacher",
@@ -222,9 +214,6 @@ const STOP_WORDS = new Set([
   "this", "that", "these", "those", "all", "now", "here", "yet", "from"
 ]);
 
-/**
- * Ensures any tooltip string is strictly 1 or 2 words.
- */
 function toOneOrTwoWords(rawText) {
   if (!rawText || typeof rawText !== "string") return "";
 
@@ -233,47 +222,39 @@ function toOneOrTwoWords(rawText) {
 
   const lower = trimmed.toLowerCase();
 
-  // 1. Direct phrase lookup
   if (PHRASE_MAP[lower]) {
     return PHRASE_MAP[lower];
   }
 
-  // 2. Check for dynamic pattern like "Filter quizzes: Attempted" -> "Filter Attempted"
   if (lower.startsWith("filter quizzes:")) {
     const part = trimmed.split(":")[1]?.trim() || "";
     return part ? `Filter ${part}` : "Filter";
   }
 
-  // 3. Dynamic pattern like "Switch to Page 1" -> "Page 1"
   if (lower.startsWith("switch to ")) {
     const rest = trimmed.slice(10).trim();
     const restWords = rest.split(/\s+/);
     return restWords.slice(0, 2).join(" ");
   }
 
-  // 4. Dynamic pattern like "View whiteboard materials for Page 1" -> "Materials"
   if (lower.includes("whiteboard materials")) {
     return "Materials";
   }
 
-  // 5. Dynamic pattern like "Send thumbs up reaction" -> "Thumbs Up"
   if (lower.startsWith("send ") && lower.endsWith(" reaction")) {
     const middle = trimmed.slice(5, -9).trim();
     return middle.split(/\s+/).slice(0, 2).join(" ");
   }
 
-  // 6. Dynamic pattern like "Delete <Name>'s attendance record" -> "Delete Record"
   if (lower.startsWith("delete ") && lower.includes("attendance")) {
     return "Delete Record";
   }
 
-  // 7. General word count check
   const words = trimmed.split(/\s+/);
   if (words.length <= 2) {
     return trimmed;
   }
 
-  // Filter out stop words to keep the two most meaningful words
   const meaningful = words.filter((w) => !STOP_WORDS.has(w.toLowerCase()));
   if (meaningful.length >= 2) {
     return `${meaningful[0]} ${meaningful[1]}`;
@@ -299,25 +280,21 @@ const GlobalTooltip = () => {
 
   useEffect(() => {
     const resolveTooltipText = (el) => {
-      // 1. Explicit data-tooltip
       const dataTooltip = el.getAttribute("data-tooltip");
       if (dataTooltip && dataTooltip.trim()) {
         return toOneOrTwoWords(dataTooltip);
       }
 
-      // 2. Native title
       const title = el.getAttribute("title") || el.getAttribute("data-orig-title");
       if (title && title.trim()) {
         return toOneOrTwoWords(title);
       }
 
-      // 3. aria-label
       const ariaLabel = el.getAttribute("aria-label");
       if (ariaLabel && ariaLabel.trim()) {
         return toOneOrTwoWords(ariaLabel);
       }
 
-      // 4. Fallback based on inner button text
       const text = (el.innerText || el.textContent || "").trim();
       if (text && text.length <= 40) {
         return toOneOrTwoWords(text);
@@ -349,7 +326,6 @@ const GlobalTooltip = () => {
         return;
       }
 
-      // Suppress browser native tooltip
       if (el.hasAttribute("title")) {
         const titleVal = el.getAttribute("title");
         if (titleVal) {
@@ -362,7 +338,6 @@ const GlobalTooltip = () => {
 
       if (timerRef.current) clearTimeout(timerRef.current);
 
-      // Exactly 1 second (1000ms) hover dwell delay as requested
       timerRef.current = setTimeout(() => {
         if (!activeElementRef.current || !activeElementRef.current.isConnected) {
           hideTooltip();
@@ -386,7 +361,6 @@ const GlobalTooltip = () => {
     };
 
     const handlePointerOver = (e) => {
-      // Touch devices should not trigger hover tooltips to avoid click interference
       if (e.pointerType === "touch") return;
       const targetBtn = e.target.closest(
         'button, [data-tooltip], [role="button"]'
@@ -406,7 +380,6 @@ const GlobalTooltip = () => {
     };
 
     const handleFocusIn = (e) => {
-      // Don't show tooltip on touch focus
       if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return;
       const targetBtn = e.target.closest(
         'button, [data-tooltip], [role="button"]'

@@ -19,8 +19,6 @@ function endOfDay(date) {
   return d;
 }
 
-// Resolves a preset key (or explicit custom from/to) into ISO from/to bounds
-// sent straight to the backend query params.
 export function resolveDateRange(presetKey, customFrom, customTo) {
   const now = new Date();
 

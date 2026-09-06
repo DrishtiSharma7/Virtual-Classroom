@@ -8,15 +8,10 @@ const DashboardLayout = ({ showNavbar }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
-  // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
-  // Desktop navbar rule:
-  // On desktop, TopNavbar is shown for /dashboard, /classrooms/create, /classrooms/join.
-  // On desktop, TopNavbar is hidden for /classrooms, /attendance, /quizzes, /recordings, /analytics, /settings.
-  // On mobile & tablet (< lg), TopNavbar is always visible.
   const path = location.pathname;
   const isDesktopNavRoute =
     path === "/dashboard" ||

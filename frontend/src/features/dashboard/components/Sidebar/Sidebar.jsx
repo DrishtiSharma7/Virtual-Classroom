@@ -15,7 +15,6 @@ import {
 import useAuth from "../../../auth/hooks/useAuth";
 import "./Sidebar.css";
 
-// Background chunk prefetching for instant page navigation
 const prefetchRoutes = () => {
   try {
     import("../../../classroom/pages/ClassroomHome/ClassroomHome");
@@ -25,7 +24,6 @@ const prefetchRoutes = () => {
     import("../../../analytics/pages/AnalyticsDashboard/AnalyticsDashboard");
     import("../../../settings/pages/SettingsPage/SettingsPage");
   } catch {
-    // Ignore prefetch error
   }
 };
 
@@ -34,12 +32,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
   const { signOut } = useAuth();
 
-  // Ensure sidebar is closed whenever the route changes
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname, setSidebarOpen]);
 
-  // Pre-load route chunks in background so mobile navigation is instantaneous
   useEffect(() => {
     const timer = setTimeout(prefetchRoutes, 500);
     return () => clearTimeout(timer);

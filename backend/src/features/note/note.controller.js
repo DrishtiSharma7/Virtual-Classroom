@@ -1,9 +1,5 @@
 const Note = require("./note.model");
 
-/**
- * Get all notes for the authenticated user
- * Priority sorting: Important notes first, then recently created notes
- */
 exports.getNotes = async (req, res) => {
   try {
     const notes = await Note.find({ user: req.user.id })
@@ -24,9 +20,6 @@ exports.getNotes = async (req, res) => {
   }
 };
 
-/**
- * Create a new personal note
- */
 exports.createNote = async (req, res) => {
   try {
     const { text, isImportant } = req.body;
@@ -59,9 +52,6 @@ exports.createNote = async (req, res) => {
   }
 };
 
-/**
- * Update an existing personal note (text, isImportant, isCompleted)
- */
 exports.updateNote = async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,9 +100,6 @@ exports.updateNote = async (req, res) => {
   }
 };
 
-/**
- * Delete a personal note
- */
 exports.deleteNote = async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,7 +1,3 @@
-/**
- * Avatar utilities for meeting-style circular initials and deterministic color allocation.
- * Guarantees that a user ID receives the exact same color everywhere (classroom, meeting, navbar, chat).
- */
 
 export const AVATAR_PALETTES = [
   { class: "bg-indigo-600 text-white", hex: "4f46e5" },
@@ -30,9 +26,6 @@ export const AVATAR_PALETTES = [
   { class: "bg-pink-700 text-white", hex: "be185d" },
 ];
 
-/**
- * Extracts 1-2 uppercase initials from a name.
- */
 export function getInitials(name = "") {
   if (!name || typeof name !== "string") return "?";
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -43,9 +36,6 @@ export function getInitials(name = "") {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/**
- * Deterministic palette index based on user ID or fallback string.
- */
 export function getAvatarPaletteIndex(id = "", name = "") {
   const key = String(id || name || "");
   if (!key) return 0;
@@ -57,30 +47,16 @@ export function getAvatarPaletteIndex(id = "", name = "") {
   return Math.abs(hash) % AVATAR_PALETTES.length;
 }
 
-/**
- * Deterministic Tailwind class allocation based on user ID (or fallback name).
- * Produces the exact same color across classroom details, live meetings, and navbar.
- */
 export function getAvatarPaletteById(id = "", name = "") {
   const idx = getAvatarPaletteIndex(id, name);
   return AVATAR_PALETTES[idx].class;
 }
 
-/**
- * Deterministic Hex color allocation for Canvas / SVG / external URLs.
- */
 export function getAvatarHexById(id = "", name = "") {
   const idx = getAvatarPaletteIndex(id, name);
   return AVATAR_PALETTES[idx].hex;
 }
 
-/**
- * Builds a 1-to-1 Map of User ID -> Consistent Color.
- * Guarantees that users have the exact same color in ClassroomDetails and LiveClassroom.
- *
- * @param {Array<Object|string>} participants - List of user objects or ID strings
- * @returns {Map<string, string>}
- */
 export function buildUserColorMap(participants = []) {
   const map = new Map();
   participants.forEach((p) => {

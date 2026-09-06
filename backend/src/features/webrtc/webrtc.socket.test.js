@@ -17,11 +17,9 @@ describe("WebRTC Socket - Mute/Unmute & Mic Status Controls", () => {
   let studentHandlers = {};
 
   beforeEach(() => {
-    // Clear room registry
     registry.removeParticipant(roomId, teacherSocketId);
     registry.removeParticipant(roomId, studentSocketId);
 
-    // Setup room
     registry.addParticipant(
       roomId,
       teacherSocketId,
@@ -35,7 +33,6 @@ describe("WebRTC Socket - Mute/Unmute & Mic Status Controls", () => {
       false
     );
 
-    // Mock IO and Sockets
     teacherHandlers = {};
     studentHandlers = {};
 

@@ -1,15 +1,3 @@
-// Chart color roles for the Analytics dashboard (light mode only — the rest
-// of the app has no dark mode, so charts intentionally match that rather
-// than introducing an orphaned dark theme).
-//
-// - `primary` is used for every single-series trend chart (nothing to
-//   distinguish from an adjacent series, so brand indigo is fine).
-// - `categorical` is used only when 2-3 genuinely different series share one
-//   chart (e.g. attendance% / participation% / engagement all on a 0-100
-//   scale). Always assigned in this fixed order, never cycled.
-// - `status` is reserved for present/absent/low-attendance, easy/medium/hard,
-//   and attendance-status badges — always paired with an icon/label, never
-//   color alone.
 export const CHART_COLORS = {
   primary: "#5b5fef",
   primarySoft: "#eef0fd",

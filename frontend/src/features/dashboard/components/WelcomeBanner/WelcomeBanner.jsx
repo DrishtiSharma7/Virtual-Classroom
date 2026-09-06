@@ -5,7 +5,6 @@ import "./WelcomeBanner.css";
 const WelcomeBanner = ({ name, role }) => {
   return (
     <div className="banner-container">
-      {/* Subtle background watermark */}
       <GraduationCap className="banner-watermark" aria-hidden="true" />
 
       <div className="banner-content">

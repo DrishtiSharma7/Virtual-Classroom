@@ -5,7 +5,6 @@ const attendanceService = require("../attendance/attendance.service");
 
 const getDashboardData = async (user) => {
   if (user.role === "teacher") {
-    // Run classroom query, live sessions count, and sessions query concurrently
     const [classrooms, liveSessions, teacherSessions] = await Promise.all([
       Classroom.find({ teacher: user.id })
         .sort({ createdAt: -1 })
@@ -98,7 +97,6 @@ const getDashboardData = async (user) => {
     };
   }
 
-  // Student: Run enrolled count, myClasses, and attendance queries concurrently
   const [enrolledClasses, myClasses, studentRecords] = await Promise.all([
     Classroom.countDocuments({
       students: user.id,

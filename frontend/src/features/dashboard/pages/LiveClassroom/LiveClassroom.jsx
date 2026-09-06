@@ -326,8 +326,6 @@ const AudioRelay = ({ stream, onAutoplayBlocked }) => {
     const el = videoRef.current;
     if (!el || !stream) return;
     el.srcObject = stream;
-    // Browser autoplay policies can silently block unmuted playback; if so,
-    // register the element so we can retry once the user interacts with the page.
     const playPromise = el.play();
     if (playPromise?.catch) {
       playPromise.catch(() => onAutoplayBlocked?.(el));
@@ -703,7 +701,6 @@ export default function LiveClassroom() {
 
   const createPeerConnection = useCallback(
     (targetId) => {
-      // Close old connection if it exists
       if (peerConnections.current[targetId]) {
         try {
           peerConnections.current[targetId].close();
@@ -719,10 +716,6 @@ export default function LiveClassroom() {
       politeRef.current[targetId] = (socketRef.current?.id || "") < targetId;
 
       makingOfferRef.current[targetId] = false;
-
-      // --------------------------------------------------
-      // ADD LOCAL AUDIO + CAMERA AT CONNECTION CREATION
-      // --------------------------------------------------
 
       if (localStream.current) {
         localStream.current.getTracks().forEach((track) => {
@@ -740,10 +733,6 @@ export default function LiveClassroom() {
           }
         });
       }
-
-      // --------------------------------------------------
-      // SCREEN SHARE
-      // --------------------------------------------------
 
       if (isHostRef.current) {
         const screenTrack = screenStream.current?.getVideoTracks()[0];
@@ -763,10 +752,6 @@ export default function LiveClassroom() {
         }
       }
 
-      // --------------------------------------------------
-      // ICE CANDIDATES
-      // --------------------------------------------------
-
       pc.onicecandidate = (event) => {
         if (!event.candidate) return;
 
@@ -777,10 +762,6 @@ export default function LiveClassroom() {
         });
       };
 
-      // --------------------------------------------------
-      // REMOTE TRACK
-      // --------------------------------------------------
-
       pc.ontrack = (event) => {
         console.log(`[WebRTC][${targetId}] Remote track received:`, {
           kind: event.track.kind,
@@ -790,8 +771,6 @@ export default function LiveClassroom() {
           streams: event.streams?.length,
         });
 
-        // Important: if the browser doesn't provide event.streams[0],
-        // build our own MediaStream so the track isn't lost.
         const stream = event.streams?.[0] || new MediaStream([event.track]);
 
         setParticipants((prev) =>
@@ -810,10 +789,6 @@ export default function LiveClassroom() {
           })
         );
       };
-
-      // --------------------------------------------------
-      // NEGOTIATION
-      // --------------------------------------------------
 
       pc.onnegotiationneeded = async () => {
         try {
@@ -847,10 +822,6 @@ export default function LiveClassroom() {
         }
       };
 
-      // --------------------------------------------------
-      // ICE STATE
-      // --------------------------------------------------
-
       pc.oniceconnectionstatechange = () => {
         console.log(`[WebRTC][${targetId}] ICE state:`, pc.iceConnectionState);
 
@@ -867,10 +838,6 @@ export default function LiveClassroom() {
           pc.iceGatheringState
         );
       };
-
-      // --------------------------------------------------
-      // CONNECTION STATE
-      // --------------------------------------------------
 
       pc.onconnectionstatechange = () => {
         console.log(
@@ -891,10 +858,6 @@ export default function LiveClassroom() {
           pc.restartIce?.();
         }
       };
-
-      // --------------------------------------------------
-      // SIGNALING STATE
-      // --------------------------------------------------
 
       pc.onsignalingstatechange = () => {
         console.log(
@@ -1933,7 +1896,6 @@ export default function LiveClassroom() {
   const toggleCamera = async () => {
     const existingTrack = localStream.current?.getVideoTracks()[0];
 
-    // Camera already exists → simply enable/disable it.
     if (existingTrack) {
       existingTrack.enabled = !existingTrack.enabled;
 
@@ -1964,7 +1926,6 @@ export default function LiveClassroom() {
         throw new Error("No video track returned");
       }
 
-      // Add video track to our local MediaStream
       if (!localStream.current) {
         localStream.current = new MediaStream();
       }
@@ -2100,7 +2061,6 @@ export default function LiveClassroom() {
         localVideoRef.current.srcObject = localStream.current;
       }
 
-      // IMPORTANT: replace the sender instead of adding another video track.
       pushCameraTrack(newTrack);
 
       newTrack.enabled = true;
@@ -2139,7 +2099,6 @@ export default function LiveClassroom() {
 
       setMediaError("");
 
-      // Update existing peer connections
       Object.entries(peerConnections.current).forEach(([targetId, pc]) => {
         if (videoTrack) {
           const videoSender = cameraSenders.current[targetId];

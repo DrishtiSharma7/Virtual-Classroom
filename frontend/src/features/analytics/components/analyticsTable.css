@@ -1,6 +1,4 @@
-/* Shared table chrome reused by every analytics section with a data table
-   (Attendance ranking, Session history, Quiz ranking) — mirrors
-   AttendanceHome.css's table conventions for visual consistency. */
+
 
 .analytics-table-toolbar {
   @apply mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;

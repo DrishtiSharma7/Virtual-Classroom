@@ -27,21 +27,17 @@ const QuickNotes = () => {
   const [isImportantNew, setIsImportantNew] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Dropdown menu state
   const [activeDropdownId, setActiveDropdownId] = useState(null);
 
-  // Inline editing state
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
 
   const dropdownRef = useRef(null);
 
-  // Fetch user notes on mount
   useEffect(() => {
     loadNotes();
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -54,11 +50,9 @@ const QuickNotes = () => {
 
   const sortNotes = (items) => {
     return [...items].sort((a, b) => {
-      // Priority 1: Important notes first
       if (a.isImportant !== b.isImportant) {
         return a.isImportant ? -1 : 1;
       }
-      // Priority 2: Most recently created first
       return new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now());
     });
   };
@@ -104,7 +98,6 @@ const QuickNotes = () => {
       setActiveDropdownId(null);
       const nextImportant = !note.isImportant;
 
-      // Optimistic update
       setNotes((prev) =>
         sortNotes(
           prev.map((n) =>
@@ -120,7 +113,7 @@ const QuickNotes = () => {
     } catch (err) {
       console.error("Error toggling important:", err);
       toast.error("Failed to update note priority");
-      loadNotes(); // revert
+      loadNotes();
     }
   };
 
@@ -128,7 +121,6 @@ const QuickNotes = () => {
     try {
       const nextCompleted = !note.isCompleted;
 
-      // Optimistic update
       setNotes((prev) =>
         prev.map((n) =>
           n._id === note._id ? { ...n, isCompleted: nextCompleted } : n
@@ -161,7 +153,6 @@ const QuickNotes = () => {
     }
 
     try {
-      // Optimistic update
       setNotes((prev) =>
         prev.map((n) => (n._id === id ? { ...n, text: trimmed } : n))
       );
@@ -210,7 +201,6 @@ const QuickNotes = () => {
 
   return (
     <div className="quick-notes-container">
-      {/* Header */}
       <div className="quick-notes-header">
         <div className="quick-notes-title-group">
           <NotebookPen size={18} className="quick-notes-icon" />
@@ -228,7 +218,6 @@ const QuickNotes = () => {
         )}
       </div>
 
-      {/* Notes List */}
       <div className="quick-notes-list">
         {loading ? (
           <div className="flex items-center justify-center py-8 text-gray-400">
@@ -255,7 +244,6 @@ const QuickNotes = () => {
                   note.isCompleted ? "completed" : ""
                 }`}
               >
-                {/* Completion Checkbox */}
                 <input
                   type="checkbox"
                   checked={note.isCompleted}
@@ -264,7 +252,6 @@ const QuickNotes = () => {
                   title={note.isCompleted ? "Mark incomplete" : "Mark completed"}
                 />
 
-                {/* Content / Edit Mode */}
                 {isEditing ? (
                   <div className="quick-notes-edit-form">
                     <input
@@ -313,7 +300,6 @@ const QuickNotes = () => {
                   </div>
                 )}
 
-                {/* Three Dots Menu Button */}
                 {!isEditing && (
                   <div className="relative" ref={isDropdownOpen ? dropdownRef : null}>
                     <button
@@ -328,7 +314,6 @@ const QuickNotes = () => {
                       <MoreVertical size={15} />
                     </button>
 
-                    {/* Three Dots Dropdown */}
                     {isDropdownOpen && (
                       <div className="quick-notes-dropdown">
                         <button
@@ -371,7 +356,6 @@ const QuickNotes = () => {
         )}
       </div>
 
-      {/* Input Box (placed at the bottom) */}
       <form onSubmit={handleAddNote} className="quick-notes-form">
         <input
           type="text"

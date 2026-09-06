@@ -115,7 +115,7 @@ describe("analytics.service", () => {
 
     const avgAttendance = result.kpis.find((k) => k.key === "avgAttendance");
     expect(avgAttendance.value).toBe(50);
-    expect(avgAttendance.trend).toBeNull(); // no attendance data in the previous period
+    expect(avgAttendance.trend).toBeNull();
   });
 
   test("getOverview: quiz participation % = distinct respondents / enrolled students", async () => {
@@ -153,8 +153,8 @@ describe("analytics.service", () => {
 
     const participation = result.kpis.find((k) => k.key === "quizParticipation");
     const avgScore = result.kpis.find((k) => k.key === "avgQuizScore");
-    expect(participation.value).toBe(50); // 1 of 2 enrolled students
-    expect(avgScore.value).toBe(100); // 2/2 correct
+    expect(participation.value).toBe(50);
+    expect(avgScore.value).toBe(100);
   });
 
   test("pctChange returns null instead of a fake number when previous period has no data", () => {
