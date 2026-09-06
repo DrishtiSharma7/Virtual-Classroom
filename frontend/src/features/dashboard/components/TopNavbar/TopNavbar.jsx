@@ -1,7 +1,8 @@
 import React from "react";
-import { Menu, CircleUser } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
+import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
 import "./TopNavbar.css";
 
 const TopNavbar = ({ setSidebarOpen }) => {
@@ -39,7 +40,11 @@ const TopNavbar = ({ setSidebarOpen }) => {
 
       <div className="navbar-profile-section">
         <div className="navbar-user-card">
-          <CircleUser size={36} strokeWidth={1.5} color="black" />
+          <UserAvatar
+            id={user?._id || user?.id}
+            name={user?.name || "User"}
+            size="sm"
+          />
           <span className="navbar-username">{user?.name || "User"}</span>
         </div>
       </div>

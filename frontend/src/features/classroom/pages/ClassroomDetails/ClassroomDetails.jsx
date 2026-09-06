@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -8,7 +8,7 @@ import {
   CalendarDays,
   PlayCircle,
   ArrowRight,
-  UserCircle2,
+  GraduationCap,
   Clock3,
   Plus,
   Trash2,
@@ -39,6 +39,9 @@ import { useNavigate } from "react-router-dom";
 import { createSession, startSession, endSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 import StatCard from "../../../dashboard/components/StatCard/StatCard";
+
+import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
+import { buildUserColorMap } from "../../../../utils/avatar";
 
 function ClassroomDetails() {
   const { classroomId } = useParams();
@@ -490,6 +493,26 @@ function ClassroomDetails() {
     ? classroom.sessionTitle
     : `${classroom.subject} Live Session`;
 
+  const userColorMap = useMemo(() => {
+    const participants = [];
+    if (classroom?.teacher) {
+      participants.push(classroom.teacher);
+    }
+    if (Array.isArray(classroom?.students)) {
+      participants.push(...classroom.students);
+    }
+    return buildUserColorMap(participants);
+  }, [classroom?.teacher, classroom?.students]);
+
+  const teacherKey = String(
+    classroom?.teacher?._id ||
+    classroom?.teacher?.id ||
+    classroom?.teacher?.email ||
+    classroom?.teacher?.name ||
+    "teacher"
+  );
+  const teacherColor = userColorMap.get(teacherKey);
+
   return (
     <div className="details-page">
       <div className="details-container">
@@ -508,6 +531,18 @@ function ClassroomDetails() {
             <div className="class-meta">
               <span className="meta-chip">Room Code : {classroom.code}</span>
               <span className="meta-chip">{students.length} Students</span>
+              {classroom.teacher && (
+                <span className="meta-chip flex items-center gap-1.5">
+                  <UserAvatar
+                    id={teacherKey}
+                    name={classroom.teacher.name}
+                    colorClass={teacherColor}
+                    size="xs"
+                    className="!w-5 !h-5 !text-[10px]"
+                  />
+                  <span>Teacher: {classroom.teacher.name}</span>
+                </span>
+              )}
               {liveSession ? (
                 <span className="meta-chip bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow-sm">
                   <span className="relative flex h-2 w-2">
@@ -844,7 +879,34 @@ function ClassroomDetails() {
 
 
           <div className="right-section">
+            {classroom.teacher && (
+              <div className="section-card">
+                <div className="section-title">
+                  <span className="section-title-left">
+                    <GraduationCap size={20} />
+                    Teacher
+                  </span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+                    Host
+                  </span>
+                </div>
 
+                <div className="student-row !border-none !py-1">
+                  <div className="student-left">
+                    <UserAvatar
+                      id={teacherKey}
+                      name={classroom.teacher.name}
+                      colorClass={teacherColor}
+                      size="lg"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h4>{classroom.teacher.name}</h4>
+                      <p>{classroom.teacher.email}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="section-card">
               <div className="section-title">
@@ -852,37 +914,54 @@ function ClassroomDetails() {
                   <Users size={20} />
                   Students
                 </span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                  {students.length}
+                </span>
               </div>
 
               {students.length === 0 ? (
                 <p className="empty-text">No students joined.</p>
               ) : (
                 <div className="students-list">
-                  {students.map((student, index) => (
-                    <div key={student._id || index} className="student-row">
-                      <div className="student-left">
-                        <UserCircle2 size={38} />
+                  {students.map((student, index) => {
+                    const studentKey = String(
+                      student._id ||
+                      student.id ||
+                      student.email ||
+                      student.name ||
+                      `student-${index}`
+                    );
+                    const studentColor = userColorMap.get(studentKey);
+                    return (
+                      <div key={student._id || index} className="student-row">
+                        <div className="student-left">
+                          <UserAvatar
+                            id={studentKey}
+                            name={student.name}
+                            colorClass={studentColor}
+                            size="md"
+                          />
 
-                        <div>
-                          <h4>{student.name}</h4>
-                          <p>{student.email}</p>
+                          <div className="min-w-0 flex-1">
+                            <h4>{student.name}</h4>
+                            <p>{student.email}</p>
+                          </div>
                         </div>
+
+                        {isTeacher && (
+                          <button
+                            className="remove-btn"
+                            onClick={() => handleRemoveStudent(student._id)}
+                            data-tooltip="Remove student"
+                            title="Remove student"
+                            aria-label={`Remove ${student.name} from classroom`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
-
-
-                      {isTeacher && (
-                        <button
-                          className="remove-btn"
-                          onClick={() => handleRemoveStudent(student._id)}
-                          data-tooltip="Remove student"
-                          title="Remove student"
-                          aria-label={`Remove ${student.name} from classroom`}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

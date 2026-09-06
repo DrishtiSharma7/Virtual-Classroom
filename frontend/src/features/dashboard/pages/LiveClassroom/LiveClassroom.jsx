@@ -74,6 +74,8 @@ import LiveAttendancePanel from "../../../classroom/components/AttendancePanel/L
 import { getWhiteboard } from "../../../classroom/api/whiteboard.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 import useAuth from "../../../auth/hooks/useAuth";
+import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
+import { getAvatarHexById } from "../../../../utils/avatar";
 
 const drawElement = (ctx, el) => {
   if (!el) return;
@@ -145,8 +147,10 @@ const drawElement = (ctx, el) => {
   }
   ctx.globalAlpha = 1;
 };
-const avatarFor = (name = "?") =>
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
+const avatarFor = (name = "?", id = "") => {
+  const bg = getAvatarHexById(id, name);
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${bg}&color=fff`;
+};
 
 const formatClock = (seconds) => {
   const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
@@ -282,7 +286,7 @@ const BottomControl = ({
   </button>
 );
 
-const ParticipantThumb = ({ stream, active, name }) => {
+const ParticipantThumb = ({ stream, active, name, id }) => {
   const videoRef = useRef(null);
   const showVideo = active && !!stream && stream.getVideoTracks().length > 0;
 
@@ -304,10 +308,11 @@ const ParticipantThumb = ({ stream, active, name }) => {
         />
       )}
       {!showVideo && (
-        <img
-          src={avatarFor(name)}
-          alt={name}
-          className="absolute inset-0 h-full w-full object-cover"
+        <UserAvatar
+          id={id}
+          name={name}
+          size="sm"
+          className="absolute inset-0 !h-full !w-full !rounded-full"
         />
       )}
     </div>
@@ -333,7 +338,7 @@ const AudioRelay = ({ stream, onAutoplayBlocked }) => {
   return <video ref={videoRef} autoPlay playsInline className="hidden" />;
 };
 
-const TeacherCameraTile = ({ stream, active, name }) => {
+const TeacherCameraTile = ({ stream, active, name, id }) => {
   const videoRef = useRef(null);
   const showVideo = active && !!stream && stream.getVideoTracks().length > 0;
 
@@ -358,10 +363,11 @@ const TeacherCameraTile = ({ stream, active, name }) => {
       )}
       {!showVideo && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-          <img
-            src={avatarFor(name)}
-            alt={name}
-            className="h-16 w-16 rounded-full object-cover"
+          <UserAvatar
+            id={id}
+            name={name}
+            size="lg"
+            className="!h-16 !w-16 !text-lg"
           />
         </div>
       )}
@@ -448,10 +454,11 @@ const StudentZoomModal = ({ participant, hostScreenStreamId, onClose }) => {
           )}
           {!showVideo && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-800">
-              <img
-                src={avatarFor(participant.user?.name)}
-                alt={participant.user?.name}
-                className="h-20 w-20 rounded-full object-cover"
+              <UserAvatar
+                id={participant.user?._id || participant.user?.id}
+                name={participant.user?.name}
+                size="xl"
+                className="!h-20 !w-20 !text-2xl"
               />
               <p className="text-xs text-slate-400">Camera is off</p>
             </div>
@@ -2464,10 +2471,10 @@ export default function LiveClassroom() {
               <span className="text-sm font-medium text-slate-700">
                 {currentUser?.name || "Guest"}
               </span>
-              <img
-                src={avatarFor(currentUser?.name)}
-                alt={currentUser?.name}
-                className="h-9 w-9 rounded-full object-cover"
+              <UserAvatar
+                id={currentUser?._id || currentUser?.id}
+                name={currentUser?.name}
+                size="md"
               />
             </div>
           </div>
@@ -3150,10 +3157,11 @@ export default function LiveClassroom() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={avatarFor(currentUser?.name)}
-                          alt={currentUser?.name}
-                          className="h-10 w-10 rounded-full object-cover"
+                        <UserAvatar
+                          id={currentUser?._id || currentUser?.id}
+                          name={currentUser?.name}
+                          size="md"
+                          className="!h-10 !w-10"
                         />
                         <div>
                           <p className="text-sm font-medium text-slate-700">
@@ -3246,6 +3254,7 @@ export default function LiveClassroom() {
                               }
                               active={p.cameraEnabled}
                               name={p.user?.name}
+                              id={p.user?._id || p.user?.id}
                             />
                             <div>
                               <p className="text-sm font-medium text-slate-700">
@@ -3376,9 +3385,17 @@ export default function LiveClassroom() {
                           className={`flex flex-col ${mine ? "items-end" : "items-start"}`}
                         >
                           {!mine && (
-                            <span className="mb-0.5 text-[10px] font-medium text-slate-400">
-                              {m.sender?.name || "Participant"}
-                            </span>
+                            <div className="mb-1 flex items-center gap-1.5">
+                              <UserAvatar
+                                id={m.sender?._id || m.sender}
+                                name={m.sender?.name || "Participant"}
+                                size="xs"
+                                className="!h-4 !w-4 !text-[9px]"
+                              />
+                              <span className="text-[11px] font-medium text-slate-500">
+                                {m.sender?.name || "Participant"}
+                              </span>
+                            </div>
                           )}
                           <div
                             className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
@@ -3457,10 +3474,11 @@ export default function LiveClassroom() {
 
                     {!cameraEnabled && (
                       <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                        <img
-                          src={avatarFor(currentUser?.name)}
-                          alt={currentUser?.name}
-                          className="h-16 w-16 rounded-full object-cover"
+                        <UserAvatar
+                          id={currentUser?._id || currentUser?.id}
+                          name={currentUser?.name}
+                          size="lg"
+                          className="!h-16 !w-16 !text-lg"
                         />
                       </div>
                     )}
@@ -3521,6 +3539,7 @@ export default function LiveClassroom() {
                     stream={teacherCameraStream}
                     active={teacherParticipant.cameraEnabled}
                     name={teacherParticipant.user?.name}
+                    id={teacherParticipant.user?._id || teacherParticipant.user?.id}
                   />
                 ) : (
                   <div className="flex h-full min-h-[9rem] items-center justify-center rounded-xl bg-slate-800 text-xs text-slate-400">

@@ -178,12 +178,10 @@ function ClassroomHome() {
                 <div className="classroom-detail-row">
                   <span className="classroom-detail-label">
                     <Users size={18} />
-                    {isTeacher ? "Students" : "Classmates"}
+                    Students
                   </span>
                   <span className="classroom-detail-value">
-                    {isTeacher
-                      ? room.students?.length ?? 0
-                      : Math.max((room.students?.length ?? 1) - 1, 0)}
+                    {room.students?.length ?? 0}
                   </span>
                 </div>
               </div>
