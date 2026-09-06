@@ -10,8 +10,6 @@
   @apply flex flex-col lg:flex-row gap-3 sm:gap-4 mb-0 lg:mb-2;
 }
 
-
-
 .dashboard-loading {
   @apply flex justify-center items-center min-h-screen;
 }

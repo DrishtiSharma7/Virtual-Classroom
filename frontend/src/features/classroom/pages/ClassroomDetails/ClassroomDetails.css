@@ -3,47 +3,47 @@
 }
 
 .details-container {
-  @apply max-w-7xl mx-auto;
+  @apply max-w-7xl mx-auto space-y-3 sm:space-y-4;
 }
 
 .back-btn {
-  @apply inline-flex items-center gap-1.5 text-sm text-indigo-600 font-semibold hover:text-indigo-700 mb-2 sm:mb-2.5;
+  @apply inline-flex items-center gap-1.5 text-sm text-indigo-600 font-semibold hover:text-indigo-700 hover:-translate-x-0.5 transition-all mb-1;
 }
 
 .class-banner {
-  @apply bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl md:rounded-3xl p-3.5 sm:p-4 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-md mb-2.5 sm:mb-3;
+  @apply bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-md;
 }
 
 .class-title {
-  @apply text-xl sm:text-2xl font-bold;
+  @apply text-xl sm:text-2xl md:text-3xl font-bold tracking-tight;
 }
 
 .class-subject {
-  @apply mt-0.5 text-indigo-100 text-sm sm:text-lg;
+  @apply mt-1 text-indigo-100 text-sm sm:text-base font-medium;
 }
 
 .class-meta {
-  @apply flex flex-wrap gap-2 sm:gap-2.5 mt-2;
+  @apply flex flex-wrap items-center gap-2 sm:gap-2.5 mt-2.5;
 }
 
 .meta-chip {
-  @apply bg-white/20 backdrop-blur px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium;
+  @apply inline-flex items-center bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white;
 }
 
 .meta-chip.active {
-  @apply bg-green-500 text-white;
+  @apply bg-emerald-500 text-white font-semibold;
 }
 
 .live-btn {
-  @apply inline-flex items-center justify-center gap-2 bg-white text-indigo-700 font-semibold px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl text-sm sm:text-base hover:bg-indigo-50 transition w-full sm:w-auto shadow-sm;
+  @apply inline-flex items-center justify-center gap-2 bg-white text-indigo-700 font-semibold px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-sm sm:text-base hover:bg-indigo-50 active:scale-[0.98] transition-all shadow-sm shrink-0 w-full sm:w-auto;
 }
 
 .classroom-details-stats-grid {
-  @apply grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mb-2.5 sm:mb-3;
+  @apply grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4;
 }
 
 .details-grid {
-  @apply grid lg:grid-cols-3 gap-3 sm:gap-4;
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-start;
 }
 
 .left-section {
@@ -55,47 +55,112 @@
 }
 
 .section-card {
-  @apply bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm p-3.5 sm:p-4;
+  @apply bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5;
 }
 
 .section-title {
-  @apply flex items-center justify-between gap-2 text-sm sm:text-base font-semibold text-slate-800 mb-3 sm:mb-5;
+  @apply flex items-center justify-between gap-2 text-sm sm:text-base font-bold text-slate-800 mb-3 sm:mb-4;
 }
 
 .section-title-left {
-  @apply flex items-center gap-2;
+  @apply flex items-center gap-2 text-indigo-600 font-bold;
 }
 
 .section-card h3 {
-  @apply text-lg sm:text-xl font-bold text-slate-800;
+  @apply text-base sm:text-lg font-bold text-slate-800;
 }
 
 .section-card p {
-  @apply text-sm text-gray-500 mt-1 sm:mt-2;
-}
-
-.session-footer {
-  @apply flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 mt-1;
-}
-
-.session-time {
-  @apply flex items-center gap-1.5 text-sm text-gray-500;
+  @apply text-xs sm:text-sm text-gray-500 mt-1;
 }
 
 .session-title-row {
   @apply flex items-center gap-2;
 }
 
+.session-footer {
+  @apply flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 mt-3 sm:mt-4 pt-3 border-t border-gray-100;
+}
+
+.session-time {
+  @apply flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 font-medium;
+}
+
+.join-btn {
+  @apply inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl shadow-sm hover:shadow active:scale-[0.98] transition-all text-xs sm:text-sm;
+}
+
+.announcement-item {
+  @apply border-b border-gray-100 last:border-none py-3 first:pt-0 last:pb-0;
+}
+
+.announcement-item h4 {
+  @apply text-sm sm:text-base font-semibold text-slate-800;
+}
+
+.announcement-item p {
+  @apply text-xs sm:text-sm text-gray-600 mt-1 whitespace-pre-wrap;
+}
+
+.inline-add-btn {
+  @apply inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 active:scale-95 transition-all;
+}
+
 .edit-icon-btn {
-  @apply flex items-center justify-center rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 transition-colors;
+  @apply flex items-center justify-center rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 active:scale-95 transition-all;
+}
+
+.recording-row {
+  @apply flex items-center justify-between border-b border-gray-100 last:border-none py-3 first:pt-0 last:pb-0 gap-3;
+}
+
+.recording-row h4 {
+  @apply text-sm font-semibold text-slate-800 hover:text-indigo-600 transition-colors;
+}
+
+.recording-row p {
+  @apply text-xs text-gray-500 mt-0.5;
+}
+
+.watch-btn {
+  @apply inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-colors;
+}
+
+.students-list {
+  @apply divide-y divide-gray-100 overflow-y-auto pr-1;
+  max-height: 420px;
+}
+
+.student-row {
+  @apply flex items-center justify-between py-2.5 first:pt-0 last:pb-0 gap-2;
+}
+
+.student-left {
+  @apply flex items-center gap-3 min-w-0;
+}
+
+.student-left svg {
+  @apply text-indigo-500 shrink-0;
+}
+
+.student-left h4 {
+  @apply text-sm font-semibold text-slate-800 truncate;
+}
+
+.student-left p {
+  @apply text-xs text-gray-400 truncate;
+}
+
+.remove-btn {
+  @apply flex items-center justify-center rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all;
 }
 
 .modal-overlay {
-  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4;
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4;
 }
 
 .modal-card {
-  @apply w-full max-w-lg rounded-2xl bg-white p-5 sm:p-6 shadow-xl;
+  @apply w-full max-w-lg rounded-2xl bg-white p-5 sm:p-6 shadow-2xl border border-gray-100;
 }
 
 .modal-header {
@@ -106,133 +171,32 @@
   @apply text-base sm:text-lg font-bold text-gray-900;
 }
 
-.modal-close-btn {
-  @apply rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition;
-}
-
 .form-field {
   @apply mb-4;
 }
 
 .form-label {
-  @apply mb-1 block text-xs font-medium text-gray-600;
+  @apply mb-1.5 block text-xs font-semibold text-gray-700;
 }
 
 .form-input {
-  @apply w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500;
+  @apply w-full rounded-xl border border-gray-300 px-3.5 py-2 text-sm text-gray-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all;
 }
 
 .form-error {
-  @apply mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600;
-}
-
-.announcement-form {
-  @apply flex flex-col gap-3 sm:gap-4;
-}
-
-.announcement-item {
-  @apply border-b border-gray-100 pb-3 sm:pb-4 last:border-0 last:pb-0;
-}
-
-.announcement-header {
-  @apply flex items-start justify-between gap-2;
-}
-
-.announcement-title {
-  @apply text-sm sm:text-base font-semibold text-slate-800;
-}
-
-.announcement-body {
-  @apply text-sm text-gray-600 mt-1 whitespace-pre-wrap;
-}
-
-.announcement-actions {
-  @apply flex items-center gap-1 shrink-0;
-}
-
-.announcement-action-btn {
-  @apply p-1 text-gray-400 hover:text-indigo-600 rounded transition;
-}
-
-.announcement-delete-btn {
-  @apply p-1 text-gray-400 hover:text-red-600 rounded transition;
-}
-
-.inline-add-btn {
-  @apply flex items-center gap-1 rounded-lg bg-gray-300 px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-400 active:bg-gray-400 transition-colors;
-}
-
-.recording-item {
-  @apply flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50/80 transition;
-}
-
-.recording-info {
-  @apply flex items-center gap-3 min-w-0;
-}
-
-.recording-meta {
-  @apply min-w-0;
-}
-
-.recording-name {
-  @apply text-sm font-semibold text-slate-800 truncate;
-}
-
-.recording-date {
-  @apply text-xs sm:text-sm text-gray-400 mt-0.5;
-}
-
-.recording-actions {
-  @apply flex items-center gap-2 shrink-0;
-}
-
-.watch-btn {
-  @apply bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg transition;
-}
-
-.student-list-item {
-  @apply flex items-center justify-between gap-3 py-2.5 border-b border-gray-50 last:border-0;
-}
-
-.student-info {
-  @apply flex items-center gap-2.5 min-w-0;
-}
-
-.student-avatar {
-  @apply w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0;
-}
-
-.student-details {
-  @apply min-w-0;
-}
-
-.student-fullname {
-  @apply text-sm font-medium text-slate-800 truncate;
-}
-
-.student-email {
-  @apply text-xs text-gray-400 truncate;
-}
-
-.student-badge {
-  @apply text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0 font-medium;
-}
-
-.students-list {
-  @apply mt-2 overflow-y-auto pr-2;
-  max-height: 420px;
+  @apply mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs sm:text-sm text-red-600;
 }
 
 .empty-text {
-  @apply text-center text-gray-400 py-10;
+  @apply text-center text-gray-400 text-sm py-8;
 }
 
 .classroom-loading {
-  @apply flex justify-center items-center h-screen text-lg font-semibold;
+  @apply flex justify-center items-center min-h-[60vh] text-lg font-semibold text-gray-500;
 }
 
 .classroom-error {
-  @apply flex justify-center items-center h-screen text-red-600 text-lg font-semibold;
+  @apply flex justify-center items-center min-h-[60vh] text-red-600 text-lg font-semibold;
 }
 
 @media (max-width: 1024px) {

@@ -72,7 +72,7 @@ const StudentDashboard = () => {
         <StatCard
           icon={<CheckSquare />}
           label="Attendance"
-          value={`${dashboard?.stats?.attendance || 0}%`}
+          value={`${dashboard?.stats?.attendance ?? 0}%`}
           colorClass="bg-green-soft"
         />
       </div>

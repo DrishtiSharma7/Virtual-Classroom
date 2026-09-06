@@ -17,6 +17,7 @@ import {
   Play,
   Loader2,
   X,
+  Megaphone,
 } from "lucide-react";
 
 import "./ClassroomDetails.css";
@@ -33,6 +34,7 @@ import {
   getClassroomRecordings,
   getRecordingUrl,
 } from "../../api/recording.api";
+import { getClassroomAttendance, getMyAttendance } from "../../api/attendance.api";
 import { useNavigate } from "react-router-dom";
 import { createSession, startSession, endSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
@@ -93,16 +95,58 @@ function ClassroomDetails() {
   const role = user?.role;
   const isTeacher = role === "teacher";
   const isStudent = role === "student";
+
+  const [attendancePercentage, setAttendancePercentage] = useState(null);
+
   useEffect(() => {
     fetchClassroom();
     fetchAnnouncements();
     fetchRecordings();
     fetchLiveSession();
+    fetchAttendance();
 
     // Periodically poll for live session status (every 8 seconds)
     const interval = setInterval(fetchLiveSession, 8000);
     return () => clearInterval(interval);
   }, [classroomId]);
+
+  const fetchAttendance = async () => {
+    try {
+      if (isTeacher) {
+        const res = await getClassroomAttendance(classroomId);
+        const list = res?.attendance || [];
+        if (list.length > 0) {
+          const total = list.reduce(
+            (sum, s) => sum + (Number(s.attendancePercentage) || 0),
+            0
+          );
+          setAttendancePercentage(Math.round(total / list.length));
+        } else {
+          setAttendancePercentage(0);
+        }
+      } else {
+        const res = await getMyAttendance();
+        const list = (res?.attendance || []).filter(
+          (r) =>
+            r.classroom?._id === classroomId ||
+            r.classroom === classroomId ||
+            r.classroom?.name === classroom?.name
+        );
+        if (list.length > 0) {
+          const total = list.reduce(
+            (sum, r) => sum + (Number(r.attendancePercentage) || 0),
+            0
+          );
+          setAttendancePercentage(Math.round(total / list.length));
+        } else {
+          setAttendancePercentage(0);
+        }
+      }
+    } catch (err) {
+      console.error("Could not load classroom attendance:", err);
+      setAttendancePercentage(0);
+    }
+  };
 
   const fetchLiveSession = async () => {
     try {
@@ -465,10 +509,10 @@ function ClassroomDetails() {
               <span className="meta-chip">Room Code : {classroom.code}</span>
               <span className="meta-chip">{students.length} Students</span>
               {liveSession ? (
-                <span className="meta-chip bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1.5 border border-emerald-300">
+                <span className="meta-chip bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow-sm">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                   </span>
                   Live Session Running
                 </span>
@@ -480,7 +524,7 @@ function ClassroomDetails() {
 
           {isTeacher && liveSession && (
             <button
-              className="live-btn bg-emerald-600 hover:bg-emerald-700 shadow-lg flex items-center gap-2"
+              className="live-btn bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg flex items-center gap-2 border-none"
               onClick={handleJoinOrRejoinSession}
               data-tooltip="Rejoin active"
               title="Rejoin Live Session"
@@ -502,6 +546,18 @@ function ClassroomDetails() {
               {startingSession ? "Starting..." : "Start Live Session"}
             </button>
           )}
+
+          {isStudent && liveSession && (
+            <button
+              className="live-btn bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg flex items-center gap-2 border-none"
+              onClick={handleJoinOrRejoinSession}
+              data-tooltip="Join active live"
+              title="Join Live Session"
+            >
+              <Video size={18} />
+              Join Live Session
+            </button>
+          )}
         </div>
 
 
@@ -518,7 +574,7 @@ function ClassroomDetails() {
             <StatCard
               icon={<CalendarDays size={22} />}
               label={isTeacher ? "Attendance" : "My Attendance"}
-              value="91%"
+              value={`${attendancePercentage ?? 0}%`}
               colorClass="bg-green-soft"
             />
           </Link>
@@ -637,6 +693,7 @@ function ClassroomDetails() {
             <div className="section-card">
               <div className="section-title">
                 <span className="section-title-left">
+                  <Megaphone size={20} />
                   Announcements
                 </span>
                 {isTeacher && (
@@ -658,9 +715,14 @@ function ClassroomDetails() {
                 announcements.map((item) => (
                   <div key={item._id} className="announcement-item">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <h4>{item.title}</h4>
-                        {item.description && <p>{item.description}</p>}
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 mt-0.5">
+                          <Megaphone size={16} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4>{item.title}</h4>
+                          {item.description && <p>{item.description}</p>}
+                        </div>
                       </div>
                       {isTeacher && (
                         <div className="flex items-center gap-1 shrink-0">
@@ -874,7 +936,10 @@ function ClassroomDetails() {
           <div className="modal-overlay">
             <div className="modal-card">
               <div className="modal-header">
-                <h2 className="modal-title">Post Announcement</h2>
+                <h2 className="modal-title flex items-center gap-2">
+                  <Megaphone size={18} className="text-indigo-600" />
+                  Post Announcement
+                </h2>
                 <button
                   onClick={() => setShowAddAnnouncement(false)}
                   data-tooltip="Close modal"
@@ -927,7 +992,10 @@ function ClassroomDetails() {
           <div className="modal-overlay">
             <div className="modal-card">
               <div className="modal-header">
-                <h2 className="modal-title">Edit Announcement</h2>
+                <h2 className="modal-title flex items-center gap-2">
+                  <Megaphone size={18} className="text-indigo-600" />
+                  Edit Announcement
+                </h2>
                 <button
                   onClick={() => setShowEditAnnouncement(false)}
                   data-tooltip="Close modal"
