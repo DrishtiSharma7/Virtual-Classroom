@@ -12,7 +12,9 @@ async function getAuthorizedSession(sessionId, user) {
     throw new SessionAccessError("Invalid session or user", 400);
   }
 
-  const session = await Session.findById(sessionId).populate("classroom");
+  const session = await Session.findById(sessionId)
+    .populate("classroom")
+    .lean();
   if (!session || !session.classroom) {
     throw new SessionAccessError("Session not found", 404);
   }

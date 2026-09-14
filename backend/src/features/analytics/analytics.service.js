@@ -108,11 +108,11 @@ async function resolveClassroomScope(teacherId, classroomId) {
 }
 
 async function getEnrolledStudentIds(classroomIds) {
-  const classrooms = await Classroom.find({ _id: { $in: classroomIds } }).select(
-    "students",
-  );
+  const classrooms = await Classroom.find({ _id: { $in: classroomIds } })
+    .select("students")
+    .lean();
   const set = new Set();
-  classrooms.forEach((c) => c.students.forEach((s) => set.add(s.toString())));
+  classrooms.forEach((c) => (c.students || []).forEach((s) => set.add(s.toString())));
   return Array.from(set);
 }
 
@@ -121,45 +121,53 @@ async function getEndedSessions(classroomIds, from, to) {
     classroom: { $in: classroomIds },
     status: "ended",
     startTime: { $gte: from, $lte: to },
-  }).sort({ startTime: 1 });
+  })
+    .sort({ startTime: 1 })
+    .lean();
 }
 
 async function computeScopeMetrics(classroomIds, from, to) {
-  const classrooms = await Classroom.find({ _id: { $in: classroomIds } }).select(
-    "students",
-  );
+  const [classrooms, sessions] = await Promise.all([
+    Classroom.find({ _id: { $in: classroomIds } })
+      .select("students")
+      .lean(),
+    getEndedSessions(classroomIds, from, to),
+  ]);
+
   const studentIds = Array.from(
-    new Set(classrooms.flatMap((c) => c.students.map((s) => s.toString()))),
+    new Set(classrooms.flatMap((c) => (c.students || []).map((s) => s.toString()))),
   );
-  const sessions = await getEndedSessions(classroomIds, from, to);
   const sessionIds = sessions.map((s) => s._id);
 
   const sessionCountByClassroom = new Map();
   sessions.forEach((s) => {
-    const key = s.classroom.toString();
+    const key = s.classroom ? s.classroom.toString() : "";
     sessionCountByClassroom.set(key, (sessionCountByClassroom.get(key) || 0) + 1);
   });
   const eligibleSessionsByStudent = new Map();
   classrooms.forEach((c) => {
     const count = sessionCountByClassroom.get(c._id.toString()) || 0;
-    c.students.forEach((studentId) => {
+    (c.students || []).forEach((studentId) => {
       const key = studentId.toString();
       eligibleSessionsByStudent.set(key, (eligibleSessionsByStudent.get(key) || 0) + count);
     });
   });
 
-  const attendanceDocs = sessionIds.length
-    ? await Attendance.find({ session: { $in: sessionIds } })
-    : [];
-
-  const quizzes = await Quiz.find({
-    classroom: { $in: classroomIds },
-    session: { $in: sessionIds },
-  }).select("questions session createdAt title");
+  const [attendanceDocs, quizzes] = await Promise.all([
+    sessionIds.length
+      ? Attendance.find({ session: { $in: sessionIds } }).lean()
+      : Promise.resolve([]),
+    Quiz.find({
+      classroom: { $in: classroomIds },
+      session: { $in: sessionIds },
+    })
+      .select("questions session createdAt title")
+      .lean(),
+  ]);
 
   const quizIds = quizzes.map((q) => q._id);
   const responses = quizIds.length
-    ? await QuizResponse.find({ quiz: { $in: quizIds } })
+    ? await QuizResponse.find({ quiz: { $in: quizIds } }).lean()
     : [];
 
   const totalStudents = studentIds.length;
@@ -293,7 +301,9 @@ function buildPerformanceTrends(metrics, from, to) {
 
 async function buildEngagementOverview(classroomIds, metrics) {
   const students = metrics.studentIds.length
-    ? await User.find({ _id: { $in: metrics.studentIds } }).select("name email")
+    ? await User.find({ _id: { $in: metrics.studentIds } })
+        .select("name email")
+        .lean()
     : [];
   const studentById = new Map(students.map((s) => [s._id.toString(), s]));
 
@@ -435,12 +445,10 @@ async function getOverview({ teacherId, classroomId, from, to }) {
   const range = resolveDateRange(from, to);
   const previousRange = getPreviousPeriod(range.from, range.to);
 
-  const metrics = await computeScopeMetrics(classroomIds, range.from, range.to);
-  const previousMetrics = await computeScopeMetrics(
-    classroomIds,
-    previousRange.from,
-    previousRange.to,
-  );
+  const [metrics, previousMetrics] = await Promise.all([
+    computeScopeMetrics(classroomIds, range.from, range.to),
+    computeScopeMetrics(classroomIds, previousRange.from, previousRange.to),
+  ]);
 
   const engagement = await buildEngagementOverview(classroomIds, metrics);
   const performanceTrends = buildPerformanceTrends(metrics, range.from, range.to);
@@ -562,7 +570,9 @@ async function getAttendanceAnalytics({
   const metrics = await computeScopeMetrics(classroomIds, range.from, range.to);
 
   const students = metrics.studentIds.length
-    ? await User.find({ _id: { $in: metrics.studentIds } }).select("name email")
+    ? await User.find({ _id: { $in: metrics.studentIds } })
+        .select("name email")
+        .lean()
     : [];
   const studentById = new Map(students.map((s) => [s._id.toString(), s]));
 
@@ -917,7 +927,9 @@ async function getQuizAnalytics({
   });
 
   const students = enrolledStudentIds.length
-    ? await User.find({ _id: { $in: enrolledStudentIds } }).select("name email")
+    ? await User.find({ _id: { $in: enrolledStudentIds } })
+        .select("name email")
+        .lean()
     : [];
   const studentById = new Map(students.map((s) => [s._id.toString(), s]));
   const perStudent = new Map();
@@ -997,7 +1009,9 @@ async function getQuizAnalytics({
 
 async function getClassComparison({ teacherId, from, to }) {
   const range = resolveDateRange(from, to);
-  const classrooms = await Classroom.find({ teacher: teacherId });
+  const classrooms = await Classroom.find({ teacher: teacherId })
+    .select("_id name subject")
+    .lean();
 
   const rows = await Promise.all(
     classrooms.map(async (classroom) => {
@@ -1026,13 +1040,15 @@ async function getClassComparison({ teacherId, from, to }) {
 
 async function buildStudentDetail({ studentId, classroomIds, from, to }) {
   const range = resolveDateRange(from, to);
-  const student = await User.findById(studentId).select("name email");
+  const student = await User.findById(studentId).select("name email").lean();
   if (!student) throw new AnalyticsAccessError("Student not found", 404);
 
   const classrooms = await Classroom.find({
     _id: { $in: classroomIds },
     students: studentId,
-  }).select("name subject");
+  })
+    .select("name subject")
+    .lean();
   if (!classrooms.length) {
     throw new AnalyticsAccessError("Student not found in your classrooms", 404);
   }
@@ -1041,7 +1057,7 @@ async function buildStudentDetail({ studentId, classroomIds, from, to }) {
   const sessions = await getEndedSessions(studentClassroomIds, range.from, range.to);
   const sessionIds = sessions.map((s) => s._id);
   const attendanceDocs = sessionIds.length
-    ? await Attendance.find({ session: { $in: sessionIds }, student: studentId })
+    ? await Attendance.find({ session: { $in: sessionIds }, student: studentId }).lean()
     : [];
 
   const sessionsAttended = attendanceDocs.filter((a) => a.isPresent).length;

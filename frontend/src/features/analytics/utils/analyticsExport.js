@@ -1,6 +1,3 @@
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-
 const filenameSafe = (value) =>
   String(value || "analytics")
     .trim()
@@ -8,7 +5,7 @@ const filenameSafe = (value) =>
     .replace(/^-+|-+$/g, "")
     .toLowerCase();
 
-export const exportAnalyticsToExcel = ({
+export const exportAnalyticsToExcel = async ({
   scopeLabel,
   dateRangeLabel,
   kpis = [],
@@ -16,6 +13,7 @@ export const exportAnalyticsToExcel = ({
   sessionRows = [],
   quizRankingRows = [],
 }) => {
+  const XLSX = await import("xlsx");
   const workbook = XLSX.utils.book_new();
 
   const summarySheet = XLSX.utils.json_to_sheet([
@@ -74,7 +72,7 @@ export const exportAnalyticsToExcel = ({
   XLSX.writeFile(workbook, `analytics-${filenameSafe(scopeLabel)}.xlsx`);
 };
 
-export const exportAnalyticsToPdf = ({
+export const exportAnalyticsToPdf = async ({
   scopeLabel,
   dateRangeLabel,
   kpis = [],
@@ -82,6 +80,7 @@ export const exportAnalyticsToPdf = ({
   attendanceRows = [],
   sessionRows = [],
 }) => {
+  const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const marginX = 40;
   let y = 50;

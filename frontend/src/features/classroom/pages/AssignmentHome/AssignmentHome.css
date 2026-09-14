@@ -1,0 +1,148 @@
+@reference "../../styles/index.css";
+
+/* Page */
+
+.assignment-page {
+  @apply min-h-screen bg-[#f4f3f3] p-8 pt-3;
+}
+
+.assignment-container {
+  @apply max-w-7xl mx-auto;
+}
+
+/* Header */
+
+.assignment-header {
+@apply flex justify-between items-center mb-6;}
+
+.assignment-title {
+  @apply text-2xl font-bold text-slate-800;
+}
+
+.assignment-subtitle {
+  @apply text-slate-500;
+}
+
+.create-btn {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition duration-200;
+}
+
+/* Stats */
+
+.stats-grid {
+  @apply grid md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6;
+}
+
+.stat-card {
+  @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6;
+}
+
+/* Search */
+
+.search-section {
+  @apply mb-6;
+}
+
+.search-input {
+  @apply w-full bg-white border border-slate-300 rounded-lg px-6 py-3 outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+/* Assignment Grid */
+
+.assignment-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-4;
+}
+
+/* Card */
+
+.assignment-card {
+  @apply bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:shadow-lg transition-all duration-300;
+}
+
+.card-top {
+  @apply flex justify-between items-start mb-6;
+}
+
+.card-top h2 {
+  @apply text-xl font-semibold text-slate-800;
+}
+
+.card-top p {
+  @apply text-slate-500 mt-1;
+}
+
+/* Status */
+
+.status {
+  @apply px-3 py-1 rounded-full text-xs font-semibold;
+}
+
+.active {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.pending {
+  @apply bg-yellow-100 text-yellow-700;
+}
+
+.completed {
+  @apply bg-green-100 text-green-700;
+}
+
+/* Card Body */
+
+.card-body {
+  @apply grid grid-cols-3 gap-4 mb-6;
+}
+
+.card-body strong {
+  @apply block text-sm text-slate-500 mb-1;
+}
+
+.card-body p {
+  @apply text-lg font-semibold text-slate-800;
+}
+
+/* Progress */
+
+.progress-wrapper {
+  @apply w-full h-3 bg-slate-200 rounded-full overflow-hidden mb-6;
+}
+
+.progress-bar {
+  @apply h-full bg-indigo-600 rounded-full transition-all duration-500;
+}
+
+/* Buttons */
+
+.card-buttons {
+  @apply flex flex-wrap gap-3;
+}
+
+.view-btn {
+  @apply px-4 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-900 transition;
+}
+
+.edit-btn {
+  @apply px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition;
+}
+
+
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .card-body {
+    @apply grid-cols-1 gap-3;
+  }
+
+  .card-buttons {
+    @apply flex-col;
+  }
+
+  .view-btn,
+  .edit-btn,
+  .delete-btn {
+    @apply w-full;
+  }
+}

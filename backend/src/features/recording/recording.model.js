@@ -38,4 +38,6 @@ const recordingSchema = new mongoose.Schema(
   },
 );
 
+recordingSchema.index({ classroom: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Recording", recordingSchema);

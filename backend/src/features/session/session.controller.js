@@ -64,16 +64,11 @@ exports.getSessionsByClassroom = async (req, res) => {
     const sessions = await Session.find({
       classroom: req.params.classroomId,
     })
-
-      .populate(
-        "createdBy",
-
-        "name email",
-      )
-
+      .populate("createdBy", "name email")
       .sort({
         startTime: 1,
-      });
+      })
+      .lean();
 
     res.json(sessions);
   } catch (err) {
@@ -86,18 +81,9 @@ exports.getSessionsByClassroom = async (req, res) => {
 exports.getSessionById = async (req, res) => {
   try {
     const session = await Session.findById(req.params.id)
-
-      .populate(
-        "createdBy",
-
-        "name email",
-      )
-
-      .populate(
-        "classroom",
-
-        "name subject",
-      );
+      .populate("createdBy", "name email")
+      .populate("classroom", "name subject")
+      .lean();
 
     if (!session) {
       return res.status(404).json({

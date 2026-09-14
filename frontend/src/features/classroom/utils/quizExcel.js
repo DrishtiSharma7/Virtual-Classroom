@@ -1,11 +1,10 @@
-import * as XLSX from "xlsx";
-
 export const parseQuizExcel = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await import("xlsx");
         const workbook = XLSX.read(e.target.result, { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet);
@@ -42,7 +41,8 @@ export const parseQuizExcel = (file) => {
   });
 };
 
-export const downloadQuizTemplate = () => {
+export const downloadQuizTemplate = async () => {
+  const XLSX = await import("xlsx");
   const rows = [
     {
       Question: "What is the derivative of x^2?",
@@ -62,7 +62,8 @@ export const downloadQuizTemplate = () => {
   XLSX.writeFile(workbook, "quiz-import-template.xlsx");
 };
 
-export const exportResultsToExcel = (results, quizTitle = "Quiz Results") => {
+export const exportResultsToExcel = async (results, quizTitle = "Quiz Results") => {
+  const XLSX = await import("xlsx");
   const rows = results.map((r) => ({
     "Student Name": r.student?.name || "Unknown",
     Email: r.student?.email || "",

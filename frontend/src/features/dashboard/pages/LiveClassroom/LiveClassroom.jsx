@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import { useParams, useNavigate, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
-import jsPDF from "jspdf";
 import {
   GraduationCap,
   Circle,
@@ -533,6 +532,8 @@ export default function LiveClassroom() {
   const activePageIdRef = useRef(null);
   const hasRedoRef = useRef({});
   const drawStateRef = useRef({ isDrawing: false, current: null });
+  const previewThrottleRef = useRef(0);
+  const rafRedrawRef = useRef(null);
   const remoteLiveRef = useRef({});
   const [showDrawTools, setShowDrawTools] = useState(true);
   const [tool, setTool] = useState("pen");
@@ -1086,23 +1087,39 @@ export default function LiveClassroom() {
       current.y2 = y;
     }
 
-    redrawCanvas();
-    if (ctxRef.current) drawElement(ctxRef.current, current);
+    if (!rafRedrawRef.current) {
+      rafRedrawRef.current = requestAnimationFrame(() => {
+        redrawCanvas();
+        if (ctxRef.current && drawStateRef.current.current) {
+          drawElement(ctxRef.current, drawStateRef.current.current);
+        }
+        rafRedrawRef.current = null;
+      });
+    }
 
-    socketRef.current?.emit("draw-preview", {
-      roomId: sessionId,
-      pageId: activePageId,
-      element: current,
-    });
+    const now = performance.now();
+    if (now - previewThrottleRef.current > 33) {
+      previewThrottleRef.current = now;
+      socketRef.current?.emit("draw-preview", {
+        roomId: sessionId,
+        pageId: activePageId,
+        element: current,
+      });
+    }
   };
 
   const handlePointerUp = () => {
     if (!canDraw) return;
+    if (rafRedrawRef.current) {
+      cancelAnimationFrame(rafRedrawRef.current);
+      rafRedrawRef.current = null;
+    }
     const current = drawStateRef.current.current;
     drawStateRef.current.isDrawing = false;
     drawStateRef.current.current = null;
 
     if (!current) return;
+    redrawCanvas();
     if (current.type === "path" && current.points.length < 2) {
       return;
     }
@@ -1173,6 +1190,7 @@ export default function LiveClassroom() {
       const height = BOARD_HEIGHT;
       const orientation = width >= height ? "landscape" : "portrait";
 
+      const { default: jsPDF } = await import("jspdf");
       const doc = new jsPDF({
         orientation,
         unit: "px",

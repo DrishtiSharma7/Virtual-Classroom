@@ -72,5 +72,7 @@ attendanceSchema.index(
 );
 attendanceSchema.index({ session: 1, status: 1 });
 attendanceSchema.index({ student: 1, status: 1 });
+attendanceSchema.index({ classroom: 1 });
+attendanceSchema.index({ classroom: 1, student: 1 });
 
 module.exports = mongoose.model("Attendance", attendanceSchema);

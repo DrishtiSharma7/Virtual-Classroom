@@ -67,4 +67,8 @@ const quizSchema = new mongoose.Schema(
   },
 );
 
+quizSchema.index({ classroom: 1, launched: 1 });
+quizSchema.index({ session: 1 });
+quizSchema.index({ createdBy: 1 });
+
 module.exports = mongoose.model("Quiz", quizSchema);

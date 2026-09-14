@@ -54,5 +54,6 @@ const sessionSchema = new mongoose.Schema(
 
 sessionSchema.index({ createdBy: 1, status: 1 });
 sessionSchema.index({ classroom: 1 });
+sessionSchema.index({ classroom: 1, status: 1, startTime: 1 });
 
 module.exports = mongoose.model("Session", sessionSchema);

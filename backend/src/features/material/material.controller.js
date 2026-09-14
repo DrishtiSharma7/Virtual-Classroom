@@ -29,7 +29,8 @@ exports.getMaterials = async (req, res) => {
       .populate("uploadedBy", "name email")
       .sort({
         createdAt: -1,
-      });
+      })
+      .lean();
 
     res.json(materials);
   } catch (err) {

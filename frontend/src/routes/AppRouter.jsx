@@ -4,11 +4,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout/DashboardLayout";
 
-import LoginPage from "../features/auth/pages/LoginPage";
-import RegisterPage from "../features/auth/pages/RegisterPage";
-import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
-import LandingPage from "../features/marketing/pages/LandingPage/LandingPage";
-
 function lazyWithRetry(componentImport) {
   return lazy(async () => {
     try {
@@ -27,6 +22,12 @@ function lazyWithRetry(componentImport) {
   });
 }
 
+const LandingPage = lazyWithRetry(() => import("../features/marketing/pages/LandingPage/LandingPage"));
+const LoginPage = lazyWithRetry(() => import("../features/auth/pages/LoginPage"));
+const RegisterPage = lazyWithRetry(() => import("../features/auth/pages/RegisterPage"));
+const ForgotPasswordPage = lazyWithRetry(() => import("../features/auth/pages/ForgotPasswordPage"));
+
+const Dashboard = lazyWithRetry(() => import("../features/dashboard/Dashboard"));
 const ClassroomHome = lazyWithRetry(() => import("../features/classroom/pages/ClassroomHome/ClassroomHome"));
 const ClassroomDetails = lazyWithRetry(() => import("../features/classroom/pages/ClassroomDetails/ClassroomDetails"));
 const CreateClassroom = lazyWithRetry(() => import("../features/classroom/pages/CreateClassroom/CreateClassroom"));
@@ -36,7 +37,6 @@ const LiveClassroom = lazyWithRetry(() => import("../features/dashboard/pages/Li
 const QuizHome = lazyWithRetry(() => import("../features/classroom/pages/QuizHome/QuizHome"));
 const QuizDetail = lazyWithRetry(() => import("../features/classroom/pages/QuizHome/QuizDetail"));
 const RecordingsHome = lazyWithRetry(() => import("../features/classroom/pages/RecordingsHome/RecordingsHome"));
-import Dashboard from "../features/dashboard/Dashboard";
 const AnalyticsDashboard = lazyWithRetry(() => import("../features/analytics/pages/AnalyticsDashboard/AnalyticsDashboard"));
 const SettingsPage = lazyWithRetry(() => import("../features/settings/pages/SettingsPage/SettingsPage"));
 

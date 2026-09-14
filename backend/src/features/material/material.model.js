@@ -33,4 +33,6 @@ const materialSchema = new mongoose.Schema(
   },
 );
 
+materialSchema.index({ classroom: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Material", materialSchema);

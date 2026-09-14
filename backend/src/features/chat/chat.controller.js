@@ -5,12 +5,11 @@ exports.getMessagesBySession = async (req, res) => {
     const messages = await Chat.find({
       session: req.params.sessionId,
     })
-
       .populate("sender", "name email")
-
       .sort({
         createdAt: 1,
-      });
+      })
+      .lean();
 
     res.json(messages);
   } catch (err) {

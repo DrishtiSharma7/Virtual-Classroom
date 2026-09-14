@@ -1,5 +1,3 @@
-import * as XLSX from "xlsx";
-
 const filenameSafe = (value) =>
   String(value || "attendance")
     .trim()
@@ -7,7 +5,8 @@ const filenameSafe = (value) =>
     .replace(/^-+|-+$/g, "")
     .toLowerCase();
 
-export const exportTeacherAttendanceToExcel = (rows, scopeLabel) => {
+export const exportTeacherAttendanceToExcel = async (rows, scopeLabel) => {
+  const XLSX = await import("xlsx");
   const sheetRows = rows.map((row) => ({
     Student: row.name,
     Email: row.email,
@@ -24,7 +23,8 @@ export const exportTeacherAttendanceToExcel = (rows, scopeLabel) => {
   XLSX.writeFile(workbook, `attendance-${filenameSafe(scopeLabel)}.xlsx`);
 };
 
-export const exportMyAttendanceToExcel = (rows, studentName) => {
+export const exportMyAttendanceToExcel = async (rows, studentName) => {
+  const XLSX = await import("xlsx");
   const sheetRows = rows.map((row) => ({
     Class: row.classroomName,
     Session: row.sessionTitle,

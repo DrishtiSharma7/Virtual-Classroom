@@ -22,7 +22,7 @@ module.exports = (io, socket) => {
     allowStudentDraw: registry.getAllowStudentDraw(roomId),
   });
 
-  socket.on("draw", async (data) => {
+  socket.on("draw", (data) => {
     if (!data?.roomId || !data?.pageId) return;
     if (
       !requireDrawPermission(
@@ -36,37 +36,43 @@ module.exports = (io, socket) => {
 
     if (data.element) {
       registry.clearRedo(data.roomId, data.pageId);
-
-      try {
-        await getOrInitBoard(data.roomId);
-        await Whiteboard.updateOne(
-          { session: data.roomId, "pages.pageId": { $ne: data.pageId } },
-          { $push: { pages: { pageId: data.pageId, name: "Page", elements: [] } } },
-        );
-
-        const filter = data.element.id
-          ? {
-              session: data.roomId,
-              pages: {
-                $elemMatch: {
-                  pageId: data.pageId,
-                  "elements.id": { $ne: data.element.id },
-                },
-              },
-            }
-          : { session: data.roomId, "pages.pageId": data.pageId };
-
-        await Whiteboard.updateOne(
-          filter,
-          { $push: { "pages.$[p].elements": data.element } },
-          { arrayFilters: [{ "p.pageId": data.pageId }] },
-        );
-      } catch (err) {
-        console.error("Whiteboard persist error:", err.message);
-      }
     }
 
+    // Broadcast immediately so peers see the stroke with zero network delay
     socket.to(data.roomId).emit("draw", data);
+
+    // Persist to MongoDB asynchronously without blocking real-time socket communication
+    if (data.element) {
+      (async () => {
+        try {
+          await getOrInitBoard(data.roomId);
+          await Whiteboard.updateOne(
+            { session: data.roomId, "pages.pageId": { $ne: data.pageId } },
+            { $push: { pages: { pageId: data.pageId, name: "Page", elements: [] } } },
+          );
+
+          const filter = data.element.id
+            ? {
+                session: data.roomId,
+                pages: {
+                  $elemMatch: {
+                    pageId: data.pageId,
+                    "elements.id": { $ne: data.element.id },
+                  },
+                },
+              }
+            : { session: data.roomId, "pages.pageId": data.pageId };
+
+          await Whiteboard.updateOne(
+            filter,
+            { $push: { "pages.$[p].elements": data.element } },
+            { arrayFilters: [{ "p.pageId": data.pageId }] },
+          );
+        } catch (err) {
+          console.error("Whiteboard persist error:", err.message);
+        }
+      })();
+    }
   });
 
   socket.on("draw-preview", (data) => {

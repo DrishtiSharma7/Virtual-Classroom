@@ -67,7 +67,8 @@ exports.getRecordings = async (req, res) => {
       .populate("uploadedBy", "name email")
       .sort({
         createdAt: -1,
-      });
+      })
+      .lean();
 
     res.json(recordings);
   } catch (err) {
@@ -101,7 +102,7 @@ exports.deleteRecording = async (req, res) => {
       const filePath = path.join(__dirname, "../../../", recording.fileUrl);
       if (fs.existsSync(filePath)) {
         try {
-          fs.unlinkSync(filePath);
+          await fs.promises.unlink(filePath);
         } catch (e) {
           console.warn("Could not delete recording file from disk:", e.message);
         }

@@ -9,7 +9,7 @@ const generateRoomCode = async () => {
     for (let i = 0; i < 6; i++) {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
-    exists = await Classroom.findOne({ code });
+    exists = await Classroom.exists({ code });
   }
   return code;
 };

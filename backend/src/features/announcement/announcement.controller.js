@@ -46,7 +46,8 @@ exports.getAnnouncements = async (req, res) => {
       classroom: req.params.classroomId,
     })
       .populate("postedBy", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json(announcements);
   } catch (err) {
