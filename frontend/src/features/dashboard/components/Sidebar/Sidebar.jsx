@@ -24,6 +24,44 @@ const prefetchRoutes = () => {
   import("../../../settings/pages/SettingsPage/SettingsPage").catch(() => {});
 };
 
+const MENU_ITEMS = [
+  {
+    icon: <LayoutDashboard />,
+    label: "Dashboard",
+    path: "/dashboard",
+  },
+  {
+    icon: <Users />,
+    label: "Classrooms",
+    path: "/classrooms",
+  },
+  {
+    icon: <CalendarCheck />,
+    label: "Attendance",
+    path: "/attendance",
+  },
+  {
+    icon: <ClipboardCheck />,
+    label: "Quizzes",
+    path: "/quizzes",
+  },
+  {
+    icon: <Video />,
+    label: "Recordings",
+    path: "/recordings",
+  },
+  {
+    icon: <ChartColumn />,
+    label: "Analytics",
+    path: "/analytics",
+  },
+  {
+    icon: <Settings />,
+    label: "Settings",
+    path: "/settings",
+  },
+];
+
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,43 +92,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     setSidebarOpen(false);
   };
 
-  const menuItems = [
-    {
-      icon: <LayoutDashboard />,
-      label: "Dashboard",
-      path: "/dashboard",
-    },
-    {
-      icon: <Users />,
-      label: "Classrooms",
-      path: "/classrooms",
-    },
-    {
-      icon: <CalendarCheck />,
-      label: "Attendance",
-      path: "/attendance",
-    },
-    {
-      icon: <ClipboardCheck />,
-      label: "Quizzes",
-      path: "/quizzes",
-    },
-    {
-      icon: <Video />,
-      label: "Recordings",
-      path: "/recordings",
-    },
-    {
-      icon: <ChartColumn />,
-      label: "Analytics",
-      path: "/analytics",
-    },
-    {
-      icon: <Settings />,
-      label: "Settings",
-      path: "/settings",
-    },
-  ];
+  const menuItems = MENU_ITEMS;
 
   return (
     <aside className={`sidebar-container ${sidebarOpen ? "open" : ""}`}>

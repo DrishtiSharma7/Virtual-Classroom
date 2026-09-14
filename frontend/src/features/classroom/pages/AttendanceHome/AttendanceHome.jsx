@@ -53,6 +53,11 @@ function AttendanceHome() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
+
   const rowsPerPage = 10;
 
   const filteredData = useMemo(() => {
@@ -79,28 +84,37 @@ function AttendanceHome() {
     currentPage * rowsPerPage
   );
 
-  const totalStudents = attendance.length;
+  const {
+    totalStudents,
+    presentCount,
+    absentCount,
+    presentSessions,
+    absentSessions,
+    attendancePercentage,
+  } = useMemo(() => {
+    const total = attendance.length;
+    let present = 0;
+    let pSessions = 0;
+    let aSessions = 0;
+    let sumPercentage = 0;
 
-  const presentCount = attendance.filter((a) => a.isPresent).length;
-  const absentCount = totalStudents - presentCount;
+    for (let i = 0; i < total; i++) {
+      const item = attendance[i];
+      if (item.isPresent) present++;
+      if (item.presentSessions) pSessions += item.presentSessions;
+      if (item.absentSessions) aSessions += item.absentSessions;
+      if (item.attendancePercentage) sumPercentage += item.attendancePercentage;
+    }
 
-  const presentSessions = attendance.reduce(
-    (sum, s) => sum + (s.presentSessions || 0),
-    0
-  );
-
-  const absentSessions = attendance.reduce(
-    (sum, s) => sum + (s.absentSessions || 0),
-    0
-  );
-
-  const attendancePercentage =
-    totalStudents === 0
-      ? "0.0"
-      : (
-          attendance.reduce((sum, s) => sum + (s.attendancePercentage || 0), 0) /
-          totalStudents
-        ).toFixed(1);
+    return {
+      totalStudents: total,
+      presentCount: present,
+      absentCount: total - present,
+      presentSessions: pSessions,
+      absentSessions: aSessions,
+      attendancePercentage: total === 0 ? "0.0" : (sumPercentage / total).toFixed(1),
+    };
+  }, [attendance]);
 
   const handleDelete = (key) => {
     if (!window.confirm("Delete attendance record?")) return;
@@ -151,13 +165,19 @@ function AttendanceHome() {
         return;
       }
 
-      const data = classroomId
-        ? await getClassroomAttendance(classroomId)
-        : await getAttendanceDashboard();
+      let data;
+      let classroomName = null;
 
-      const classroomName = classroomId
-        ? (await getClassroomById(classroomId)).name
-        : null;
+      if (classroomId) {
+        const [attData, classData] = await Promise.all([
+          getClassroomAttendance(classroomId),
+          getClassroomById(classroomId).catch(() => null),
+        ]);
+        data = attData;
+        classroomName = classData?.name || null;
+      } else {
+        data = await getAttendanceDashboard();
+      }
 
       setClassroomLabel(classroomName || "all-classrooms");
 
@@ -287,10 +307,7 @@ function AttendanceHome() {
                   type="text"
                   placeholder="Search by Class or Session..."
                   value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={handleSearchChange}
                 />
               </div>
             </div>
@@ -488,10 +505,7 @@ function AttendanceHome() {
                 type="text"
                 placeholder="Search by Name or Email..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={handleSearchChange}
               />
             </div>
           </div>

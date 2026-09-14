@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -56,27 +56,50 @@ export default function StudentQuizHome() {
   useEffect(() => {
     if (!classroomId) return;
 
+    const cacheKey = `cached_student_quizzes_${classroomId}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setQuizzes(JSON.parse(cached));
+      }
+    } catch {}
+
+    let active = true;
     (async () => {
       setLoadingQuizzes(true);
       try {
         const data = await getClassroomQuizzes(classroomId);
+        if (!active) return;
         setQuizzes(data);
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
       } catch {
-        toast.error("Could not load quizzes for this classroom.");
+        if (active) toast.error("Could not load quizzes for this classroom.");
       } finally {
-        setLoadingQuizzes(false);
+        if (active) setLoadingQuizzes(false);
       }
     })();
+
+    return () => {
+      active = false;
+    };
   }, [classroomId]);
 
-  const attemptedCount = quizzes.filter((q) => q.attempted).length;
-  const pendingCount = quizzes.length - attemptedCount;
+  const { attemptedCount, pendingCount } = useMemo(() => {
+    let attempted = 0;
+    for (let i = 0; i < quizzes.length; i++) {
+      if (quizzes[i].attempted) attempted++;
+    }
+    return {
+      attemptedCount: attempted,
+      pendingCount: quizzes.length - attempted,
+    };
+  }, [quizzes]);
 
-  const visibleQuizzes = quizzes.filter((q) => {
-    if (filter === "attempted") return q.attempted;
-    if (filter === "pending") return !q.attempted;
-    return true;
-  });
+  const visibleQuizzes = useMemo(() => {
+    if (filter === "attempted") return quizzes.filter((q) => q.attempted);
+    if (filter === "pending") return quizzes.filter((q) => !q.attempted);
+    return quizzes;
+  }, [quizzes, filter]);
 
   return (
     <div className="quiz-page">

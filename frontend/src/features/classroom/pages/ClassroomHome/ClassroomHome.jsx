@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { getMyClassrooms, deleteClassroom } from "../../api/classroom.api";
 import {
   LayoutDashboard,
@@ -25,8 +26,9 @@ function ClassroomHome() {
   const [loading, setLoading] = useState(classrooms.length === 0);
   const [error, setError] = useState("");
 
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = storedUser?.role || "student";
+  const authUser = useSelector((state) => state.auth?.user);
+  const authRole = useSelector((state) => state.auth?.role);
+  const role = authRole || authUser?.role || "student";
   const isTeacher = role === "teacher";
 
   useEffect(() => {

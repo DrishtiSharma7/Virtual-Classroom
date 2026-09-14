@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { KeyRound, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { joinClassroom } from "../../api/classroom.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
@@ -8,8 +9,9 @@ function JoinClassroom() {
   const navigate = useNavigate();
   usePageMeta("Join Classroom");
 
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = storedUser?.role || localStorage.getItem("role") || "student";
+  const authUser = useSelector((state) => state.auth?.user);
+  const authRole = useSelector((state) => state.auth?.role);
+  const role = authRole || authUser?.role || localStorage.getItem("role") || "student";
   const isTeacher = role === "teacher";
 
   const [code, setCode] = useState("");

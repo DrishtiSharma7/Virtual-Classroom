@@ -43,15 +43,19 @@ export default function QuizDetail() {
 
   const loadQuiz = async () => {
     try {
-      const data = await getQuizDetail(quizId);
-      setQuiz(data);
-
       if (role === "teacher") {
-        const r = await getQuizResults(quizId);
+        const [data, r] = await Promise.all([
+          getQuizDetail(quizId),
+          getQuizResults(quizId),
+        ]);
+        setQuiz(data);
         setResults({
           perStudent: r?.perStudent || [],
           perQuestion: r?.perQuestion || [],
         });
+      } else {
+        const data = await getQuizDetail(quizId);
+        setQuiz(data);
       }
     } catch (err) {
       setError(err?.response?.data?.message || "Could not load this quiz.");

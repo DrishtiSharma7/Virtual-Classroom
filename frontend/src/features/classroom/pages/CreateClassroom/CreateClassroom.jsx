@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   GraduationCap,
   BookOpen,
@@ -16,8 +17,9 @@ function CreateClassroom() {
   const navigate = useNavigate();
   usePageMeta("Create Classroom");
 
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = storedUser?.role || localStorage.getItem("role") || "student";
+  const authUser = useSelector((state) => state.auth?.user);
+  const authRole = useSelector((state) => state.auth?.role);
+  const role = authRole || authUser?.role || localStorage.getItem("role") || "student";
   const isTeacher = role === "teacher";
 
   const [formData, setFormData] = useState({ name: "", subject: "" });

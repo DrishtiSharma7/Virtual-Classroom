@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
   ArrowLeft,
@@ -16,7 +17,6 @@ import {
   Pencil,
   Play,
   Loader2,
-  X,
   Megaphone,
 } from "lucide-react";
 
@@ -32,19 +32,29 @@ import {
   uploadRecording,
   deleteRecording,
   getClassroomRecordings,
-  getRecordingUrl,
 } from "../../api/recording.api";
 import { getClassroomAttendance, getMyAttendance } from "../../api/attendance.api";
-import { useNavigate } from "react-router-dom";
 import { createSession, startSession, endSession, getSessionsByClassroom } from "../../../auth/api/session.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 import StatCard from "../../../dashboard/components/StatCard/StatCard";
-
 import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
 import { buildUserColorMap } from "../../../../utils/avatar";
 
+import EditSessionModal from "./components/EditSessionModal";
+import AddAnnouncementModal from "./components/AddAnnouncementModal";
+import EditAnnouncementModal from "./components/EditAnnouncementModal";
+import UploadRecordingModal from "./components/UploadRecordingModal";
+import WatchRecordingModal from "./components/WatchRecordingModal";
+
 function ClassroomDetails() {
   const { classroomId } = useParams();
+  const navigate = useNavigate();
+
+  const authUser = useSelector((state) => state.auth?.user);
+  const authRole = useSelector((state) => state.auth?.role);
+  const role = authRole || authUser?.role || localStorage.getItem("role");
+  const isTeacher = role === "teacher";
+  const isStudent = role === "student";
 
   const [classroom, setClassroom] = useState(() => {
     try {
@@ -55,49 +65,27 @@ function ClassroomDetails() {
     }
   });
   usePageMeta(classroom?.name || "Classroom");
+
   const [loading, setLoading] = useState(!classroom);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const [liveSession, setLiveSession] = useState(null);
   const [startingSession, setStartingSession] = useState(false);
 
+  // Modals state
   const [showEditSession, setShowEditSession] = useState(false);
-  const [sessionTitleInput, setSessionTitleInput] = useState("");
-  const [savingSessionTitle, setSavingSessionTitle] = useState(false);
-  const [sessionTitleError, setSessionTitleError] = useState("");
+  const [showAddAnnouncement, setShowAddAnnouncement] = useState(false);
+  const [showEditAnnouncement, setShowEditAnnouncement] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [showUploadRecording, setShowUploadRecording] = useState(false);
+  const [watchingRecording, setWatchingRecording] = useState(null);
 
   const [announcements, setAnnouncements] = useState([]);
-  const [showAddAnnouncement, setShowAddAnnouncement] = useState(false);
-  const [announcementTitle, setAnnouncementTitle] = useState("");
-  const [announcementDescription, setAnnouncementDescription] = useState("");
-  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
-  const [announcementError, setAnnouncementError] = useState("");
-
-  const [showEditAnnouncement, setShowEditAnnouncement] = useState(false);
-  const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
-  const [editAnnouncementTitle, setEditAnnouncementTitle] = useState("");
-  const [editAnnouncementDescription, setEditAnnouncementDescription] = useState("");
-  const [updatingAnnouncement, setUpdatingAnnouncement] = useState(false);
-  const [editAnnouncementError, setEditAnnouncementError] = useState("");
   const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null);
 
   const [recordings, setRecordings] = useState([]);
   const [loadingRecordings, setLoadingRecordings] = useState(false);
-  const [showUploadRecording, setShowUploadRecording] = useState(false);
-  const [recordingTitle, setRecordingTitle] = useState("");
-  const [recordingDescription, setRecordingDescription] = useState("");
-  const [recordingFile, setRecordingFile] = useState(null);
-  const [uploadingRecording, setUploadingRecording] = useState(false);
-  const [recordingUploadError, setRecordingUploadError] = useState("");
-  const [watchingRecording, setWatchingRecording] = useState(null);
   const [deletingRecordingId, setDeletingRecordingId] = useState(null);
-  const recordingFileInputRef = useRef(null);
-
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  const role = user?.role;
-  const isTeacher = role === "teacher";
-  const isStudent = role === "student";
 
   const [attendancePercentage, setAttendancePercentage] = useState(null);
 
@@ -112,45 +100,8 @@ function ClassroomDetails() {
     return buildUserColorMap(participants);
   }, [classroom]);
 
-  const fetchAttendance = async () => {
-    try {
-      if (isTeacher) {
-        const res = await getClassroomAttendance(classroomId);
-        const list = res?.attendance || [];
-        if (list.length > 0) {
-          const total = list.reduce(
-            (sum, s) => sum + (Number(s.attendancePercentage) || 0),
-            0
-          );
-          setAttendancePercentage(Math.round(total / list.length));
-        } else {
-          setAttendancePercentage(0);
-        }
-      } else {
-        const res = await getMyAttendance();
-        const list = (res?.attendance || []).filter(
-          (r) =>
-            r.classroom?._id === classroomId ||
-            r.classroom === classroomId ||
-            r.classroom?.name === classroom?.name
-        );
-        if (list.length > 0) {
-          const total = list.reduce(
-            (sum, r) => sum + (Number(r.attendancePercentage) || 0),
-            0
-          );
-          setAttendancePercentage(Math.round(total / list.length));
-        } else {
-          setAttendancePercentage(0);
-        }
-      }
-    } catch (err) {
-      console.error("Could not load classroom attendance:", err);
-      setAttendancePercentage(0);
-    }
-  };
-
-  const fetchLiveSession = async () => {
+  const fetchLiveSession = useCallback(async () => {
+    if (document.hidden) return;
     try {
       const res = await getSessionsByClassroom(classroomId);
       const active = res.data?.find((s) => s.status === "live");
@@ -158,57 +109,97 @@ function ClassroomDetails() {
     } catch (err) {
       console.error("Could not fetch active live session:", err);
     }
-  };
-
-  const fetchClassroom = async () => {
-    try {
-      const data = await getClassroomById(classroomId);
-      setClassroom(data);
-      sessionStorage.setItem(
-        `cached_classroom_${classroomId}`,
-        JSON.stringify(data)
-      );
-    } catch (err) {
-      console.error(err);
-      if (!classroom) {
-        setError("Unable to load classroom.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAnnouncements = async () => {
-    try {
-      const data = await getClassroomAnnouncements(classroomId);
-      setAnnouncements(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchRecordings = async () => {
-    try {
-      setLoadingRecordings(true);
-      const data = await getClassroomRecordings(classroomId);
-      setRecordings(data);
-    } catch (err) {
-      console.error("Could not load recordings:", err);
-    } finally {
-      setLoadingRecordings(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchClassroom();
-    fetchAnnouncements();
-    fetchRecordings();
-    fetchLiveSession();
-    fetchAttendance();
-
-    const interval = setInterval(fetchLiveSession, 8000);
-    return () => clearInterval(interval);
   }, [classroomId]);
+
+  // Parallel initial batch data fetching
+  useEffect(() => {
+    let active = true;
+
+    const loadData = async () => {
+      try {
+        const [classRes, annRes, recRes, sesRes, attRes] = await Promise.allSettled([
+          getClassroomById(classroomId),
+          getClassroomAnnouncements(classroomId),
+          getClassroomRecordings(classroomId),
+          getSessionsByClassroom(classroomId),
+          isTeacher ? getClassroomAttendance(classroomId) : getMyAttendance(),
+        ]);
+
+        if (!active) return;
+
+        if (classRes.status === "fulfilled" && classRes.value) {
+          setClassroom(classRes.value);
+          sessionStorage.setItem(
+            `cached_classroom_${classroomId}`,
+            JSON.stringify(classRes.value)
+          );
+        } else if (!classroom) {
+          setError("Unable to load classroom.");
+        }
+
+        if (annRes.status === "fulfilled" && Array.isArray(annRes.value)) {
+          setAnnouncements(annRes.value);
+        }
+
+        if (recRes.status === "fulfilled" && Array.isArray(recRes.value)) {
+          setRecordings(recRes.value);
+        }
+
+        if (sesRes.status === "fulfilled" && sesRes.value?.data) {
+          const live = sesRes.value.data.find((s) => s.status === "live");
+          setLiveSession(live || null);
+        }
+
+        if (attRes.status === "fulfilled" && attRes.value) {
+          const list = attRes.value.attendance || [];
+          if (isTeacher) {
+            if (list.length > 0) {
+              const total = list.reduce(
+                (sum, s) => sum + (Number(s.attendancePercentage) || 0),
+                0
+              );
+              setAttendancePercentage(Math.round(total / list.length));
+            } else {
+              setAttendancePercentage(0);
+            }
+          } else {
+            const classObj = classRes.status === "fulfilled" ? classRes.value : classroom;
+            const myAtt = list.filter(
+              (r) =>
+                r.classroom?._id === classroomId ||
+                r.classroom === classroomId ||
+                r.classroom?.name === classObj?.name
+            );
+            if (myAtt.length > 0) {
+              const total = myAtt.reduce(
+                (sum, r) => sum + (Number(r.attendancePercentage) || 0),
+                0
+              );
+              setAttendancePercentage(Math.round(total / myAtt.length));
+            } else {
+              setAttendancePercentage(0);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error loading classroom details:", err);
+      } finally {
+        if (active) {
+          setLoading(false);
+          setLoadingRecordings(false);
+        }
+      }
+    };
+
+    loadData();
+
+    // Polling every 8 seconds, automatically pausing when tab is inactive
+    const interval = setInterval(fetchLiveSession, 8000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [classroomId, isTeacher, fetchLiveSession]);
 
   if (loading && !classroom) {
     return (
@@ -248,7 +239,7 @@ function ClassroomDetails() {
 
       const createRes = await createSession({
         classroom: classroom._id,
-        title: sessionTitleInput.trim() || `${classroom.subject} Live Session`,
+        title: sessionTitle,
         description: `Live class for ${classroom.name}`,
         startTime: new Date(),
       });
@@ -308,74 +299,31 @@ function ClassroomDetails() {
     }
   };
 
-  const handlePostAnnouncement = () => {
-    setAnnouncementTitle("");
-    setAnnouncementDescription("");
-    setAnnouncementError("");
-    setShowAddAnnouncement(true);
-  };
-
-  const handleCreateAnnouncement = async () => {
-    if (!announcementTitle.trim()) {
-      setAnnouncementError("Give this announcement a title.");
-      return;
-    }
-    try {
-      setPostingAnnouncement(true);
-      setAnnouncementError("");
-      const res = await createAnnouncement({
-        classroom: classroom._id,
-        title: announcementTitle.trim(),
-        description: announcementDescription.trim(),
-      });
-      setAnnouncements((prev) => [res.announcement, ...prev]);
-      setShowAddAnnouncement(false);
-      toast.success("Announcement posted.");
-    } catch (err) {
-      console.error(err);
-      setAnnouncementError(
-        err.response?.data?.message || "Unable to post announcement.",
-      );
-    } finally {
-      setPostingAnnouncement(false);
-    }
+  // Announcement callbacks
+  const handleCreateAnnouncement = async ({ title, description }) => {
+    const res = await createAnnouncement({
+      classroom: classroom._id,
+      title,
+      description,
+    });
+    setAnnouncements((prev) => [res.announcement, ...prev]);
+    toast.success("Announcement posted.");
   };
 
   const handleOpenEditAnnouncement = (item) => {
-    setEditingAnnouncementId(item._id);
-    setEditAnnouncementTitle(item.title || "");
-    setEditAnnouncementDescription(item.description || "");
-    setEditAnnouncementError("");
+    setEditingAnnouncement(item);
     setShowEditAnnouncement(true);
   };
 
-  const handleUpdateAnnouncement = async () => {
-    if (!editAnnouncementTitle.trim()) {
-      setEditAnnouncementError("Give this announcement a title.");
-      return;
-    }
-    try {
-      setUpdatingAnnouncement(true);
-      setEditAnnouncementError("");
-      const res = await updateAnnouncement(editingAnnouncementId, {
-        title: editAnnouncementTitle.trim(),
-        description: editAnnouncementDescription.trim(),
-      });
-      setAnnouncements((prev) =>
-        prev.map((a) =>
-          a._id === editingAnnouncementId ? res.announcement : a
-        )
-      );
-      setShowEditAnnouncement(false);
-      toast.success("Announcement updated.");
-    } catch (err) {
-      console.error(err);
-      setEditAnnouncementError(
-        err.response?.data?.message || "Unable to update announcement."
-      );
-    } finally {
-      setUpdatingAnnouncement(false);
-    }
+  const handleUpdateAnnouncement = async (announcementId, { title, description }) => {
+    const res = await updateAnnouncement(announcementId, {
+      title,
+      description,
+    });
+    setAnnouncements((prev) =>
+      prev.map((a) => (a._id === announcementId ? res.announcement : a))
+    );
+    toast.success("Announcement updated.");
   };
 
   const handleDeleteAnnouncement = async (announcementId) => {
@@ -398,50 +346,11 @@ function ClassroomDetails() {
     }
   };
 
-  const handleOpenUploadRecording = () => {
-    setRecordingTitle("");
-    setRecordingDescription("");
-    setRecordingFile(null);
-    setRecordingUploadError("");
-    if (recordingFileInputRef.current) {
-      recordingFileInputRef.current.value = "";
-    }
-    setShowUploadRecording(true);
-  };
-
-  const handleUploadRecordingSubmit = async (e) => {
-    e.preventDefault();
-    if (!recordingTitle.trim()) {
-      setRecordingUploadError("Please provide a title for this recording.");
-      return;
-    }
-    if (!recordingFile) {
-      setRecordingUploadError("Please choose a video file to upload.");
-      return;
-    }
-
-    try {
-      setUploadingRecording(true);
-      setRecordingUploadError("");
-
-      const formData = new FormData();
-      formData.append("classroom", classroomId);
-      formData.append("title", recordingTitle.trim());
-      formData.append("description", recordingDescription.trim());
-      formData.append("file", recordingFile);
-
-      const res = await uploadRecording(formData);
-      setRecordings((prev) => [res.recording, ...prev]);
-      setShowUploadRecording(false);
-      toast.success("Recording uploaded successfully!");
-    } catch (err) {
-      console.error(err);
-      setRecordingUploadError(
-        err.response?.data?.message || "Failed to upload recording."
-      );
-    } finally {
-      setUploadingRecording(false);
-    }
+  // Recording callbacks
+  const handleUploadRecording = async (formData) => {
+    const res = await uploadRecording(formData);
+    setRecordings((prev) => [res.recording, ...prev]);
+    toast.success("Recording uploaded successfully!");
   };
 
   const handleDeleteRecording = async (recordingId, title) => {
@@ -462,39 +371,16 @@ function ClassroomDetails() {
   };
 
   const handleRemoveStudent = (studentId) => {
-    if (!window.confirm("Remove this student from the classroom?"))
-      return;
+    if (!window.confirm("Remove this student from the classroom?")) return;
     console.log("Remove student:", studentId);
   };
 
-  const handleOpenEditSession = () => {
-    setSessionTitleInput(sessionTitle);
-    setSessionTitleError("");
-    setShowEditSession(true);
-  };
-
-  const handleSaveSessionTitle = async () => {
-    if (!sessionTitleInput.trim()) {
-      setSessionTitleError("Session title cannot be empty.");
-      return;
-    }
-    try {
-      setSavingSessionTitle(true);
-      setSessionTitleError("");
-      const res = await updateClassroom(classroom._id, {
-        sessionTitle: sessionTitleInput.trim(),
-      });
-      setClassroom(res.classroom);
-      setShowEditSession(false);
-      toast.success("Session title updated.");
-    } catch (err) {
-      console.error(err);
-      setSessionTitleError(
-        err.response?.data?.message || "Unable to update session title.",
-      );
-    } finally {
-      setSavingSessionTitle(false);
-    }
+  const handleSaveSessionTitle = async (newTitle) => {
+    const res = await updateClassroom(classroom._id, {
+      sessionTitle: newTitle,
+    });
+    setClassroom(res.classroom);
+    toast.success("Session title updated.");
   };
 
   const students = classroom.students || [];
@@ -514,7 +400,6 @@ function ClassroomDetails() {
   return (
     <div className="details-page">
       <div className="details-container">
-
         <Link to="/classrooms" className="back-btn">
           <ArrowLeft size={18} />
           Back to Classrooms
@@ -617,9 +502,7 @@ function ClassroomDetails() {
         </div>
 
         <div className="details-grid">
-
           <div className="left-section">
-
             <div className="section-card">
               <div className="section-title">
                 <span className="section-title-left">
@@ -639,7 +522,7 @@ function ClassroomDetails() {
                 {isTeacher && !liveSession && (
                   <button
                     className="edit-icon-btn"
-                    onClick={handleOpenEditSession}
+                    onClick={() => setShowEditSession(true)}
                     data-tooltip="Edit title"
                     title="Edit session title"
                     aria-label="Edit session title"
@@ -722,7 +605,7 @@ function ClassroomDetails() {
                 {isTeacher && (
                   <button
                     className="inline-add-btn"
-                    onClick={handlePostAnnouncement}
+                    onClick={() => setShowAddAnnouncement(true)}
                     data-tooltip="Post new"
                     title="Post Announcement"
                   >
@@ -795,7 +678,7 @@ function ClassroomDetails() {
                 {isTeacher && (
                   <button
                     className="inline-add-btn"
-                    onClick={handleOpenUploadRecording}
+                    onClick={() => setShowUploadRecording(true)}
                     data-tooltip="Upload recorded"
                     title="Upload Recording"
                   >
@@ -875,7 +758,6 @@ function ClassroomDetails() {
                 )}
               </div>
             </div>
-
           </div>
 
           <div className="right-section">
@@ -968,284 +850,39 @@ function ClassroomDetails() {
           </div>
         </div>
 
-        {showEditSession && (
-          <div className="modal-overlay">
-            <div className="modal-card">
-              <div className="modal-header">
-                <h2 className="modal-title">Edit Session Title</h2>
-                <button
-                  onClick={() => setShowEditSession(false)}
-                  data-tooltip="Close modal"
-                  title="Close"
-                  aria-label="Close"
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+        {/* Modals rendered outside main tree content */}
+        <EditSessionModal
+          isOpen={showEditSession}
+          onClose={() => setShowEditSession(false)}
+          initialTitle={sessionTitle}
+          subject={classroom.subject}
+          onSave={handleSaveSessionTitle}
+        />
 
-              {sessionTitleError && (
-                <p className="form-error">{sessionTitleError}</p>
-              )}
+        <AddAnnouncementModal
+          isOpen={showAddAnnouncement}
+          onClose={() => setShowAddAnnouncement(false)}
+          onSubmit={handleCreateAnnouncement}
+        />
 
-              <div className="form-field">
-                <label className="form-label">Session Title</label>
-                <input
-                  value={sessionTitleInput}
-                  onChange={(e) => setSessionTitleInput(e.target.value)}
-                  placeholder={`e.g. ${classroom.subject} Live Session`}
-                  className="form-input"
-                />
-              </div>
+        <EditAnnouncementModal
+          isOpen={showEditAnnouncement}
+          onClose={() => setShowEditAnnouncement(false)}
+          announcement={editingAnnouncement}
+          onSubmit={handleUpdateAnnouncement}
+        />
 
-              <button
-                onClick={handleSaveSessionTitle}
-                disabled={savingSessionTitle}
-                data-tooltip="Save updated"
-                title="Save"
-                className="join-btn mt-6 w-full justify-center"
-              >
-                {savingSessionTitle ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        )}
+        <UploadRecordingModal
+          isOpen={showUploadRecording}
+          onClose={() => setShowUploadRecording(false)}
+          classroomId={classroom._id}
+          onSubmit={handleUploadRecording}
+        />
 
-        {showAddAnnouncement && (
-          <div className="modal-overlay">
-            <div className="modal-card">
-              <div className="modal-header">
-                <h2 className="modal-title flex items-center gap-2">
-                  <Megaphone size={18} className="text-indigo-600" />
-                  Post Announcement
-                </h2>
-                <button
-                  onClick={() => setShowAddAnnouncement(false)}
-                  data-tooltip="Close modal"
-                  title="Close"
-                  aria-label="Close"
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {announcementError && (
-                <p className="form-error">{announcementError}</p>
-              )}
-
-              <div className="form-field">
-                <label className="form-label">Title</label>
-                <input
-                  value={announcementTitle}
-                  onChange={(e) => setAnnouncementTitle(e.target.value)}
-                  placeholder="e.g. Class rescheduled to 4 PM"
-                  className="form-input"
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="form-label">Description (optional)</label>
-                <input
-                  value={announcementDescription}
-                  onChange={(e) => setAnnouncementDescription(e.target.value)}
-                  placeholder="Add more details..."
-                  className="form-input"
-                />
-              </div>
-
-              <button
-                onClick={handleCreateAnnouncement}
-                disabled={postingAnnouncement}
-                data-tooltip="Publish announcement"
-                title="Post"
-                className="join-btn mt-6 w-full justify-center"
-              >
-                {postingAnnouncement ? "Posting..." : "Post"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showEditAnnouncement && (
-          <div className="modal-overlay">
-            <div className="modal-card">
-              <div className="modal-header">
-                <h2 className="modal-title flex items-center gap-2">
-                  <Megaphone size={18} className="text-indigo-600" />
-                  Edit Announcement
-                </h2>
-                <button
-                  onClick={() => setShowEditAnnouncement(false)}
-                  data-tooltip="Close modal"
-                  title="Close"
-                  aria-label="Close"
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {editAnnouncementError && (
-                <p className="form-error">{editAnnouncementError}</p>
-              )}
-
-              <div className="form-field">
-                <label className="form-label">Title</label>
-                <input
-                  value={editAnnouncementTitle}
-                  onChange={(e) => setEditAnnouncementTitle(e.target.value)}
-                  placeholder="e.g. Class rescheduled to 4 PM"
-                  className="form-input"
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="form-label">Description (optional)</label>
-                <input
-                  value={editAnnouncementDescription}
-                  onChange={(e) =>
-                    setEditAnnouncementDescription(e.target.value)
-                  }
-                  placeholder="Add more details..."
-                  className="form-input"
-                />
-              </div>
-
-              <button
-                onClick={handleUpdateAnnouncement}
-                disabled={updatingAnnouncement}
-                data-tooltip="Save changes"
-                title="Save Changes"
-                className="join-btn mt-6 w-full justify-center"
-              >
-                {updatingAnnouncement ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showUploadRecording && (
-          <div className="modal-overlay">
-            <div className="modal-card">
-              <div className="modal-header">
-                <h2 className="modal-title">Upload Recording</h2>
-                <button
-                  onClick={() => setShowUploadRecording(false)}
-                  data-tooltip="Close modal"
-                  title="Close"
-                  aria-label="Close"
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {recordingUploadError && (
-                <p className="form-error">{recordingUploadError}</p>
-              )}
-
-              <form onSubmit={handleUploadRecordingSubmit}>
-                <div className="form-field">
-                  <label className="form-label">Title</label>
-                  <input
-                    value={recordingTitle}
-                    onChange={(e) => setRecordingTitle(e.target.value)}
-                    placeholder="e.g. Week 4 — Introduction to React"
-                    className="form-input"
-                    required
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label className="form-label">Description (optional)</label>
-                  <input
-                    value={recordingDescription}
-                    onChange={(e) => setRecordingDescription(e.target.value)}
-                    placeholder="Topics discussed in this lecture..."
-                    className="form-input"
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label className="form-label">Video File</label>
-                  <input
-                    ref={recordingFileInputRef}
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) =>
-                      setRecordingFile(e.target.files?.[0] || null)
-                    }
-                    className="form-input"
-                    required
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Supports MP4, WebM, MOV, AVI (up to 500MB)
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={uploadingRecording}
-                  data-tooltip="Upload recorded"
-                  title="Upload Recording"
-                  className="join-btn mt-6 w-full justify-center"
-                >
-                  {uploadingRecording ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Uploading Video...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <UploadCloud size={18} />
-                      <span>Upload Recording</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {watchingRecording && (
-          <div
-            className="modal-overlay"
-            onClick={() => setWatchingRecording(null)}
-          >
-            <div
-              className="modal-card max-w-3xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="modal-header">
-                <div>
-                  <h2 className="modal-title">{watchingRecording.title}</h2>
-                  {watchingRecording.description && (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {watchingRecording.description}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={() => setWatchingRecording(null)}
-                  data-tooltip="Close Player"
-                  title="Close"
-                  aria-label="Close"
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-              <video
-                key={watchingRecording._id}
-                src={getRecordingUrl(watchingRecording.fileUrl)}
-                controls
-                autoPlay
-                className="w-full rounded-xl bg-black max-h-[70vh]"
-              />
-            </div>
-          </div>
-        )}
+        <WatchRecordingModal
+          recording={watchingRecording}
+          onClose={() => setWatchingRecording(null)}
+        />
       </div>
     </div>
   );
