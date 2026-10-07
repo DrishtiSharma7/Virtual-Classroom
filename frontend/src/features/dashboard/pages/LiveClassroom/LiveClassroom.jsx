@@ -318,21 +318,35 @@ const ParticipantThumb = ({ stream, active, name, id }) => {
   );
 };
 
+// FIX: dedicated <audio> element fed by a dedicated audio-only MediaStream.
 const AudioRelay = ({ stream, onAutoplayBlocked }) => {
-  const videoRef = useRef(null);
+  const audioRef = useRef(null);
 
   useEffect(() => {
-    const el = videoRef.current;
+    const el = audioRef.current;
     if (!el || !stream) return;
     el.srcObject = stream;
-    const playPromise = el.play();
-    if (playPromise?.catch) {
-      playPromise.catch(() => onAutoplayBlocked?.(el));
-    }
+    el.muted = false;
+    el.volume = 1;
+
+    const tryPlay = () => {
+      const p = el.play();
+      if (p?.catch) p.catch(() => onAutoplayBlocked?.(el));
+    };
+    tryPlay();
+
+    // track late unmute / add hone par dobara play try karo
+    const track = stream.getAudioTracks()[0];
+    track?.addEventListener("unmute", tryPlay);
+    stream.addEventListener("addtrack", tryPlay);
+    return () => {
+      track?.removeEventListener("unmute", tryPlay);
+      stream.removeEventListener("addtrack", tryPlay);
+    };
   }, [stream, onAutoplayBlocked]);
 
   if (!stream) return null;
-  return <video ref={videoRef} autoPlay playsInline className="hidden" />;
+  return <audio ref={audioRef} autoPlay playsInline />;
 };
 
 const TeacherCameraTile = ({ stream, active, name, id }) => {
@@ -499,6 +513,8 @@ export default function LiveClassroom() {
   const [sessionError, setSessionError] = useState("");
 
   const [participants, setParticipants] = useState([]);
+  // FIX: remote audio streams, keyed by peer socketId
+  const [remoteAudio, setRemoteAudio] = useState({});
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [peerTyping, setPeerTyping] = useState(false);
@@ -771,6 +787,13 @@ export default function LiveClassroom() {
           readyState: event.track.readyState,
           streams: event.streams?.length,
         });
+
+        // FIX: audio ko alag stream mein rakho aur <audio> se play karo.
+        // participants list pe depend nahi karta, isliye audio kabhi lost nahi hoti.
+        if (event.track.kind === "audio") {
+          const audioStream = new MediaStream([event.track]);
+          setRemoteAudio((prev) => ({ ...prev, [targetId]: audioStream }));
+        }
 
         const stream = event.streams?.[0] || new MediaStream([event.track]);
 
@@ -1225,7 +1248,7 @@ export default function LiveClassroom() {
       });
 
       const stamp = new Date().toISOString().slice(0, 10);
-      doc.save(`${classroomName || "whiteboard"}-${stamp}.pdf`);
+      doc.save(`${session?.classroom?.name || session?.title || "whiteboard"}-${stamp}.pdf`);
     } catch (err) {
       console.error("PDF export error:", err);
       setWbError("Couldn't generate the PDF. Please try again.");
@@ -1368,6 +1391,13 @@ export default function LiveClassroom() {
         delete screenSenders.current[stale.socketId];
         delete politeRef.current[stale.socketId];
         delete makingOfferRef.current[stale.socketId];
+        // FIX: stale peer ki audio bhi hatao
+        setRemoteAudio((audioPrev) => {
+          if (!audioPrev[stale.socketId]) return audioPrev;
+          const nextAudio = { ...audioPrev };
+          delete nextAudio[stale.socketId];
+          return nextAudio;
+        });
         const next = [...prev];
         next[staleIdx] = {
           socketId,
@@ -1519,6 +1549,13 @@ export default function LiveClassroom() {
       delete politeRef.current[socketId];
       delete makingOfferRef.current[socketId];
       setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
+      // FIX: cleanup remote audio
+      setRemoteAudio((prev) => {
+        if (!prev[socketId]) return prev;
+        const next = { ...prev };
+        delete next[socketId];
+        return next;
+      });
       setMutedParticipants((prev) => {
         if (!prev.has(socketId)) return prev;
         const next = new Set(prev);
@@ -2282,6 +2319,13 @@ export default function LiveClassroom() {
     setParticipants((prev) =>
       prev.filter((p) => p.socketId !== targetSocketId)
     );
+    // FIX: cleanup remote audio
+    setRemoteAudio((prev) => {
+      if (!prev[targetSocketId]) return prev;
+      const next = { ...prev };
+      delete next[targetSocketId];
+      return next;
+    });
   };
 
   const [showHostExitModal, setShowHostExitModal] = useState(false);
@@ -2309,8 +2353,9 @@ export default function LiveClassroom() {
     try {
       socketRef.current?.emit("leave-call", { roomId: sessionId });
       socketRef.current?.emit("leave-room", { roomId: sessionId });
-      localStreamRef.current?.getTracks().forEach((track) => track.stop());
-      screenStreamRef.current?.getTracks().forEach((track) => track.stop());
+      // FIX: pehle localStreamRef / screenStreamRef undefined the (crash)
+      localStream.current?.getTracks().forEach((track) => track.stop());
+      screenStream.current?.getTracks().forEach((track) => track.stop());
     } catch (err) {
       console.error("Error leaving room:", err);
     } finally {
@@ -3086,14 +3131,11 @@ export default function LiveClassroom() {
           </div>
 
           <aside className="flex w-[340px] flex-shrink-0 flex-col gap-4 overflow-hidden">
-            {participants.map((p) => (
+            {/* FIX: audio ab remoteAudio state se play hoti hai */}
+            {Object.entries(remoteAudio).map(([socketId, stream]) => (
               <AudioRelay
-                key={p.socketId}
-                stream={
-                  Object.values(p.videoStreams || {}).find(
-                    (s) => s.id !== hostScreenStreamId
-                  ) || null
-                }
+                key={socketId}
+                stream={stream}
                 onAutoplayBlocked={handleAutoplayBlocked}
               />
             ))}
