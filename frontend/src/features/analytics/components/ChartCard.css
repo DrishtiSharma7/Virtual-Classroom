@@ -1,5 +1,5 @@
 .chart-card {
-  @apply rounded-xl sm:rounded-2xl border border-gray-100 bg-white p-3 sm:p-5 shadow-sm;
+  @apply rounded-xl sm:rounded-2xl border border-gray-100 bg-white p-3 sm:p-5 shadow-sm min-w-0 overflow-hidden;
 }
 
 .chart-card-header {

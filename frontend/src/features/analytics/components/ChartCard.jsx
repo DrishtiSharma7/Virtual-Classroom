@@ -28,7 +28,7 @@ const ChartCard = ({
         {actions && <div className="flex items-center gap-2">{actions}</div>}
       </div>
 
-      <div style={{ minHeight: height }} className="relative">
+      <div style={loading || isEmpty ? { minHeight: height } : undefined} className="relative">
         {loading ? (
           <div
             className="chart-card-skeleton"

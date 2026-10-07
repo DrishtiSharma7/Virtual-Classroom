@@ -457,6 +457,10 @@ const SettingsPage = () => {
           </SettingsRow>
         </SettingsSection>
       )}
+
+      <footer className="mt-6 border-t border-slate-200 pt-6 pb-6 text-center text-xs sm:text-sm text-slate-500">
+        © 2026 Virtual Classroom · Developed by Drishti Sharma
+      </footer>
     </div>
   );
 };

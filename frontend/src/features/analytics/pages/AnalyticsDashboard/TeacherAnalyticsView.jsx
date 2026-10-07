@@ -177,7 +177,7 @@ const TeacherAnalyticsView = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-8">
             <KpiGrid kpis={overview?.kpis} loading={loadingOverview} />
 
             <InsightsPanel insights={overview?.insights || []} loading={loadingOverview} />

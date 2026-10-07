@@ -1,9 +1,9 @@
 .analytics-page {
-  @apply min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4;
+  @apply min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4 w-full min-w-0 overflow-x-hidden;
 }
 
 .analytics-container {
-  @apply mx-auto max-w-7xl;
+  @apply mx-auto max-w-7xl w-full min-w-0;
 }
 
 .analytics-header {
