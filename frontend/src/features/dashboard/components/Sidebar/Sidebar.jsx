@@ -127,7 +127,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </NavLink>
         ))}
       </nav>
-      <div className="border-t border-gray-100 px-4 py-4">
+      <div className="border-t border-gray-100 py-1 pl-3">
         <button
           type="button"
           onClick={handleLogout}

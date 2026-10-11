@@ -10,7 +10,7 @@
 }
 
 .banner-content {
-  @apply relative z-10 flex-1 md:max-w-xl;
+  @apply relative z-10 flex-1 ;
 }
 
 .banner-heading {
