@@ -31,10 +31,6 @@ function ClassroomHome() {
   const role = authRole || authUser?.role || "student";
   const isTeacher = role === "teacher";
 
-  useEffect(() => {
-    fetchClassrooms();
-  }, []);
-
   const fetchClassrooms = async () => {
     try {
       const data = await getMyClassrooms();
@@ -51,6 +47,10 @@ function ClassroomHome() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchClassrooms();
+  }, []);
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(

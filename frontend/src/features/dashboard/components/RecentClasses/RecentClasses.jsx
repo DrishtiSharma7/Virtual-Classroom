@@ -1,4 +1,3 @@
-import React from "react";
 import "./RecentClasses.css";
 
 const RecentClasses = ({ classes = [] }) => {

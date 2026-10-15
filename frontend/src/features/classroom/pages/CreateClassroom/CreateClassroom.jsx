@@ -76,7 +76,9 @@ function CreateClassroom() {
       await navigator.clipboard.writeText(createdClassroom.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch {
+      // ignore clipboard permission error
+    }
   };
 
   if (!isTeacher) {

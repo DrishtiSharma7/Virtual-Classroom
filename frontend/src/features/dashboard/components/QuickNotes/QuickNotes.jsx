@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   NotebookPen,
   Plus,
@@ -20,6 +20,33 @@ import {
 } from "../../api/note.api";
 import "./QuickNotes.css";
 
+const saveCachedNotes = (notesList) => {
+  try {
+    localStorage.setItem("cached_quick_notes", JSON.stringify(notesList));
+  } catch {
+    // Ignore localStorage quota or access errors
+  }
+};
+
+const getCachedNotes = () => {
+  try {
+    const cached = localStorage.getItem("cached_quick_notes");
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    // Ignore localStorage read errors
+    return null;
+  }
+};
+
+const sortNotes = (items) => {
+  return [...items].sort((a, b) => {
+    if (a.isImportant !== b.isImportant) {
+      return a.isImportant ? -1 : 1;
+    }
+    return new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now());
+  });
+};
+
 const QuickNotes = () => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +61,28 @@ const QuickNotes = () => {
 
   const dropdownRef = useRef(null);
 
+  const loadNotes = async () => {
+    try {
+      setLoading(true);
+      const data = await getNotes();
+      const sorted = sortNotes(data);
+      setNotes(sorted);
+      saveCachedNotes(sorted);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        // Backend /api/notes endpoint not yet deployed/restarted; load from localStorage fallback
+        const cached = getCachedNotes();
+        if (cached) {
+          setNotes(cached);
+        }
+      } else {
+        console.error("Failed to load notes:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadNotes();
   }, []);
@@ -47,41 +96,6 @@ const QuickNotes = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const sortNotes = (items) => {
-    return [...items].sort((a, b) => {
-      if (a.isImportant !== b.isImportant) {
-        return a.isImportant ? -1 : 1;
-      }
-      return new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now());
-    });
-  };
-
-  const loadNotes = async () => {
-    try {
-      setLoading(true);
-      const data = await getNotes();
-      const sorted = sortNotes(data);
-      setNotes(sorted);
-      try {
-        localStorage.setItem("cached_quick_notes", JSON.stringify(sorted));
-      } catch {}
-    } catch (err) {
-      if (err.response?.status === 404) {
-        // Backend /api/notes endpoint not yet deployed/restarted; load from localStorage fallback
-        try {
-          const cached = localStorage.getItem("cached_quick_notes");
-          if (cached) {
-            setNotes(JSON.parse(cached));
-          }
-        } catch {}
-      } else {
-        console.error("Failed to load notes:", err);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddNote = async (e) => {
     e.preventDefault();
@@ -112,9 +126,7 @@ const QuickNotes = () => {
 
       setNotes((prev) => {
         const updated = sortNotes([newNote, ...prev]);
-        try {
-          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
-        } catch {}
+        saveCachedNotes(updated);
         return updated;
       });
       setInputText("");
@@ -139,9 +151,7 @@ const QuickNotes = () => {
             n._id === note._id ? { ...n, isImportant: nextImportant } : n
           )
         );
-        try {
-          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
-        } catch {}
+        saveCachedNotes(updated);
         return updated;
       });
 
@@ -168,9 +178,7 @@ const QuickNotes = () => {
         const updated = prev.map((n) =>
           n._id === note._id ? { ...n, isCompleted: nextCompleted } : n
         );
-        try {
-          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
-        } catch {}
+        saveCachedNotes(updated);
         return updated;
       });
 
@@ -206,9 +214,7 @@ const QuickNotes = () => {
     try {
       setNotes((prev) => {
         const updated = prev.map((n) => (n._id === id ? { ...n, text: trimmed } : n));
-        try {
-          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
-        } catch {}
+        saveCachedNotes(updated);
         return updated;
       });
       setEditingId(null);
@@ -231,9 +237,7 @@ const QuickNotes = () => {
       setActiveDropdownId(null);
       setNotes((prev) => {
         const updated = prev.filter((n) => n._id !== id);
-        try {
-          localStorage.setItem("cached_quick_notes", JSON.stringify(updated));
-        } catch {}
+        saveCachedNotes(updated);
         return updated;
       });
       try {

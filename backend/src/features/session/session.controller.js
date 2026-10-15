@@ -35,21 +35,15 @@ exports.createSession = async (req, res) => {
 
     const session = await Session.create({
       classroom: req.body.classroom,
-
       title: req.body.title,
-
       description: req.body.description,
-
       startTime: req.body.startTime,
-
       endTime: req.body.endTime,
-
       createdBy: req.user.id,
     });
 
     res.status(201).json({
       message: "Session created",
-
       session,
     });
   } catch (err) {

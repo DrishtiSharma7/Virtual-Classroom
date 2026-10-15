@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getDashboard } from "../../api/dashboard.api";
 
 import WelcomeBanner from "../../components/WelcomeBanner/WelcomeBanner";
@@ -23,10 +23,6 @@ const StudentDashboard = () => {
   });
   const [loading, setLoading] = useState(!dashboard);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
   const loadDashboard = async () => {
     try {
       const response = await getDashboard();
@@ -43,6 +39,10 @@ const StudentDashboard = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
 
   if (loading && !dashboard) {
     return <DashboardSkeleton />;

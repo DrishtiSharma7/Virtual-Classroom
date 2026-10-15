@@ -3,12 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   GraduationCap,
   ArrowLeft,
-  Mail,
-  Lock,
   Eye,
   EyeOff,
   CheckCircle2,
-  KeyRound,
   AlertCircle,
   ArrowRight,
   ShieldCheck,

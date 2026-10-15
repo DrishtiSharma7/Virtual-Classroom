@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getDashboard } from "../../api/dashboard.api";
 import WelcomeBanner from "../../components/WelcomeBanner/WelcomeBanner";
 import StatCard from "../../components/StatCard/StatCard";
@@ -25,10 +25,6 @@ const TeacherDashboard = () => {
   const [loading, setLoading] = useState(!dashboard);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
   const loadDashboard = async () => {
     try {
       const response = await getDashboard();
@@ -45,6 +41,10 @@ const TeacherDashboard = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
 
   if (loading && !dashboard) {
     return <DashboardSkeleton />;

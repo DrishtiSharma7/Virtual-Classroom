@@ -1,16 +1,18 @@
 import { Outlet, useLocation } from "react-router-dom";
 import "./DashboardLayout.css";
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Sidebar from "../../features/dashboard/components/Sidebar/Sidebar";
 import TopNavbar from "../../features/dashboard/components/TopNavbar/TopNavbar";
 
 const DashboardLayout = ({ showNavbar }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const [prevPath, setPrevPath] = useState(location.pathname);
 
-  useEffect(() => {
+  if (prevPath !== location.pathname) {
+    setPrevPath(location.pathname);
     setSidebarOpen(false);
-  }, [location.pathname]);
+  }
 
   const path = location.pathname;
   const isDesktopNavRoute =

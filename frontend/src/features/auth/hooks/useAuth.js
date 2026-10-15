@@ -18,7 +18,9 @@ function useAuth() {
   const signOut = async () => {
     try {
       await logoutUser();
-    } catch {}
+    } catch {
+      // Ignore network errors during logout; proceed with local sign out
+    }
     dispatch(logout());
   };
 

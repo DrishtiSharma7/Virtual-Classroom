@@ -5,7 +5,6 @@ const { setAuthCookies, clearAuthCookies } = require("../../utils/cookie");
 
 exports.register = async (req, res) => {
   try {
-    console.log("BODY:", req.body);
     if (!req.body) {
       return res.status(400).json({
         message: "Request body missing",
@@ -50,7 +49,7 @@ exports.register = async (req, res) => {
       },
     });
   } catch (err) {
-    console.log(err);
+    console.error("Register error:", err.message);
     res.status(500).json({ message: err.message });
   }
 };

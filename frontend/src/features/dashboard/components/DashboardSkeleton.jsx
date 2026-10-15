@@ -1,5 +1,3 @@
-import React from "react";
-
 const DashboardSkeleton = () => {
   return (
     <div className="teacher-dashboard-viewport animate-pulse">

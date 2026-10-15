@@ -1,4 +1,3 @@
-import React from "react";
 import { getInitials, getAvatarPaletteById } from "../../utils/avatar";
 
 export const UserAvatar = ({

@@ -31,7 +31,7 @@ export const parseQuizExcel = (file) => {
         }
 
         resolve(questions);
-      } catch (err) {
+      } catch {
         reject(new Error("Could not parse the Excel file. Check the format and try again."));
       }
     };
@@ -74,7 +74,7 @@ export const exportResultsToExcel = async (results, quizTitle = "Quiz Results") 
   const sheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
 
-  const safeSheetName = quizTitle.replace(/[\[\]:*?/\\]/g, "").slice(0, 31) || "Results";
+  const safeSheetName = quizTitle.replace(/[\][:*?/\\]/g, "").slice(0, 31) || "Results";
 
   XLSX.utils.book_append_sheet(workbook, sheet, safeSheetName);
 

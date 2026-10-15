@@ -24,7 +24,7 @@ export const logoutUser = async () => {
   try {
     const response = await api.post("/auth/logout");
     return response.data;
-  } catch (err) {
+  } catch {
     return { success: true };
   }
 };

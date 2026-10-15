@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import { useParams, useNavigate, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -34,8 +34,6 @@ import {
   Smile,
   Paperclip,
   Send,
-  Wifi,
-  WifiOff,
   RefreshCcw,
   Highlighter,
   ZoomIn,
@@ -74,7 +72,6 @@ import { getWhiteboard } from "../../../classroom/api/whiteboard.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 import useAuth from "../../../auth/hooks/useAuth";
 import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
-import { getAvatarHexById } from "../../../../utils/avatar";
 
 const drawElement = (ctx, el) => {
   if (!el) return;
@@ -145,10 +142,6 @@ const drawElement = (ctx, el) => {
     ctx.fillText(el.text, el.x1, el.y1);
   }
   ctx.globalAlpha = 1;
-};
-const avatarFor = (name = "?", id = "") => {
-  const bg = getAvatarHexById(id, name);
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${bg}&color=fff`;
 };
 
 const formatClock = (seconds) => {
@@ -514,6 +507,7 @@ export default function LiveClassroom() {
 
   const localVideoRef = useRef(null);
   const socketRef = useRef(null);
+  const [socketInstance, setSocketInstance] = useState(null);
   const peerConnections = useRef({});
   const pendingCandidates = useRef({});
   const localStream = useRef(null);
@@ -1376,6 +1370,7 @@ export default function LiveClassroom() {
     });
 
     socketRef.current = socket;
+    setSocketInstance(socket);
 
     socket.on("connect", () => {
       setConnected(true);
@@ -1830,6 +1825,8 @@ export default function LiveClassroom() {
       socket.emit("leave-call", { roomId: sessionId });
       socket.emit("leave-room", { roomId: sessionId });
       socket.disconnect();
+      socketRef.current = null;
+      setSocketInstance(null);
     };
   }, [
     sessionId,
@@ -2430,8 +2427,6 @@ export default function LiveClassroom() {
   }
 
   const classroomName = session.classroom?.name || session.title;
-  const classroomSubject = session.classroom?.subject;
-  const classroomCode = session.classroom?.code;
 
   const teacherParticipant = participants.find(
     (p) => p.user?.role === "teacher"
@@ -2969,7 +2964,7 @@ export default function LiveClassroom() {
                 {isHost && showQuizPanel && (
                   <div className="absolute left-[68%] top-[8%]">
                     <TeacherQuizPanel
-                      socket={socketRef.current}
+                      socket={socketInstance}
                       sessionId={sessionId}
                       classroomId={
                         session?.classroom?._id || session?.classroom
@@ -2991,7 +2986,7 @@ export default function LiveClassroom() {
                 {!isHost && (
                   <div className="absolute left-[68%] top-[8%]">
                     <StudentQuizPanel
-                      socket={socketRef.current}
+                      socket={socketInstance}
                       sessionId={sessionId}
                       studentId={currentUser?.id}
                     />

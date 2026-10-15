@@ -21,12 +21,16 @@ if (typeof window !== "undefined") {
       if (el.controlsList && !el.hasAttribute("controls")) {
         try {
           el.controlsList.add("nodownload", "nofullscreen", "noremoteplayback");
-        } catch {}
+        } catch {
+          // ignore DOM token list errors
+        }
       }
       if (el.shadowRoot) {
         try {
           el.shadowRoot.innerHTML = "";
-        } catch {}
+        } catch {
+          // ignore closed shadow-root or read-only errors
+        }
       }
     });
   };
@@ -37,7 +41,9 @@ if (typeof window !== "undefined") {
       .forEach((el) => {
         try {
           el.remove();
-        } catch {}
+        } catch {
+          // ignore removal errors
+        }
       });
   };
 

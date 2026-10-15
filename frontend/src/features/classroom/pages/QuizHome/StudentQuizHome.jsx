@@ -62,7 +62,9 @@ export default function StudentQuizHome() {
       if (cached) {
         setQuizzes(JSON.parse(cached));
       }
-    } catch {}
+    } catch {
+      // ignore sessionStorage access errors
+    }
 
     let active = true;
     (async () => {
