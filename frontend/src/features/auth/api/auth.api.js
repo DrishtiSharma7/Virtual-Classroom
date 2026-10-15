@@ -20,4 +20,25 @@ export const resetPassword = async (payload) => {
   return response.data;
 };
 
-export default { loginUser, registerUser, forgotPassword, resetPassword };
+export const logoutUser = async () => {
+  try {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  } catch (err) {
+    return { success: true };
+  }
+};
+
+export const getMe = async () => {
+  const response = await api.get("/auth/me");
+  return response.data;
+};
+
+export default {
+  loginUser,
+  registerUser,
+  forgotPassword,
+  resetPassword,
+  logoutUser,
+  getMe,
+};

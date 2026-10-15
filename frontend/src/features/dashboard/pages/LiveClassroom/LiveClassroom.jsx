@@ -303,6 +303,9 @@ const ParticipantThumb = ({ stream, active, name, id }) => {
           autoPlay
           playsInline
           muted
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
           className={`h-full w-full object-cover ${showVideo ? "" : "opacity-0"}`}
         />
       )}
@@ -346,7 +349,15 @@ const AudioRelay = ({ stream, onAutoplayBlocked }) => {
   }, [stream, onAutoplayBlocked]);
 
   if (!stream) return null;
-  return <audio ref={audioRef} autoPlay playsInline />;
+  return (
+    <audio
+      ref={audioRef}
+      autoPlay
+      playsInline
+      controls={false}
+      disableRemotePlayback
+    />
+  );
 };
 
 const TeacherCameraTile = ({ stream, active, name, id }) => {
@@ -360,13 +371,16 @@ const TeacherCameraTile = ({ stream, active, name, id }) => {
   }, [stream]);
 
   return (
-    <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black shadow-sm">
+    <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black">
       {stream && (
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
           className={`h-full w-full object-cover ${
             showVideo ? "" : "opacity-0"
           }`}
@@ -403,6 +417,9 @@ const ScreenShareStage = ({ stream }) => {
       ref={videoRef}
       autoPlay
       playsInline
+      controls={false}
+      disablePictureInPicture
+      disableRemotePlayback
       className="h-full w-full object-contain"
     />
   );
@@ -460,6 +477,9 @@ const StudentZoomModal = ({ participant, hostScreenStreamId, onClose }) => {
               autoPlay
               playsInline
               muted
+              controls={false}
+              disablePictureInPicture
+              disableRemotePlayback
               className="h-full w-full object-contain"
             />
           )}
@@ -3473,19 +3493,22 @@ export default function LiveClassroom() {
               )}
             </div>
 
-            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-3 shadow-sm">
+            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white p-3">
               <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-800">
                 <Camera size={16} />
                 {isHost ? "Camera" : "Teacher"}
               </h4>
               <div className="flex-1 overflow-hidden">
                 {isHost ? (
-                  <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black shadow-sm">
+                  <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black">
                     <video
                       ref={localVideoRef}
                       autoPlay
                       playsInline
                       muted
+                      controls={false}
+                      disablePictureInPicture
+                      disableRemotePlayback
                       className={`h-full w-full origin-center object-cover [transform:scaleX(-1)] ${
                         cameraEnabled ? "" : "opacity-0"
                       }`}

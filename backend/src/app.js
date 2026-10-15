@@ -18,10 +18,23 @@ const analyticsRoutes = require("./features/analytics/analytics.routes");
 const announcementRoutes = require("./features/announcement/announcement.routes");
 const noteRoutes = require("./features/note/note.routes");
 const path = require("path");
+const { parseCookies } = require("./utils/cookie");
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, origin || true),
+    credentials: true,
+    exposedHeaders: ["X-Cache"],
+  }),
+);
 app.use(express.json());
+
+// Parse incoming cookies
+app.use((req, res, next) => {
+  req.cookies = parseCookies(req.headers.cookie);
+  next();
+});
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "../uploads"), {

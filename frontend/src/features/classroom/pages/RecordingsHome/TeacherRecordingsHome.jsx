@@ -404,6 +404,10 @@ export default function TeacherRecordingsHome() {
                 src={getRecordingUrl(watching.fileUrl)}
                 controls
                 autoPlay
+                playsInline
+                disablePictureInPicture
+                disableRemotePlayback
+                controlsList="nodownload nofullscreen noremoteplayback"
                 className="w-full rounded-xl bg-black"
               />
             </div>

@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("./auth.model");
+const { setAuthCookies, clearAuthCookies } = require("../../utils/cookie");
 
 exports.register = async (req, res) => {
   try {
@@ -22,9 +23,31 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
     });
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        name: user.name,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      },
+    );
+
+    setAuthCookies(res, { token, role: user.role });
+
     res.status(201).json({
       message: "User registered successfully",
       userId: user._id,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (err) {
     console.log(err);
@@ -54,9 +77,40 @@ exports.login = async (req, res) => {
         expiresIn: "1d",
       },
     );
+
+    setAuthCookies(res, { token, role: user.role });
+
     res.json({
       message: "Login successful",
       token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.logout = (req, res) => {
+  clearAuthCookies(res);
+  res.json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password").lean();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      success: true,
       user: {
         id: user._id,
         name: user.name,

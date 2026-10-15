@@ -37,6 +37,10 @@ export default function WatchRecordingModal({ recording, onClose }) {
           src={getRecordingUrl(recording.fileUrl)}
           controls
           autoPlay
+          playsInline
+          disablePictureInPicture
+          disableRemotePlayback
+          controlsList="nodownload nofullscreen noremoteplayback"
           className="w-full rounded-xl bg-black max-h-[70vh]"
         />
       </div>

@@ -27,4 +27,38 @@
     background-color: #f4f3f3;
     min-height: 100%;
   }
+
+  /* Suppress user-agent shadow root media controls and overlay play buttons on video & audio */
+  video:not([controls])::-webkit-media-controls,
+  video:not([controls])::-webkit-media-controls-enclosure,
+  video:not([controls])::-webkit-media-controls-panel,
+  video:not([controls])::-webkit-media-controls-overlay-play-button,
+  video:not([controls])::-webkit-media-controls-start-playback-button,
+  video::-webkit-media-controls-picture-in-picture-button,
+  audio:not([controls])::-webkit-media-controls,
+  audio:not([controls])::-webkit-media-controls-enclosure {
+    display: none !important;
+    -webkit-appearance: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Completely hide and eliminate Video Speed Controller (vsc-controller) badge and overlay */
+  vsc-controller,
+  .vsc-controller,
+  [class*="vsc-controller"],
+  [id*="vsc-controller"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    z-index: -9999999 !important;
+  }
 }

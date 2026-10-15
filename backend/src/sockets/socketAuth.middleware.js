@@ -1,8 +1,14 @@
 const jwt = require("jsonwebtoken");
+const { parseCookies } = require("../utils/cookie");
 
 module.exports = (socket, next) => {
   try {
-    const raw = socket.handshake.auth?.token || socket.handshake.query?.token;
+    let raw = socket.handshake.auth?.token || socket.handshake.query?.token;
+
+    if (!raw && socket.handshake.headers?.cookie) {
+      const cookies = parseCookies(socket.handshake.headers.cookie);
+      raw = cookies.token;
+    }
 
     if (!raw) {
       return next(new Error("Authentication required"));
