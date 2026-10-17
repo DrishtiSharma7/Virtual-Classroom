@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
-  GraduationCap,
   LayoutDashboard,
   CalendarCheck,
   ClipboardCheck,
@@ -12,6 +11,7 @@ import {
   LogOut,
   X,
 } from "lucide-react";
+import logoImg from "../../../../assets/Logo.png";
 import useAuth from "../../../auth/hooks/useAuth";
 import "./Sidebar.css";
 
@@ -97,14 +97,23 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <aside className={`sidebar-container ${sidebarOpen ? "open" : ""}`}>
       <header className="sidebar-header">
-        <div className="flex items-center space-x-3 min-w-0">
-          <GraduationCap className="sidebar-logo-icon shrink-0" />
-          <span className="sidebar-logo-text truncate">Virtual Classroom</span>
-        </div>
+        <Link
+          to="/dashboard"
+          onClick={handleNavClick}
+          className="flex flex-col items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
+          aria-label="Virtual Classroom"
+        >
+          <img
+            src={logoImg}
+            alt="Virtual Classroom Logo"
+            className="sidebar-logo-icon shrink-0 object-contain"
+          />
+          <h2 className="sidebar-logo-title">Virtual Classroom</h2>
+        </Link>
         <button
           type="button"
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition mr-1 cursor-pointer"
+          className="lg:hidden absolute right-3 top-3 z-10 p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition cursor-pointer"
           aria-label="Close menu"
         >
           <X size={22} />
