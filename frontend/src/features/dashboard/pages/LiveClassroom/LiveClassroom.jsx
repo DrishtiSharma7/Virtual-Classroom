@@ -2461,7 +2461,7 @@ export default function LiveClassroom() {
     : "";
 
   return (
-    <div className="relative flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
+    <div className="live-classroom-shell relative flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
       {needsAudioUnlock && (
         <div className="absolute inset-x-0 top-0 z-50 flex items-center justify-center bg-amber-500 py-1.5 text-xs font-medium text-white">
           Your browser blocked audio playback. Click anywhere to enable sound.
@@ -2938,7 +2938,7 @@ export default function LiveClassroom() {
 
               <div
                 ref={canvasWrapRef}
-                className="relative flex-1 overflow-hidden bg-white"
+                className="live-whiteboard-surface relative flex-1 overflow-hidden bg-white"
               >
                 <canvas
                   ref={canvasRef}

@@ -365,7 +365,7 @@ const GlobalTooltip = () => {
       const targetBtn = e.target.closest(
         'button, [data-tooltip], [role="button"]'
       );
-      if (!targetBtn) {
+      if (!targetBtn || targetBtn.hasAttribute("data-no-tooltip")) {
         hideTooltip();
         return;
       }
@@ -384,7 +384,7 @@ const GlobalTooltip = () => {
       const targetBtn = e.target.closest(
         'button, [data-tooltip], [role="button"]'
       );
-      if (targetBtn) {
+      if (targetBtn && !targetBtn.hasAttribute("data-no-tooltip")) {
         showForElement(targetBtn);
       }
     };

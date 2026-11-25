@@ -1,6 +1,6 @@
 export const CHART_COLORS = {
   primary: "#5b5fef",
-  primarySoft: "#eef0fd",
+  primarySoft: "var(--accent-soft)",
   categorical: ["#2a78d6", "#eb6834", "#1baf7a"],
   status: {
     good: "#0ca30c",
@@ -8,11 +8,11 @@ export const CHART_COLORS = {
     critical: "#d03b3b",
   },
   chrome: {
-    surface: "#ffffff",
-    grid: "#e5e7eb",
-    axis: "#9ca3af",
-    mutedText: "#6b7280",
-    primaryText: "#111827",
+    surface: "var(--chart-surface)",
+    grid: "var(--chart-grid)",
+    axis: "var(--chart-axis)",
+    mutedText: "var(--chart-text-muted)",
+    primaryText: "var(--chart-text-primary)",
   },
 };
 

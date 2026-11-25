@@ -3,7 +3,7 @@
 }
 
 .sidebar-header {
-  @apply relative flex flex-col items-center justify-center px-3 pt-3 pb-4;
+  @apply relative flex flex-col items-center justify-center px-3 pt-3 pb-4 overflow-hidden;
 }
 
 .sidebar-logo-icon {
@@ -15,7 +15,7 @@
 }
 
 .sidebar-nav {
-  @apply flex-1 pt-4 pb-4 px-4 space-y-1 overflow-y-auto;
+  @apply flex-1 pt-4 pb-4 px-4 space-y-1 overflow-y-auto overflow-x-hidden;
 }
 
 .sidebar-link {
@@ -41,13 +41,67 @@
 }
 
 .sidebar-container {
-  @apply fixed top-0 left-0 w-64 h-screen bg-white border-r border-gray-100 flex flex-col z-50 overflow-x-hidden;
+  @apply fixed top-0 left-0 w-64 h-screen bg-white border-r border-gray-100 flex flex-col z-50;
 
   transform: translate3d(-100%, 0, 0);
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
   visibility: hidden;
   pointer-events: none;
+}
+
+.sidebar-footer {
+  @apply relative border-t border-gray-100 p-2.5;
+}
+
+.sidebar-user-trigger {
+  @apply w-full flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar-user-meta {
+  @apply flex-1 min-w-0 flex flex-col;
+}
+
+.sidebar-user-name {
+  @apply text-sm font-semibold text-gray-800 truncate leading-tight;
+}
+
+.sidebar-user-role {
+  @apply text-xs text-gray-500 truncate leading-tight mt-0.5;
+}
+
+.sidebar-user-chevron {
+  @apply text-gray-400 shrink-0;
+}
+
+.sidebar-user-popover {
+  @apply absolute bottom-full left-2.5 right-2.5 mb-2 bg-white border border-gray-100 rounded-2xl shadow-xl p-2 z-50;
+}
+
+.sidebar-user-popover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 10px;
+}
+
+.sidebar-user-popover-header {
+  @apply flex items-center gap-2.5 px-2 py-2 border-b border-gray-100 mb-1;
+}
+
+.sidebar-user-menu-item {
+  @apply w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer text-left;
+}
+
+.sidebar-user-menu-item.danger {
+  @apply text-red-600 hover:bg-red-50 hover:text-red-700;
+}
+
+.sidebar-theme-badge {
+  @apply text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600;
 }
 
 .sidebar-container.open {
@@ -95,6 +149,28 @@
   }
 
   .sidebar-container.collapsed .sidebar-footer {
-    @apply px-3 py-1;
+    @apply px-2.5 py-2.5;
+  }
+
+  .sidebar-container.collapsed .sidebar-user-trigger {
+    @apply justify-center px-0;
+  }
+
+  .sidebar-container.collapsed .sidebar-user-meta,
+  .sidebar-container.collapsed .sidebar-user-chevron {
+    @apply hidden;
+  }
+
+  .sidebar-container.collapsed .sidebar-user-popover.collapsed-popover {
+    @apply bottom-2 left-full right-auto mb-0 ml-2 w-56;
+  }
+
+  .sidebar-container.collapsed .sidebar-user-popover.collapsed-popover::after {
+    top: 0;
+    bottom: 0;
+    left: -10px;
+    right: auto;
+    width: 10px;
+    height: auto;
   }
 }

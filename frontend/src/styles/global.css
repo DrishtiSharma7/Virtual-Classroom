@@ -13,6 +13,85 @@
     U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+:root {
+  --bg-app: #f4f3f3;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --bg-surface-subtle: #f8fafc;
+  --bg-surface-hover: #f1f5f9;
+  --bg-surface-muted: #e2e8f0;
+  --bg-input: #ffffff;
+  --bg-auth: #f8faff;
+  --bg-auth-panel: #e5e9f9;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+
+  --border-subtle: #e5e7eb;
+  --border-light: #f1f5f9;
+  --border-input: #d1d5db;
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef2ff;
+  --accent-soft-text: #4338ca;
+
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+
+  --chart-surface: #ffffff;
+  --chart-grid: #e5e7eb;
+  --chart-axis: #9ca3af;
+  --chart-text-muted: #6b7280;
+  --chart-text-primary: #111827;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --bg-app: #0b1120;
+  --bg-surface: #131c31;
+  --bg-surface-elevated: #1e293b;
+  --bg-surface-subtle: #192338;
+  --bg-surface-hover: #1e293b;
+  --bg-surface-muted: #26334d;
+  --bg-input: #0f172a;
+  --bg-auth: #0b1120;
+  --bg-auth-panel: #17213a;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+
+  --border-subtle: #334155;
+  --border-light: #1e293b;
+  --border-input: #334155;
+
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-soft: rgba(99, 102, 241, 0.16);
+  --accent-soft-text: #a5b4fc;
+
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
+
+  --chart-surface: #131c31;
+  --chart-grid: #26334d;
+  --chart-axis: #475569;
+  --chart-text-muted: #94a3b8;
+  --chart-text-primary: #f1f5f9;
+}
+
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease,
+    box-shadow 0.2s ease !important;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -24,7 +103,8 @@
     font-family: "Inter", "Poppins", sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    background-color: #f4f3f3;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
     min-height: 100%;
   }
 
@@ -61,4 +141,688 @@
     left: -9999px !important;
     z-index: -9999999 !important;
   }
+}
+
+/* ==========================================================================
+   Dark Mode Theme System
+   ========================================================================== */
+
+/* Page canvases & outer wrappers */
+html.dark body,
+html.dark .dashboard-layout,
+html.dark .teacher-dashboard-page,
+html.dark .student-dashboard-page,
+html.dark .classroom-page,
+html.dark .attendance-page,
+html.dark .quiz-page,
+html.dark .recordings-page,
+html.dark .details-page,
+html.dark .analytics-page,
+html.dark .live-classroom-shell,
+html.dark .bg-\[\#f4f3f3\] {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+html.dark .bg-\[\#f8faff\] {
+  background-color: var(--bg-auth);
+  color: var(--text-primary);
+}
+
+html.dark .bg-\[\#e5e9f9\] {
+  background-color: var(--bg-auth-panel);
+}
+
+html.dark .auth-register-card {
+  background-image: linear-gradient(to bottom right, #17213a, #1d2846, #271e45);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+/* Primary card & panel surfaces */
+html.dark .bg-white,
+html.dark .sidebar-container,
+html.dark .stat-card,
+html.dark .quick-actions-panel,
+html.dark .recent-classes-container,
+html.dark .quick-notes-container,
+html.dark .classroom-card,
+html.dark .classroom-empty,
+html.dark .section-card,
+html.dark .filter-card,
+html.dark .filter-bar,
+html.dark .table-wrapper,
+html.dark .chart-card,
+html.dark .insights-panel,
+html.dark .no-data {
+  background-color: var(--bg-surface);
+}
+
+/* Elevated popovers, modals & dropdowns */
+html.dark .sidebar-user-popover,
+html.dark .quick-notes-dropdown,
+html.dark .filter-export-menu,
+html.dark .modal-card,
+html.dark .modal-card-wide {
+  background-color: var(--bg-surface-elevated);
+  border-color: var(--border-subtle);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+}
+
+/* Subtle / recessed surfaces (table headers, nested stats, skeletons) */
+html.dark .bg-gray-50,
+html.dark .bg-gray-50\/70,
+html.dark .bg-gray-50\/80,
+html.dark .bg-slate-50,
+html.dark .table-head,
+html.dark .analytics-table-head,
+html.dark .student-detail-stat,
+html.dark .quick-notes-form,
+html.dark .filter-bar-mobile-toggle,
+html.dark .chart-card-skeleton,
+html.dark .chart-card-empty {
+  background-color: var(--bg-surface-subtle);
+}
+
+html.dark .bg-gray-100,
+html.dark .bg-slate-100,
+html.dark .filter-tabs,
+html.dark .sidebar-theme-badge,
+html.dark .quick-notes-count-badge,
+html.dark .status-neutral,
+html.dark .page-btn-inactive,
+html.dark .pagination-btn-disabled {
+  background-color: var(--bg-surface-muted);
+}
+
+html.dark .bg-gray-200,
+html.dark .bg-gray-200\/60,
+html.dark .bg-gray-200\/80,
+html.dark .bg-slate-200,
+html.dark .bg-gray-300,
+html.dark .bg-slate-300 {
+  background-color: var(--bg-surface-muted);
+}
+
+/* Preserve white surfaces where contrast requires pure white */
+html.dark .live-whiteboard-surface {
+  background-color: #ffffff !important;
+}
+
+html.dark .live-btn,
+html.dark .bg-gradient-to-br .bg-white {
+  background-color: #ffffff;
+  color: #4338ca;
+}
+
+html.dark .live-btn:hover,
+html.dark .bg-gradient-to-br .bg-white:hover {
+  background-color: #eef2ff;
+  color: #3730a3;
+}
+
+html.dark .bg-red-500 .bg-white,
+html.dark .bg-red-600 .bg-white,
+html.dark .bg-emerald-500 .bg-white,
+html.dark [role="switch"] .bg-white {
+  background-color: #ffffff;
+}
+
+html.dark [role="switch"]:focus {
+  --tw-ring-offset-color: var(--bg-surface);
+}
+
+/* Borders & Dividers */
+html.dark .border-gray-50,
+html.dark .border-gray-100,
+html.dark .border-slate-100,
+html.dark .divide-gray-100,
+html.dark .border-\[\#e5e9f9\],
+html.dark .sidebar-container,
+html.dark .sidebar-footer,
+html.dark .sidebar-user-popover-header,
+html.dark .stat-card,
+html.dark .quick-actions-panel,
+html.dark .recent-classes-container,
+html.dark .classes-table th,
+html.dark .classes-table td,
+html.dark .quick-notes-container,
+html.dark .quick-notes-header,
+html.dark .quick-notes-item,
+html.dark .quick-notes-item:hover,
+html.dark .quick-notes-dropdown,
+html.dark .classroom-card,
+html.dark .classroom-empty,
+html.dark .section-card,
+html.dark .session-footer,
+html.dark .announcement-item,
+html.dark .recording-row,
+html.dark .filter-card,
+html.dark .filter-bar,
+html.dark .filter-select,
+html.dark .filter-export-menu,
+html.dark .table-wrapper,
+html.dark .table-row,
+html.dark .chart-card,
+html.dark .insights-panel,
+html.dark .analytics-table-wrapper,
+html.dark .analytics-table-row,
+html.dark .analytics-search-input,
+html.dark .analytics-empty-state,
+html.dark .student-detail-stat,
+html.dark .search-input,
+html.dark .classroom-select,
+html.dark .form-input,
+html.dark .no-data,
+html.dark .modal-card,
+html.dark .modal-card-wide {
+  border-color: var(--border-subtle);
+}
+
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .announcements-list > :not([hidden]) ~ :not([hidden]),
+html.dark .recordings-list > :not([hidden]) ~ :not([hidden]),
+html.dark .students-list > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-subtle);
+}
+
+html.dark .border-gray-200,
+html.dark .border-slate-200,
+html.dark .border-gray-300,
+html.dark .border-slate-300,
+html.dark .border-\[\#d9dce8\] {
+  border-color: var(--border-input);
+}
+
+html.dark .ring-slate-200 {
+  --tw-ring-color: var(--border-input);
+}
+
+html.dark .border-\[\#4f46e5\],
+html.dark .border-\[\#5b5fef\] {
+  border-color: var(--accent-hover);
+}
+
+/* Primary, Secondary, and Muted Text */
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-slate-800,
+html.dark .text-black,
+html.dark .text-\[\#0f0f10\],
+html.dark .text-\[\#111\],
+html.dark .text-\[\#1d1d1f\],
+html.dark .navbar-title,
+html.dark .sidebar-logo-title,
+html.dark .sidebar-user-name,
+html.dark .stat-value,
+html.dark .quick-actions-title,
+html.dark .section-title,
+html.dark .quick-notes-title,
+html.dark .quick-notes-text,
+html.dark .classroom-title,
+html.dark .classroom-name,
+html.dark .classroom-detail-value,
+html.dark .attendance-title,
+html.dark .quiz-title,
+html.dark .recordings-title,
+html.dark .analytics-title,
+html.dark .table-heading,
+html.dark .student-name,
+html.dark .entity-name,
+html.dark .section-card h3,
+html.dark .announcement-item h4,
+html.dark .recording-row h4,
+html.dark .student-left h4,
+html.dark .modal-title,
+html.dark .chart-card-title,
+html.dark .insights-title,
+html.dark .student-detail-stat-value,
+html.dark .status-completed {
+  color: var(--text-primary);
+}
+
+html.dark .text-gray-700,
+html.dark .text-slate-700,
+html.dark .text-\[\#333\],
+html.dark .text-\[\#404244\],
+html.dark .text-\[\#444\],
+html.dark .navbar-username,
+html.dark .sidebar-link,
+html.dark .sidebar-user-menu-item,
+html.dark .table-cell,
+html.dark .analytics-table-cell,
+html.dark .analytics-table-heading,
+html.dark .filter-bar-mobile-toggle,
+html.dark .filter-export-menu button,
+html.dark .form-label,
+html.dark .page-btn-inactive,
+html.dark .secondary-btn {
+  color: var(--text-secondary);
+}
+
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-\[\#555\],
+html.dark .text-\[\#61646b\],
+html.dark .sidebar-user-role,
+html.dark .sidebar-theme-badge,
+html.dark .stat-label,
+html.dark .classroom-subtitle,
+html.dark .attendance-subtitle,
+html.dark .quiz-subtitle,
+html.dark .recordings-subtitle,
+html.dark .analytics-subtitle,
+html.dark .classroom-subject,
+html.dark .classroom-detail-label,
+html.dark .classroom-empty,
+html.dark .filter-label,
+html.dark .filter-tab,
+html.dark .filter-icon-btn,
+html.dark .analytics-pagination,
+html.dark .no-data,
+html.dark .section-card p,
+html.dark .session-time,
+html.dark .announcement-item p,
+html.dark .recording-row p,
+html.dark .status-upcoming,
+html.dark .status-neutral,
+html.dark .quick-notes-count-badge,
+html.dark .quick-notes-empty-text,
+html.dark .student-detail-stat-sub,
+html.dark .classroom-loading {
+  color: var(--text-muted);
+}
+
+html.dark .text-gray-400,
+html.dark .text-slate-400,
+html.dark .sidebar-user-chevron,
+html.dark .stat-description,
+html.dark .stat-trend-flat,
+html.dark .quick-notes-time,
+html.dark .quick-notes-empty-subtext,
+html.dark .student-left p,
+html.dark .empty-text,
+html.dark .loading-text,
+html.dark .analytics-no-data,
+html.dark .insights-empty,
+html.dark .student-detail-stat-label,
+html.dark .pagination-btn-disabled {
+  color: var(--text-muted);
+}
+
+html.dark .text-gray-300,
+html.dark .text-slate-300,
+html.dark .stat-tooltip-wrapper,
+html.dark .chart-card-tooltip-wrapper,
+html.dark .quick-notes-empty-icon {
+  color: var(--text-subtle);
+}
+
+html.dark .stat-tooltip-wrapper:hover,
+html.dark .chart-card-tooltip-wrapper:hover {
+  color: var(--text-secondary);
+}
+
+/* Semantic & Accent Text Colors */
+html.dark .text-indigo-600,
+html.dark .text-indigo-500,
+html.dark .text-\[\#4f46e5\],
+html.dark .text-\[\#4b4fd6\],
+html.dark .text-\[\#5b5fef\],
+html.dark .section-title-left,
+html.dark .analytics-title-icon,
+html.dark .quick-notes-icon,
+html.dark .back-btn,
+html.dark .student-left svg {
+  color: #818cf8;
+}
+
+html.dark .text-indigo-700,
+html.dark .text-indigo-900,
+html.dark .text-indigo-950,
+html.dark .text-\[\#4347d4\],
+html.dark .text-\[\#4347d9\],
+html.dark .inline-add-btn {
+  color: #a5b4fc;
+}
+
+html.dark .text-blue-600,
+html.dark .text-blue-700,
+html.dark .view-btn,
+html.dark .view-icon {
+  color: #60a5fa;
+}
+
+html.dark .text-green-600,
+html.dark .text-green-700,
+html.dark .text-emerald-600,
+html.dark .text-emerald-700,
+html.dark .text-emerald-800,
+html.dark .status-active,
+html.dark .toggle-btn,
+html.dark .watch-btn {
+  color: #34d399;
+}
+
+html.dark .text-amber-600,
+html.dark .text-amber-700,
+html.dark .text-amber-800,
+html.dark .text-yellow-700,
+html.dark .text-orange-600 {
+  color: #fbbf24;
+}
+
+html.dark .text-red-500,
+html.dark .text-red-600,
+html.dark .text-red-700,
+html.dark .delete-btn,
+html.dark .delete-icon,
+html.dark .sidebar-user-menu-item.danger {
+  color: #f87171;
+}
+
+html.dark .text-purple-600 {
+  color: #c084fc;
+}
+
+/* Soft Tinted Badges, Insights & Buttons */
+html.dark .bg-\[\#f3f4ff\],
+html.dark .bg-indigo-50,
+html.dark .bg-indigo-50\/70,
+html.dark .inline-add-btn {
+  background-color: rgba(99, 102, 241, 0.16);
+}
+
+html.dark .bg-indigo-100,
+html.dark .status-live {
+  background-color: rgba(99, 102, 241, 0.24);
+  color: #a5b4fc;
+}
+
+html.dark .bg-blue-50,
+html.dark .insight-info,
+html.dark .bg-blue-soft {
+  background-color: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+}
+
+html.dark .bg-orange-soft {
+  background-color: rgba(249, 115, 22, 0.18);
+  color: #fdba74;
+}
+
+html.dark .bg-purple-50,
+html.dark .bg-purple-soft {
+  background-color: rgba(168, 85, 247, 0.18);
+  color: #d8b4fe;
+}
+
+html.dark .bg-green-50,
+html.dark .bg-emerald-50,
+html.dark .bg-green-soft,
+html.dark .insight-positive,
+html.dark .analytics-status-good,
+html.dark .watch-btn {
+  background-color: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+}
+
+html.dark .bg-green-100,
+html.dark .bg-emerald-100,
+html.dark .bg-emerald-200,
+html.dark .status-present,
+html.dark .classroom-status {
+  background-color: rgba(16, 185, 129, 0.22);
+  color: #6ee7b7;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/30,
+html.dark .insight-warning,
+html.dark .analytics-status-warning,
+html.dark .quick-notes-important-badge,
+html.dark .quick-notes-item.important,
+html.dark .quick-notes-star-toggle.active {
+  background-color: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.32);
+}
+
+html.dark .bg-amber-100,
+html.dark .bg-yellow-100,
+html.dark .status-leave {
+  background-color: rgba(245, 158, 11, 0.22);
+  color: #fcd34d;
+}
+
+html.dark .quiz-page .status-absent {
+  background-color: rgba(245, 158, 11, 0.22);
+  color: #fcd34d;
+}
+
+html.dark .bg-red-50,
+html.dark .analytics-error,
+html.dark .analytics-status-critical,
+html.dark .form-error {
+  background-color: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.32);
+}
+
+html.dark .bg-red-100,
+html.dark .bg-red-200,
+html.dark .attendance-page .status-absent {
+  background-color: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+}
+
+/* Interactive Hover, Active, and Disabled States */
+html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-50\/80:hover,
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-gray-200:hover,
+html.dark .sidebar-link:hover,
+html.dark .sidebar-user-trigger:hover,
+html.dark .sidebar-user-menu-item:hover,
+html.dark .table-row:hover,
+html.dark .analytics-table-row:hover,
+html.dark .filter-icon-btn:hover,
+html.dark .filter-export-menu button:hover,
+html.dark .analytics-pagination-btn:hover:not(:disabled),
+html.dark .page-btn-inactive:hover,
+html.dark .secondary-btn:hover:not(:disabled),
+html.dark .edit-icon-btn:hover,
+html.dark .quick-notes-menu-btn:hover,
+html.dark .quick-notes-dropdown-item:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+html.dark .hover\:bg-\[\#f3f4ff\]:hover,
+html.dark .hover\:bg-\[\#4f46e5\]\/\[0\.06\]:hover,
+html.dark .inline-add-btn:hover {
+  background-color: rgba(99, 102, 241, 0.24);
+}
+
+html.dark .hover\:bg-indigo-100:hover {
+  background-color: rgba(99, 102, 241, 0.26);
+}
+
+html.dark .hover\:bg-emerald-50:hover,
+html.dark .hover\:bg-emerald-100:hover,
+html.dark .watch-btn:hover,
+html.dark .toggle-btn:hover {
+  background-color: rgba(16, 185, 129, 0.24);
+}
+
+html.dark .hover\:bg-blue-50:hover,
+html.dark .view-btn:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+html.dark .hover\:bg-red-50:hover,
+html.dark .delete-btn:hover,
+html.dark .remove-btn:hover,
+html.dark .sidebar-user-menu-item.danger:hover,
+html.dark .quick-notes-dropdown-item.danger:hover {
+  background-color: rgba(239, 68, 68, 0.16);
+}
+
+html.dark .hover\:text-black:hover,
+html.dark .hover\:text-gray-800:hover,
+html.dark .hover\:text-gray-900:hover,
+html.dark .hover\:text-slate-700:hover,
+html.dark .sidebar-link:hover,
+html.dark .analytics-table-heading:hover {
+  color: #ffffff;
+}
+
+html.dark .hover\:text-indigo-600:hover,
+html.dark .hover\:text-indigo-700:hover,
+html.dark .hover\:text-\[\#4f46e5\]:hover {
+  color: #a5b4fc;
+}
+
+html.dark .sidebar-link.active,
+html.dark .filter-tab-active,
+html.dark .page-btn-active,
+html.dark .pagination-btn-active {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+html.dark .sidebar-link.active:hover,
+html.dark .pagination-btn-active:hover {
+  background-color: var(--accent-hover);
+  color: #ffffff;
+}
+
+html.dark .export-btn:disabled,
+html.dark .secondary-btn:disabled {
+  background-color: var(--bg-surface-muted);
+  color: var(--text-subtle);
+  border-color: var(--border-subtle);
+}
+
+/* Secondary & Action Buttons */
+html.dark .secondary-btn,
+html.dark .filter-icon-btn,
+html.dark .analytics-pagination-btn {
+  background-color: var(--bg-surface);
+  border-color: var(--border-input);
+}
+
+html.dark .action-btn {
+  background-color: var(--bg-input);
+  border-color: var(--border-input);
+  color: var(--text-secondary);
+}
+
+html.dark .action-btn:hover {
+  background-color: rgba(99, 102, 241, 0.16);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Welcome Banner */
+html.dark .banner-container {
+  background-image: linear-gradient(to right, #312e81, #4338ca, #581c87);
+}
+
+html.dark .banner-heading {
+  color: #f8fafc;
+}
+
+html.dark .banner-subtext {
+  color: #e0e7ff;
+}
+
+html.dark .banner-cap-card {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+html.dark .banner-cap-icon {
+  color: #f8fafc;
+}
+
+/* Forms, Inputs, Selects & Textareas */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
+html.dark select,
+html.dark textarea {
+  background-color: var(--bg-input);
+  border-color: var(--border-input);
+  color: var(--text-primary);
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--text-subtle);
+}
+
+html.dark .quick-notes-form {
+  background-color: var(--bg-input);
+  border-color: var(--border-input);
+}
+
+html.dark .quick-notes-form:focus-within {
+  background-color: var(--bg-input);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+html.dark .quick-notes-input {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+/* Recharts Tooltips & Legends */
+html.dark .recharts-default-tooltip {
+  background-color: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border-input) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45) !important;
+  color: var(--text-primary) !important;
+}
+
+html.dark .recharts-tooltip-label {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+html.dark .recharts-tooltip-item,
+html.dark .recharts-legend-item-text {
+  color: var(--text-secondary) !important;
+}
+
+/* Tooltips & Toasts */
+html.dark .global-tooltip-bubble,
+html.dark .stat-tooltip-bubble,
+html.dark .chart-card-tooltip-bubble {
+  background-color: #020617;
+  color: #f8fafc;
+  border: 1px solid #334155;
+}
+
+html.dark .vc-toast {
+  background-color: var(--bg-surface-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-input);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Scrollbars */
+html.dark ::-webkit-scrollbar-thumb,
+html.dark .quick-notes-list::-webkit-scrollbar-thumb,
+html.dark .announcements-list::-webkit-scrollbar-thumb,
+html.dark .recordings-list::-webkit-scrollbar-thumb,
+html.dark .students-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover,
+html.dark .quick-notes-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }

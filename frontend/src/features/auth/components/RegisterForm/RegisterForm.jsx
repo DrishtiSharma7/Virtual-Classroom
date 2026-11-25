@@ -91,7 +91,7 @@ function RegisterForm() {
 
 
       <main className="relative z-10 flex min-h-[calc(100vh-140px)] items-center justify-center px-4 py-6 sm:px-5">
-        <div className="animate-rp-fade-in flex w-full max-w-[950px] flex-col overflow-hidden rounded-[18px] bg-gradient-to-br from-[#98d1f7] via-[#a7c4ff] to-[#dabbfb] shadow-[0_20px_45px_rgba(0,0,0,0.12)] sm:rounded-[22px] md:h-[640px] md:flex-row">
+        <div className="auth-register-card animate-rp-fade-in flex w-full max-w-[950px] flex-col overflow-hidden rounded-[18px] bg-gradient-to-br from-[#98d1f7] via-[#a7c4ff] to-[#dabbfb] shadow-[0_20px_45px_rgba(0,0,0,0.12)] sm:rounded-[22px] md:h-[640px] md:flex-row">
 
           <div className="hidden flex-1 flex-row items-center justify-between gap-3 px-5 py-5 text-left md:flex md:flex-col md:items-center md:justify-center md:gap-0 md:px-8 md:py-12 md:text-center">
             <div className="flex flex-col md:order-2 md:items-center">
@@ -230,9 +230,9 @@ function RegisterForm() {
                   aria-pressed={showPassword}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color="#6B7280" />
+                    <EyeOff size={20} className="text-gray-500" />
                   ) : (
-                    <Eye size={20} color="#6B7280" />
+                    <Eye size={20} className="text-gray-500" />
                   )}
                 </button>
               </div>
@@ -263,9 +263,9 @@ function RegisterForm() {
                   aria-pressed={showConfirmPassword}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff size={20} color="#6B7280" />
+                    <EyeOff size={20} className="text-gray-500" />
                   ) : (
-                    <Eye size={20} color="#6B7280" />
+                    <Eye size={20} className="text-gray-500" />
                   )}
                 </button>
               </div>

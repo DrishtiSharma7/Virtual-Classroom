@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -9,10 +10,15 @@ import {
   ChartColumn,
   Settings,
   LogOut,
+  Sun,
+  Moon,
+  ChevronUp,
   X,
 } from "lucide-react";
 import logoImg from "../../../../assets/Logo.png";
 import useAuth from "../../../auth/hooks/useAuth";
+import useTheme from "../../../../hooks/useTheme";
+import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
 import "./Sidebar.css";
 
 const prefetchRoutes = () => {
@@ -71,9 +77,15 @@ const Sidebar = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
+  const { user, role } = useSelector((state) => state.auth);
+  const { theme, toggleTheme } = useTheme();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+  const closeTimerRef = useRef(null);
 
   useEffect(() => {
     setSidebarOpen(false);
+    setUserMenuOpen(false);
   }, [location.pathname, setSidebarOpen]);
 
   useEffect(() => {
@@ -87,13 +99,65 @@ const Sidebar = ({
     }
   }, [sidebarOpen]);
 
+  useEffect(() => {
+    if (!userMenuOpen) return;
+
+    const handlePointerDown = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [userMenuOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  const openUserMenu = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setUserMenuOpen(true);
+  };
+
+  const scheduleCloseUserMenu = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setUserMenuOpen(false);
+    }, 150);
+  };
+
   const handleLogout = () => {
+    setUserMenuOpen(false);
     setSidebarOpen(false);
     signOut();
     navigate("/login", { replace: true });
   };
 
+  const handleGoToSettings = () => {
+    setUserMenuOpen(false);
+    setSidebarOpen(false);
+    navigate("/settings");
+  };
+
   const handleNavClick = () => {
+    setUserMenuOpen(false);
     setSidebarOpen(false);
   };
 
@@ -111,6 +175,9 @@ const Sidebar = ({
   };
 
   const menuItems = MENU_ITEMS;
+  const userName = user?.name || "User";
+  const userSubtitle =
+    user?.email || (role === "teacher" ? "Teacher" : "Student");
 
   return (
     <aside
@@ -162,18 +229,108 @@ const Sidebar = ({
           </NavLink>
         ))}
       </nav>
-      <div className="sidebar-footer border-t border-gray-100 py-1 pl-3">
+      <div
+        ref={userMenuRef}
+        className="sidebar-footer"
+        onMouseEnter={openUserMenu}
+        onMouseLeave={scheduleCloseUserMenu}
+      >
+        {userMenuOpen && (
+          <div
+            className={`sidebar-user-popover ${
+              sidebarCollapsed ? "collapsed-popover" : ""
+            }`}
+            role="menu"
+            aria-label="User menu"
+          >
+            <div className="sidebar-user-popover-header">
+              <UserAvatar
+                id={user?._id || user?.id}
+                name={userName}
+                size="sm"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {userName}
+                </p>
+                <p className="text-xs text-gray-500 truncate">{userSubtitle}</p>
+              </div>
+            </div>
+
+            <div className="py-1 space-y-0.5">
+              <button
+                type="button"
+                role="menuitem"
+                data-no-tooltip
+                onClick={toggleTheme}
+                className="sidebar-user-menu-item"
+              >
+                <span className="flex items-center gap-2.5">
+                  {theme === "dark" ? (
+                    <Sun size={16} className="text-amber-500 shrink-0" />
+                  ) : (
+                    <Moon size={16} className="text-indigo-600 shrink-0" />
+                  )}
+                  <span>Theme</span>
+                </span>
+                <span className="sidebar-theme-badge">
+                  {theme === "dark" ? "Dark" : "Light"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                role="menuitem"
+                data-no-tooltip
+                onClick={handleGoToSettings}
+                className="sidebar-user-menu-item"
+              >
+                <span className="flex items-center gap-2.5">
+                  <Settings size={16} className="text-gray-500 shrink-0" />
+                  <span>Settings</span>
+                </span>
+              </button>
+            </div>
+
+            <div className="border-t border-gray-100 pt-1 mt-1">
+              <button
+                type="button"
+                role="menuitem"
+                data-no-tooltip
+                onClick={handleLogout}
+                className="sidebar-user-menu-item danger"
+              >
+                <span className="flex items-center gap-2.5">
+                  <LogOut size={16} className="shrink-0" />
+                  <span>Logout</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
-          onClick={handleLogout}
-          aria-label="Logout"
-          data-tooltip={sidebarCollapsed ? "Logout" : undefined}
-          className="sidebar-link w-full text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
+          data-no-tooltip
+          onClick={() => setUserMenuOpen((prev) => !prev)}
+          aria-haspopup="menu"
+          aria-expanded={userMenuOpen}
+          aria-label={`User menu for ${userName}`}
+          className="sidebar-user-trigger"
         >
-          <span className="sidebar-icon pointer-events-none">
-            <LogOut />
-          </span>
-          <span className="sidebar-label pointer-events-none">Logout</span>
+          <UserAvatar id={user?._id || user?.id} name={userName} size="sm" />
+          <div className="sidebar-user-meta">
+            <span className="sidebar-user-name">{userName}</span>
+            <span className="sidebar-user-role">
+              {role === "teacher" ? "Teacher" : "Student"}
+            </span>
+          </div>
+          <ChevronUp
+            size={16}
+            className={`sidebar-user-chevron transition-transform duration-150 ${
+              userMenuOpen ? "rotate-180" : ""
+            }`}
+          />
         </button>
       </div>
     </aside>
