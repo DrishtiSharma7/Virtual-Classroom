@@ -61,6 +61,8 @@ import {
   Volume2,
   VolumeOff,
   AlertTriangle,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
@@ -71,6 +73,7 @@ import LiveAttendancePanel from "../../../classroom/components/AttendancePanel/L
 import { getWhiteboard } from "../../../classroom/api/whiteboard.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 import useAuth from "../../../auth/hooks/useAuth";
+import useTheme from "../../../../hooks/useTheme";
 import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
 
 const drawElement = (ctx, el) => {
@@ -497,6 +500,7 @@ export default function LiveClassroom() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const currentUser = useSelector((state) => state.auth.user);
   const token = useSelector((state) => state.auth.token);
@@ -668,10 +672,35 @@ export default function LiveClassroom() {
 
     const initMedia = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
+        let stream = null;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true,
+          });
+        } catch (combinedErr) {
+          console.warn(
+            "[Media] Combined audio+video failed, trying separately:",
+            combinedErr
+          );
+          const [audioRes, videoRes] = await Promise.allSettled([
+            navigator.mediaDevices.getUserMedia({ audio: true }),
+            navigator.mediaDevices.getUserMedia({ video: true }),
+          ]);
+
+          const combinedTracks = [];
+          if (audioRes.status === "fulfilled") {
+            combinedTracks.push(...audioRes.value.getAudioTracks());
+          }
+          if (videoRes.status === "fulfilled") {
+            combinedTracks.push(...videoRes.value.getVideoTracks());
+          }
+
+          if (combinedTracks.length === 0) {
+            throw combinedErr;
+          }
+          stream = new MediaStream(combinedTracks);
+        }
 
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
@@ -688,7 +717,7 @@ export default function LiveClassroom() {
 
         setCameraEnabled(false);
         setMicEnabled(false);
-        setMediaError("");
+        setMediaError(videoTrack ? "" : "Camera unavailable.");
 
         setActiveCameraId(videoTrack?.getSettings().deviceId || null);
 
@@ -2039,7 +2068,7 @@ export default function LiveClassroom() {
 
     const existingTrack = localStream.current?.getAudioTracks()[0];
 
-    if (existingTrack) {
+    if (existingTrack && existingTrack.readyState === "live") {
       existingTrack.enabled = !existingTrack.enabled;
 
       setMicEnabled(existingTrack.enabled);
@@ -2050,6 +2079,10 @@ export default function LiveClassroom() {
       });
 
       return;
+    }
+
+    if (existingTrack && existingTrack.readyState !== "live") {
+      localStream.current?.removeTrack(existingTrack);
     }
 
     if (togglingMicRef.current) {
@@ -2076,11 +2109,15 @@ export default function LiveClassroom() {
       localStream.current.addTrack(audioTrack);
 
       Object.values(peerConnections.current).forEach((pc) => {
-        const alreadyExists = pc
+        const audioSender = pc
           .getSenders()
-          .some((sender) => sender.track && sender.track.kind === "audio");
+          .find((sender) => sender.track?.kind === "audio");
 
-        if (!alreadyExists) {
+        if (audioSender) {
+          audioSender.replaceTrack(audioTrack).catch((err) => {
+            console.error("[WebRTC] Audio replaceTrack failed:", err);
+          });
+        } else {
           pc.addTrack(audioTrack, localStream.current);
         }
       });
@@ -2404,7 +2441,7 @@ export default function LiveClassroom() {
 
   if (sessionLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-100 text-slate-500">
+      <div className="live-classroom-shell flex h-screen w-full items-center justify-center bg-slate-100 text-slate-500">
         Loading session...
       </div>
     );
@@ -2412,7 +2449,7 @@ export default function LiveClassroom() {
 
   if (sessionError || !session) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-slate-100 text-slate-600">
+      <div className="live-classroom-shell flex h-screen w-full flex-col items-center justify-center gap-3 bg-slate-100 text-slate-600">
         <p>{sessionError || "Session not found."}</p>
         <button
           onClick={() => navigate("/classrooms")}
@@ -2559,7 +2596,7 @@ export default function LiveClassroom() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <nav className="flex w-[72px] flex-col items-center gap-4 bg-slate-900 py-5">
+        <nav className="live-classroom-nav flex w-[72px] flex-col items-center gap-4 bg-slate-900 py-5">
           {NAV_RAIL_ITEMS.map((item) => (
             <NavLink
               key={item.path}
@@ -2572,7 +2609,12 @@ export default function LiveClassroom() {
               <item.icon size={20} />
             </NavLink>
           ))}
-          <div className="mt-auto">
+          <div className="mt-auto flex flex-col items-center gap-3">
+            <NavRailIcon
+              Icon={theme === "dark" ? Sun : Moon}
+              label={theme === "dark" ? "Light Mode" : "Dark Mode"}
+              onClick={toggleTheme}
+            />
             <NavRailIcon
               Icon={LogOut}
               label="Logout"
@@ -3036,7 +3078,7 @@ export default function LiveClassroom() {
                   onClick={toggleFullscreen}
                   data-tooltip={wbFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   title={wbFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                  className="absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-500 shadow-sm ring-1 ring-slate-200 backdrop-blur transition-colors hover:bg-white hover:text-slate-700"
+                  className="live-whiteboard-fs-btn absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-500 shadow-sm ring-1 ring-slate-200 backdrop-blur transition-colors hover:bg-white hover:text-slate-700"
                 >
                   {wbFullscreen ? (
                     <Minimize size={16} />
@@ -3147,18 +3189,13 @@ export default function LiveClassroom() {
 
           <aside className="flex w-[340px] flex-shrink-0 flex-col gap-4 overflow-hidden">
 
-            {participants
-              .filter((p) => isHost || p.user?.role !== "teacher")
-              .map((p) => (
-                <AudioRelay
-                  key={p.socketId}
-                  stream={
-                    Object.values(p.videoStreams || {}).find(
-                      (s) => s.id !== hostScreenStreamId
-                    ) || null
-                  }
-                />
-              ))}
+            {Object.entries(remoteAudio).map(([socketId, audioStream]) => (
+              <AudioRelay
+                key={socketId}
+                stream={audioStream}
+                onAutoplayBlocked={handleAutoplayBlocked}
+              />
+            ))}
 
             <div className="flex flex-[2] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
               <div className="flex border-b border-slate-100">
@@ -3650,7 +3687,7 @@ export default function LiveClassroom() {
                 >
                   <canvas
                     ref={materialsCanvasRef}
-                    className="rounded-lg border border-slate-200 bg-white"
+                    className="live-whiteboard-surface rounded-lg border border-slate-200 bg-white"
                   />
                 </div>
               </div>

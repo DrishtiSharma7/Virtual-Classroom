@@ -248,13 +248,29 @@ html.dark .live-whiteboard-surface {
   background-color: #ffffff !important;
 }
 
-html.dark .live-btn,
+html.dark .live-whiteboard-fs-btn {
+  background-color: rgba(255, 255, 255, 0.92);
+  color: #334155;
+  --tw-ring-color: #cbd5e1;
+}
+
+html.dark .live-whiteboard-fs-btn:hover {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+html.dark .live-classroom-nav {
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+}
+
+html.dark .live-btn:not(.bg-emerald-600),
 html.dark .bg-gradient-to-br .bg-white {
   background-color: #ffffff;
   color: #4338ca;
 }
 
-html.dark .live-btn:hover,
+html.dark .live-btn:not(.bg-emerald-600):hover,
 html.dark .bg-gradient-to-br .bg-white:hover {
   background-color: #eef2ff;
   color: #3730a3;
@@ -263,6 +279,8 @@ html.dark .bg-gradient-to-br .bg-white:hover {
 html.dark .bg-red-500 .bg-white,
 html.dark .bg-red-600 .bg-white,
 html.dark .bg-emerald-500 .bg-white,
+html.dark .bg-indigo-500 .bg-white,
+html.dark .bg-indigo-600 .bg-white,
 html.dark [role="switch"] .bg-white {
   background-color: #ffffff;
 }
@@ -338,7 +356,8 @@ html.dark .ring-slate-200 {
 }
 
 html.dark .border-\[\#4f46e5\],
-html.dark .border-\[\#5b5fef\] {
+html.dark .border-\[\#5b5fef\],
+html.dark .border-indigo-400 {
   border-color: var(--accent-hover);
 }
 
