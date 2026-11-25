@@ -10,4 +10,35 @@ export const registerUser = async (data) => {
   return response.data;
 };
 
-export default { loginUser, registerUser };
+export const forgotPassword = async (email) => {
+  const response = await api.post("/auth/forgot-password", { email });
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await api.post("/auth/reset-password", payload);
+  return response.data;
+};
+
+export const logoutUser = async () => {
+  try {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  } catch {
+    return { success: true };
+  }
+};
+
+export const getMe = async () => {
+  const response = await api.get("/auth/me");
+  return response.data;
+};
+
+export default {
+  loginUser,
+  registerUser,
+  forgotPassword,
+  resetPassword,
+  logoutUser,
+  getMe,
+};

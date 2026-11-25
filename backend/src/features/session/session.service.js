@@ -12,9 +12,22 @@ async function getAuthorizedSession(sessionId, user) {
     throw new SessionAccessError("Invalid session or user", 400);
   }
 
-  const session = await Session.findById(sessionId).populate("classroom");
+  const session = await Session.findById(sessionId)
+    .populate("classroom")
+    .lean();
   if (!session || !session.classroom) {
     throw new SessionAccessError("Session not found", 404);
+  }
+
+  if (
+    session.kickedStudents?.some(
+      (s) => s.toString() === user.id || s.equals?.(user.id),
+    )
+  ) {
+    throw new SessionAccessError(
+      "You have been removed from this session by the host and cannot rejoin.",
+      403,
+    );
   }
 
   const classroom = session.classroom;

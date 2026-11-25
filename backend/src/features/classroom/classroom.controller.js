@@ -9,7 +9,7 @@ const generateRoomCode = async () => {
     for (let i = 0; i < 6; i++) {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
-    exists = await Classroom.findOne({ code });
+    exists = await Classroom.exists({ code });
   }
   return code;
 };
@@ -74,11 +74,11 @@ exports.getMyClassrooms = async (req, res) => {
     if (req.user.role === "teacher") {
       classrooms = await Classroom.find({
         teacher: req.user.id,
-      });
+      }).lean();
     } else {
       classrooms = await Classroom.find({
         students: req.user.id,
-      });
+      }).lean();
     }
     res.json(classrooms);
   } catch (err) {
@@ -92,13 +92,43 @@ exports.getClassroomById = async (req, res) => {
   try {
     const classroom = await Classroom.findById(req.params.id)
       .populate("teacher", "name email")
-      .populate("students", "name email");
+      .populate("students", "name email")
+      .lean();
     if (!classroom) {
       return res.status(404).json({
         message: "Classroom not found",
       });
     }
     res.json(classroom);
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+exports.updateClassroom = async (req, res) => {
+  try {
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) {
+      return res.status(404).json({
+        message: "Classroom not found",
+      });
+    }
+    if (classroom.teacher.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
+    }
+    const { sessionTitle } = req.body;
+    if (sessionTitle !== undefined) {
+      classroom.sessionTitle = sessionTitle;
+    }
+    await classroom.save();
+    res.json({
+      success: true,
+      classroom,
+    });
   } catch (err) {
     res.status(500).json({
       message: err.message,

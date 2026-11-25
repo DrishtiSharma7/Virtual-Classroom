@@ -108,27 +108,29 @@ exports.completeSessionAttendance = async (sessionId) => {
     status: "IN_SESSION",
   });
 
-  for (const attendance of records) {
-    attendance.connectedIntervals.forEach((interval) => {
-      if (!interval.disconnectedAt) interval.disconnectedAt = finalizedAt;
-    });
+  await Promise.all(
+    records.map((attendance) => {
+      attendance.connectedIntervals.forEach((interval) => {
+        if (!interval.disconnectedAt) interval.disconnectedAt = finalizedAt;
+      });
 
-    attendance.duration = sumIntervalSeconds(
-      attendance.connectedIntervals,
-      finalizedAt,
-    );
-    attendance.leaveTime = finalizedAt;
+      attendance.duration = sumIntervalSeconds(
+        attendance.connectedIntervals,
+        finalizedAt,
+      );
+      attendance.leaveTime = finalizedAt;
 
-    attendance.attendancePercentage =
-      sessionDurationSeconds > 0
-        ? (attendance.duration / sessionDurationSeconds) * 100
-        : 0;
+      attendance.attendancePercentage =
+        sessionDurationSeconds > 0
+          ? (attendance.duration / sessionDurationSeconds) * 100
+          : 0;
 
-    attendance.isPresent = attendance.attendancePercentage >= ATTENDANCE_THRESHOLD;
-    attendance.status = "COMPLETED";
+      attendance.isPresent = attendance.attendancePercentage >= ATTENDANCE_THRESHOLD;
+      attendance.status = "COMPLETED";
 
-    await attendance.save();
-  }
+      return attendance.save();
+    }),
+  );
 
   return true;
 };
@@ -141,20 +143,22 @@ exports.reconcileOnStartup = async () => {
     connectedIntervals: { $elemMatch: { disconnectedAt: null } },
   });
 
-  for (const attendance of dangling) {
-    attendance.connectedIntervals.forEach((interval) => {
-      if (!interval.disconnectedAt) interval.disconnectedAt = now;
-    });
-    attendance.duration = sumIntervalSeconds(attendance.connectedIntervals, now);
-    attendance.leaveTime = now;
-    await attendance.save();
-  }
+  await Promise.all(
+    dangling.map((attendance) => {
+      attendance.connectedIntervals.forEach((interval) => {
+        if (!interval.disconnectedAt) interval.disconnectedAt = now;
+      });
+      attendance.duration = sumIntervalSeconds(attendance.connectedIntervals, now);
+      attendance.leaveTime = now;
+      return attendance.save();
+    }),
+  );
 
   return dangling.length;
 };
 
 exports.getLiveSessionAttendance = async (sessionId) => {
-  const session = await Session.findById(sessionId);
+  const session = await Session.findById(sessionId).lean();
   if (!session) return [];
 
   const now = new Date();
@@ -163,14 +167,16 @@ exports.getLiveSessionAttendance = async (sessionId) => {
   const records = await Attendance.find({
     session: sessionId,
     status: "IN_SESSION",
-  }).populate("student", "name email");
+  })
+    .populate("student", "name email")
+    .lean();
 
   return records.map((attendance) => {
-    const isOpen = attendance.connectedIntervals.some(
+    const isOpen = (attendance.connectedIntervals || []).some(
       (interval) => !interval.disconnectedAt,
     );
     const timePresentSoFar = sumIntervalSeconds(
-      attendance.connectedIntervals,
+      attendance.connectedIntervals || [],
       now,
     );
 
@@ -185,9 +191,9 @@ exports.getLiveSessionAttendance = async (sessionId) => {
     }
 
     return {
-      studentId: attendance.student._id,
-      name: attendance.student.name,
-      email: attendance.student.email,
+      studentId: attendance.student?._id,
+      name: attendance.student?.name,
+      email: attendance.student?.email,
       connectionStatus,
       timePresentSoFar,
       currentPercentage:
@@ -205,7 +211,8 @@ exports.getSessionAttendance = async (sessionId) => {
     .populate("student", "name email")
     .sort({
       joinTime: 1,
-    });
+    })
+    .lean();
 };
 
 exports.getStudentAttendance = async (studentId) => {
@@ -216,7 +223,8 @@ exports.getStudentAttendance = async (studentId) => {
     .populate("session", "title startTime endTime")
     .sort({
       createdAt: -1,
-    });
+    })
+    .lean();
 };
 
 exports.getClassroomAttendance = async (classroomId) => {
@@ -227,11 +235,14 @@ exports.getClassroomAttendance = async (classroomId) => {
 
   const records = await Attendance.find({
     classroom: classroomId,
-  }).populate("student", "name email");
+  })
+    .populate("student", "name email")
+    .lean();
 
   const studentMap = new Map();
 
   records.forEach((record) => {
+    if (!record.student?._id) return;
     const id = record.student._id.toString();
 
     if (!studentMap.has(id)) {
@@ -269,7 +280,9 @@ exports.getClassroomAttendance = async (classroomId) => {
 exports.getAttendanceDashboard = async (teacherId) => {
   const classrooms = await Classroom.find({
     teacher: teacherId,
-  });
+  })
+    .select("_id")
+    .lean();
 
   if (!classrooms.length) {
     return [];
@@ -280,42 +293,43 @@ exports.getAttendanceDashboard = async (teacherId) => {
   const sessions = await Session.find({
     classroom: { $in: classroomIds },
     status: "ended",
-  });
+  })
+    .select("_id classroom")
+    .lean();
 
   const sessionIds = sessions.map((s) => s._id);
+
+  const sessionCountByClassroom = new Map();
+  sessions.forEach((s) => {
+    const cid = s.classroom ? s.classroom.toString() : "";
+    sessionCountByClassroom.set(cid, (sessionCountByClassroom.get(cid) || 0) + 1);
+  });
 
   const records = await Attendance.find({
     session: { $in: sessionIds },
   })
     .populate("student", "name email")
-    .populate("classroom", "name");
+    .populate("classroom", "name")
+    .lean();
 
   const attendanceMap = new Map();
 
   records.forEach((record) => {
-    const key =
-      record.student._id.toString() + "_" + record.classroom._id.toString();
+    if (!record.student?._id || !record.classroom?._id) return;
+    const studentIdStr = record.student._id.toString();
+    const classroomIdStr = record.classroom._id.toString();
+    const key = `${studentIdStr}_${classroomIdStr}`;
 
     if (!attendanceMap.has(key)) {
       attendanceMap.set(key, {
         id: key,
-
         studentId: record.student._id,
-
         name: record.student.name,
-
         email: record.student.email,
-
         classroom: record.classroom.name,
-
-        totalSessions: sessions.filter(
-          (s) => s.classroom.toString() === record.classroom._id.toString(),
-        ).length,
-
+        totalSessions: sessionCountByClassroom.get(classroomIdStr) || 0,
         presentSessions: 0,
-
         absentSessions: 0,
-
         attendancePercentage: 0,
       });
     }

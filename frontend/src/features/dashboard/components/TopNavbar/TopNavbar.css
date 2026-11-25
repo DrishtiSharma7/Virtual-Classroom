@@ -1,5 +1,5 @@
 .navbar-container {
-  @apply h-14 sm:h-16 bg-transparent flex items-center justify-between px-4 sm:px-6 lg:px-12 w-full pt-2 sm:pt-3;
+  @apply h-14 sm:h-14 bg-transparent flex items-center justify-between px-5 sm:px-8 lg:px-8 w-full pt-0.5 sm:pt-1;
 }
 
 .navbar-title {
@@ -31,5 +31,7 @@
 }
 
 .navbar-menu-btn {
-  @apply p-2 rounded-lg hover:bg-gray-100 lg:hidden flex-shrink-0;
+  @apply p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 lg:hidden flex-shrink-0 cursor-pointer text-gray-700;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }

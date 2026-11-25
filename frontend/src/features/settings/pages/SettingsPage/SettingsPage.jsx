@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { Loader2, Save, KeyRound } from "lucide-react";
+import { Loader2, Save, KeyRound, Settings } from "lucide-react";
 
 import SettingsSection, { SettingsRow } from "../../components/SettingsSection";
 import ToggleSwitch from "../../components/ToggleSwitch";
@@ -151,14 +151,18 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 md:py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Manage your account and{" "}
-          {role === "teacher" ? "classroom" : "learning"} preferences.
-        </p>
-      </div>
+    <div className="min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-2.5 sm:mb-3">
+          <h1 className="hidden lg:flex items-center gap-2 text-2xl font-bold text-slate-800">
+            <Settings className="text-indigo-600" size={26} />
+            Settings
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 lg:mt-0.5">
+            Manage your account and{" "}
+            {role === "teacher" ? "classroom" : "learning"} preferences.
+          </p>
+        </div>
 
 
       <SettingsSection
@@ -216,6 +220,8 @@ const SettingsPage = () => {
           <button
             type="submit"
             disabled={savingSection === "profile"}
+            data-tooltip="Save Profile"
+            title="Save changes"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
           >
             {savingSection === "profile" ? (
@@ -298,6 +304,8 @@ const SettingsPage = () => {
           <button
             type="submit"
             disabled={savingSection === "password"}
+            data-tooltip="Save Password"
+            title="Update password"
             className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
           >
             {savingSection === "password" ? (
@@ -453,6 +461,11 @@ const SettingsPage = () => {
           </SettingsRow>
         </SettingsSection>
       )}
+
+        <footer className="mt-6 border-t border-slate-200 pt-6 pb-6 text-center text-xs sm:text-sm text-slate-500">
+          © 2026 Virtual Classroom · Developed by Drishti Sharma
+        </footer>
+      </div>
     </div>
   );
 };

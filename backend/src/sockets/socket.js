@@ -26,6 +26,14 @@ module.exports = (io) => {
       if (socket.rooms.has(roomId))
         return;
 
+      if (registry.isKicked(roomId, socket.user?.id)) {
+        socket.emit("session-error", {
+          message:
+            "You have been removed from this session by the host and cannot rejoin.",
+        });
+        return;
+      }
+
       let isHost = false;
       let session;
       let classroom;
@@ -98,6 +106,9 @@ module.exports = (io) => {
       socket.to(roomId).emit("user-joined", {
         socketId: socket.id,
         user: socket.user,
+        cameraEnabled: false,
+        micEnabled: false,
+        forceMuted: false,
       });
 
       console.log(socket.id, "joined room", roomId);

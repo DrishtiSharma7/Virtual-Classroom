@@ -10,7 +10,6 @@ const STATUS_MAP = {
   Hard: { className: "analytics-status-critical", Icon: XCircle },
 };
 
-// Status is always shown as an icon + label together, never color alone.
 const StatusBadge = ({ status }) => {
   const entry = STATUS_MAP[status] || {
     className: "analytics-status-warning",

@@ -1,4 +1,3 @@
-import React from "react";
 import "./QuickActions.css";
 import { useNavigate } from "react-router-dom";
 
@@ -10,19 +9,39 @@ function QuickActions({ handleStartSession }) {
       <h3 className="quick-actions-title">Quick Actions</h3>
 
       <div className="quick-actions-buttons">
-        <button className="action-btn" onClick={() => navigate("/classrooms/create")}>
+        <button
+          className="action-btn"
+          onClick={() => navigate("/classrooms/create")}
+          data-tooltip="Create new"
+          title="Create a new virtual classroom"
+        >
           Create Classroom
         </button>
 
-        <button className="action-btn" onClick={handleStartSession}>
+        <button
+          className="action-btn"
+          onClick={handleStartSession}
+          data-tooltip="Launch instant"
+          title="Launch an instant live classroom session"
+        >
           Start Session
         </button>
 
-        <button className="action-btn" onClick={() => navigate("/quizzes")}>
+        <button
+          className="action-btn"
+          onClick={() => navigate("/quizzes")}
+          data-tooltip="View manage"
+          title="View and manage classroom quizzes"
+        >
           Quiz
         </button>
 
-        <button className="action-btn" onClick={() => navigate("/attendance")}>
+        <button
+          className="action-btn"
+          onClick={() => navigate("/attendance")}
+          data-tooltip="View export"
+          title="View and export attendance records"
+        >
           Attendance
         </button>
       </div>

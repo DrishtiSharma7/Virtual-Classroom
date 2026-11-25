@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -19,11 +19,18 @@ import { getClassroomQuizzes } from "../../api/quiz.api";
 export default function StudentQuizHome() {
   const navigate = useNavigate();
 
-  const [classrooms, setClassrooms] = useState([]);
-  const [classroomId, setClassroomId] = useState("");
+  const [classrooms, setClassrooms] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_classrooms");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [classroomId, setClassroomId] = useState(() => classrooms[0]?._id || "");
   const [quizzes, setQuizzes] = useState([]);
 
-  const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+  const [loadingClassrooms, setLoadingClassrooms] = useState(classrooms.length === 0);
   const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const [filter, setFilter] = useState("all");
 
@@ -31,10 +38,15 @@ export default function StudentQuizHome() {
     (async () => {
       try {
         const data = await getMyClassrooms();
-        setClassrooms(data);
-        if (data.length > 0) setClassroomId(data[0]._id);
+        if (Array.isArray(data)) {
+          setClassrooms(data);
+          localStorage.setItem("cached_classrooms", JSON.stringify(data));
+          if (!classroomId && data.length > 0) setClassroomId(data[0]._id);
+        }
       } catch {
-        toast.error("Could not load your classrooms.");
+        if (classrooms.length === 0) {
+          toast.error("Could not load your classrooms.");
+        }
       } finally {
         setLoadingClassrooms(false);
       }
@@ -44,34 +56,59 @@ export default function StudentQuizHome() {
   useEffect(() => {
     if (!classroomId) return;
 
+    const cacheKey = `cached_student_quizzes_${classroomId}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setQuizzes(JSON.parse(cached));
+      }
+    } catch {
+      // ignore sessionStorage access errors
+    }
+
+    let active = true;
     (async () => {
       setLoadingQuizzes(true);
       try {
         const data = await getClassroomQuizzes(classroomId);
+        if (!active) return;
         setQuizzes(data);
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
       } catch {
-        toast.error("Could not load quizzes for this classroom.");
+        if (active) toast.error("Could not load quizzes for this classroom.");
       } finally {
-        setLoadingQuizzes(false);
+        if (active) setLoadingQuizzes(false);
       }
     })();
+
+    return () => {
+      active = false;
+    };
   }, [classroomId]);
 
-  const attemptedCount = quizzes.filter((q) => q.attempted).length;
-  const pendingCount = quizzes.length - attemptedCount;
+  const { attemptedCount, pendingCount } = useMemo(() => {
+    let attempted = 0;
+    for (let i = 0; i < quizzes.length; i++) {
+      if (quizzes[i].attempted) attempted++;
+    }
+    return {
+      attemptedCount: attempted,
+      pendingCount: quizzes.length - attempted,
+    };
+  }, [quizzes]);
 
-  const visibleQuizzes = quizzes.filter((q) => {
-    if (filter === "attempted") return q.attempted;
-    if (filter === "pending") return !q.attempted;
-    return true;
-  });
+  const visibleQuizzes = useMemo(() => {
+    if (filter === "attempted") return quizzes.filter((q) => q.attempted);
+    if (filter === "pending") return quizzes.filter((q) => !q.attempted);
+    return quizzes;
+  }, [quizzes, filter]);
 
   return (
     <div className="quiz-page">
       <div className="quiz-container">
         <div className="quiz-header">
           <div>
-            <h1 className="quiz-title">
+            <h1 className="quiz-title hidden lg:flex">
               <ClipboardList className="text-indigo-600" size={26} />
               Quizzes
             </h1>
@@ -83,7 +120,10 @@ export default function StudentQuizHome() {
         </div>
 
         {loadingClassrooms ? (
-          <p className="loading-text">Loading classrooms...</p>
+          <div className="animate-pulse space-y-3 p-4">
+            <div className="h-10 w-64 bg-gray-200 rounded-xl" />
+            <div className="h-28 w-full bg-gray-100 rounded-2xl" />
+          </div>
         ) : classrooms.length === 0 ? (
           <div className="no-data">
             You haven't joined a classroom yet. Join one to see its quizzes.
@@ -113,6 +153,8 @@ export default function StudentQuizHome() {
                   <button
                     key={tab.key}
                     onClick={() => setFilter(tab.key)}
+                    data-tooltip={tab.label}
+                    title={tab.label}
                     className={`filter-tab ${
                       filter === tab.key ? "filter-tab-active" : ""
                     }`}
@@ -146,7 +188,11 @@ export default function StudentQuizHome() {
             </div>
 
             {loadingQuizzes ? (
-              <p className="loading-text">Loading quizzes...</p>
+              <div className="animate-pulse space-y-3 p-6 bg-white rounded-2xl border border-gray-100">
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+              </div>
             ) : visibleQuizzes.length === 0 ? (
               <div className="no-data">No quizzes here yet.</div>
             ) : (

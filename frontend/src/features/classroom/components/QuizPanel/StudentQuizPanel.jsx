@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { CheckCircle2, X } from "lucide-react";
 
 import { submitQuiz } from "../../api/quiz.api";
@@ -7,7 +7,6 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
   const [quiz, setQuiz] = useState(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selected, setSelected] = useState(null);
-  const [answers, setAnswers] = useState([]);
   const [locked, setLocked] = useState(false);
   const [revealedAnswer, setRevealedAnswer] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -17,6 +16,25 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
   const timerRef = useRef(null);
   const answersRef = useRef([]);
 
+  const lockAnswer = useCallback(() => {
+    setLocked((alreadyLocked) => {
+      if (alreadyLocked) return true;
+
+      setSelected((sel) => {
+        const value = sel === null ? -1 : sel;
+        const next = [...answersRef.current];
+        next[questionIndex] = value;
+        answersRef.current = next;
+
+        socket?.emit("student-answered", { sessionId, studentId });
+
+        return sel;
+      });
+
+      return true;
+    });
+  }, [questionIndex, sessionId, socket, studentId]);
+
   useEffect(() => {
     if (!socket) return;
 
@@ -24,7 +42,6 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
       setQuiz(payload);
       setQuestionIndex(0);
       setSelected(null);
-      setAnswers([]);
       answersRef.current = [];
       setLocked(false);
       setRevealedAnswer(null);
@@ -99,29 +116,7 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [quiz, questionIndex, finished]);
-
-  const lockAnswer = () => {
-    setLocked((alreadyLocked) => {
-      if (alreadyLocked) return true;
-
-      setSelected((sel) => {
-        const value = sel === null ? -1 : sel;
-        setAnswers((prev) => {
-          const next = [...prev];
-          next[questionIndex] = value;
-          answersRef.current = next;
-          return next;
-        });
-
-        socket?.emit("student-answered", { sessionId, studentId });
-
-        return sel;
-      });
-
-      return true;
-    });
-  };
+  }, [quiz, questionIndex, finished, lockAnswer]);
 
   const handleSelect = (optIndex) => {
     if (locked) return;
@@ -143,6 +138,8 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
               setQuiz(null);
               onClose?.();
             }}
+            data-tooltip="Close Panel"
+            title="Close quiz panel"
             aria-label="Close quiz panel"
           >
             <X size={16} />
@@ -229,6 +226,8 @@ export default function StudentQuizPanel({ socket, sessionId, studentId, onClose
           <button
             onClick={lockAnswer}
             disabled={selected === null || locked}
+            data-tooltip={locked ? "Submitted" : "Submit Answer"}
+            title={locked ? "Submitted" : "Submit"}
             className="w-full rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             {locked ? "Submitted" : "Submit"}

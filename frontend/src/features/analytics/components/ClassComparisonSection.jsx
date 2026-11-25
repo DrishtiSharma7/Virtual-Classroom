@@ -48,7 +48,6 @@ const ClassComparisonSection = ({ from, to }) => {
     );
   }
 
-  // Only meaningful with more than one classroom — otherwise there's nothing to compare.
   if (!loading && (!data || data.classes.length <= 1)) {
     return null;
   }

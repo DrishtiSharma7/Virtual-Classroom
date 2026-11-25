@@ -20,23 +20,30 @@ exports.createSession = async (req, res) => {
       });
     }
 
+    const activeSession = await Session.findOne({
+      classroom: req.body.classroom,
+      status: "live",
+    });
+
+    if (activeSession) {
+      return res.status(200).json({
+        message: "Active live session already in progress",
+        session: activeSession,
+        alreadyLive: true,
+      });
+    }
+
     const session = await Session.create({
       classroom: req.body.classroom,
-
       title: req.body.title,
-
       description: req.body.description,
-
       startTime: req.body.startTime,
-
       endTime: req.body.endTime,
-
       createdBy: req.user.id,
     });
 
     res.status(201).json({
       message: "Session created",
-
       session,
     });
   } catch (err) {
@@ -51,16 +58,11 @@ exports.getSessionsByClassroom = async (req, res) => {
     const sessions = await Session.find({
       classroom: req.params.classroomId,
     })
-
-      .populate(
-        "createdBy",
-
-        "name email",
-      )
-
+      .populate("createdBy", "name email")
       .sort({
         startTime: 1,
-      });
+      })
+      .lean();
 
     res.json(sessions);
   } catch (err) {
@@ -73,22 +75,24 @@ exports.getSessionsByClassroom = async (req, res) => {
 exports.getSessionById = async (req, res) => {
   try {
     const session = await Session.findById(req.params.id)
-
-      .populate(
-        "createdBy",
-
-        "name email",
-      )
-
-      .populate(
-        "classroom",
-
-        "name subject",
-      );
+      .populate("createdBy", "name email")
+      .populate("classroom", "name subject")
+      .lean();
 
     if (!session) {
       return res.status(404).json({
         message: "Session not found",
+      });
+    }
+
+    if (
+      session.kickedStudents?.some(
+        (s) => s.toString() === req.user.id || s.equals?.(req.user.id),
+      )
+    ) {
+      return res.status(403).json({
+        message:
+          "You have been removed from this session by the host and cannot rejoin.",
       });
     }
 

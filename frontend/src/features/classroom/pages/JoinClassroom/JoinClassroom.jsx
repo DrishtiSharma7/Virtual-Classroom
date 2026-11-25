@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { KeyRound, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { joinClassroom } from "../../api/classroom.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
@@ -8,8 +9,9 @@ function JoinClassroom() {
   const navigate = useNavigate();
   usePageMeta("Join Classroom");
 
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = storedUser?.role || localStorage.getItem("role") || "student";
+  const authUser = useSelector((state) => state.auth?.user);
+  const authRole = useSelector((state) => state.auth?.role);
+  const role = authRole || authUser?.role || localStorage.getItem("role") || "student";
   const isTeacher = role === "teacher";
 
   const [code, setCode] = useState("");
@@ -75,6 +77,8 @@ function JoinClassroom() {
           </p>
           <button
             onClick={() => navigate("/classrooms")}
+            data-tooltip="Return classrooms"
+            title="Back to Classrooms"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
           >
             Back to Classrooms
@@ -112,6 +116,8 @@ function JoinClassroom() {
             <button
               type="button"
               onClick={() => navigate(`/classrooms/${joinedClassroom._id}`)}
+              data-tooltip="Open classroom"
+              title="Go to Classroom"
               className="flex-1 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
             >
               Go to Classroom
@@ -119,6 +125,8 @@ function JoinClassroom() {
             <button
               type="button"
               onClick={() => navigate("/classrooms")}
+              data-tooltip="Return classrooms"
+              title="Back to Classrooms"
               className="flex-1 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
               Back to Classrooms
@@ -150,6 +158,8 @@ function JoinClassroom() {
                     : "/classrooms"
                 )
               }
+              data-tooltip="Classroom"
+              title={alreadyJoinedClassroom._id ? "Go to Classroom" : "Back to Classrooms"}
               className="flex-1 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5"
             >
               {alreadyJoinedClassroom._id
@@ -160,6 +170,8 @@ function JoinClassroom() {
               <button
                 type="button"
                 onClick={() => navigate("/classrooms")}
+                data-tooltip="Return classrooms"
+                title="Back to Classrooms"
                 className="flex-1 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
               >
                 Back to Classrooms
@@ -234,6 +246,8 @@ function JoinClassroom() {
             <button
               type="submit"
               disabled={loading}
+              data-tooltip="Submit invite"
+              title="Join Classroom"
               className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#5b5bd6] text-sm font-semibold text-white shadow-[0_8px_20px_rgba(79,70,229,0.35)] transition disabled:cursor-not-allowed disabled:opacity-70 hover:enabled:-translate-y-0.5"
             >
               {loading ? (

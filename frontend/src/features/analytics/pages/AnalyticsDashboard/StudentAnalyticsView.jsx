@@ -43,7 +43,7 @@ const StudentAnalyticsView = () => {
       <div className="analytics-container">
         <header className="analytics-header">
           <div>
-            <h1 className="analytics-title">
+            <h1 className="analytics-title hidden lg:flex">
               <ChartColumn className="analytics-title-icon" size={26} />
               My Analytics
             </h1>
@@ -68,6 +68,8 @@ const StudentAnalyticsView = () => {
               type="button"
               className="filter-icon-btn"
               onClick={() => setRefreshKey((k) => k + 1)}
+              data-tooltip="Refresh"
+              title="Refresh"
               aria-label="Refresh"
             >
               <RefreshCw size={16} aria-hidden="true" />
@@ -79,7 +81,13 @@ const StudentAnalyticsView = () => {
         {error && (
           <div className="analytics-error" role="alert">
             {error}
-            <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className="analytics-error-retry">
+            <button
+              type="button"
+              onClick={() => setRefreshKey((k) => k + 1)}
+              data-tooltip="Retry"
+              title="Retry"
+              className="analytics-error-retry"
+            >
               Retry
             </button>
           </div>
@@ -93,7 +101,7 @@ const StudentAnalyticsView = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {loading || !detail ? (
                 Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)

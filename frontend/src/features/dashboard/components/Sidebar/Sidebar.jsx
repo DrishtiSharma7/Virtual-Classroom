@@ -1,7 +1,6 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
-  GraduationCap,
   LayoutDashboard,
   CalendarCheck,
   ClipboardCheck,
@@ -10,13 +9,83 @@ import {
   ChartColumn,
   Settings,
   LogOut,
+  X,
 } from "lucide-react";
+import logoImg from "../../../../assets/Logo.png";
 import useAuth from "../../../auth/hooks/useAuth";
 import "./Sidebar.css";
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const prefetchRoutes = () => {
+  import("../../../classroom/pages/ClassroomHome/ClassroomHome").catch(() => {});
+  import("../../../classroom/pages/AttendanceHome/AttendanceHome").catch(() => {});
+  import("../../../classroom/pages/QuizHome/QuizHome").catch(() => {});
+  import("../../../classroom/pages/RecordingsHome/RecordingsHome").catch(() => {});
+  import("../../../analytics/pages/AnalyticsDashboard/AnalyticsDashboard").catch(() => {});
+  import("../../../settings/pages/SettingsPage/SettingsPage").catch(() => {});
+};
+
+const MENU_ITEMS = [
+  {
+    icon: <LayoutDashboard />,
+    label: "Dashboard",
+    path: "/dashboard",
+  },
+  {
+    icon: <Users />,
+    label: "Classrooms",
+    path: "/classrooms",
+  },
+  {
+    icon: <CalendarCheck />,
+    label: "Attendance",
+    path: "/attendance",
+  },
+  {
+    icon: <ClipboardCheck />,
+    label: "Quizzes",
+    path: "/quizzes",
+  },
+  {
+    icon: <Video />,
+    label: "Recordings",
+    path: "/recordings",
+  },
+  {
+    icon: <ChartColumn />,
+    label: "Analytics",
+    path: "/analytics",
+  },
+  {
+    icon: <Settings />,
+    label: "Settings",
+    path: "/settings",
+  },
+];
+
+const Sidebar = ({
+  sidebarOpen,
+  setSidebarOpen,
+  sidebarCollapsed = false,
+  setSidebarCollapsed,
+}) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signOut } = useAuth();
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname, setSidebarOpen]);
+
+  useEffect(() => {
+    const timer = setTimeout(prefetchRoutes, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      prefetchRoutes();
+    }
+  }, [sidebarOpen]);
 
   const handleLogout = () => {
     setSidebarOpen(false);
@@ -24,75 +93,87 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     navigate("/login", { replace: true });
   };
 
-  const menuItems = [
-    {
-      icon: <LayoutDashboard />,
-      label: "Dashboard",
-      path: "/dashboard",
-    },
-    {
-      icon: <Users />,
-      label: "Classrooms",
-      path: "/classrooms",
-    },
-    {
-      icon: <CalendarCheck />,
-      label: "Attendance",
-      path: "/attendance",
-    },
-    {
-      icon: <ClipboardCheck />,
-      label: "Quizzes",
-      path: "/quizzes",
-    },
-    {
-      icon: <Video />,
-      label: "Recordings",
-      path: "/recordings",
-    },
-    {
-      icon: <ChartColumn />,
-      label: "Analytics",
-      path: "/analytics",
-    },
-    {
-      icon: <Settings />,
-      label: "Settings",
-      path: "/settings",
-    },
-  ];
+  const handleNavClick = () => {
+    setSidebarOpen(false);
+  };
+
+  const handleBrandClick = () => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches &&
+      setSidebarCollapsed
+    ) {
+      setSidebarCollapsed((prev) => !prev);
+      return;
+    }
+    setSidebarOpen(false);
+    navigate("/dashboard");
+  };
+
+  const menuItems = MENU_ITEMS;
 
   return (
-    <aside className={`sidebar-container ${sidebarOpen ? "open" : ""}`}>
+    <aside
+      className={`sidebar-container ${sidebarOpen ? "open" : ""} ${
+        sidebarCollapsed ? "collapsed" : ""
+      }`}
+    >
       <header className="sidebar-header">
-        <GraduationCap className="sidebar-logo-icon" />
-        <span className="sidebar-logo-text">Virtual Classroom</span>
+        <button
+          type="button"
+          onClick={handleBrandClick}
+          className="sidebar-brand-btn flex flex-col items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-xl"
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!sidebarCollapsed}
+          data-tooltip={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <img
+            src={logoImg}
+            alt="Virtual Classroom Logo"
+            className="sidebar-logo-icon shrink-0 object-contain"
+          />
+          <h2 className="sidebar-logo-title">Virtual Classroom</h2>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          className="lg:hidden absolute right-3 top-3 z-10 p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition cursor-pointer"
+          aria-label="Close menu"
+        >
+          <X size={22} />
+        </button>
       </header>
       <nav className="sidebar-nav">
         {menuItems.map((item, index) => (
           <NavLink
             key={index}
             to={item.path}
-            onClick={() => setSidebarOpen(false)}
+            onClick={handleNavClick}
+            onPointerEnter={prefetchRoutes}
+            onTouchStart={prefetchRoutes}
+            aria-label={item.label}
+            data-tooltip={sidebarCollapsed ? item.label : undefined}
             className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
+              `sidebar-link cursor-pointer ${isActive ? "active" : ""}`
             }
           >
-            <span className="sidebar-icon">{item.icon}</span>
-            <span className="sidebar-label">{item.label}</span>
+            <span className="sidebar-icon pointer-events-none">{item.icon}</span>
+            <span className="sidebar-label pointer-events-none">{item.label}</span>
           </NavLink>
         ))}
       </nav>
-      <div className="border-t border-gray-100 px-4 py-4">
+      <div className="sidebar-footer border-t border-gray-100 py-1 pl-3">
         <button
           type="button"
           onClick={handleLogout}
-          className="sidebar-link w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+          aria-label="Logout"
+          data-tooltip={sidebarCollapsed ? "Logout" : undefined}
+          className="sidebar-link w-full text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
         >
-          <span className="sidebar-icon">
+          <span className="sidebar-icon pointer-events-none">
             <LogOut />
           </span>
-          <span className="sidebar-label">Logout</span>
+          <span className="sidebar-label pointer-events-none">Logout</span>
         </button>
       </div>
     </aside>

@@ -20,6 +20,11 @@ export const getClassroomById = async (id) => {
   return response.data;
 };
 
+export const updateClassroom = async (id, payload) => {
+  const response = await api.put(`/classrooms/${id}`, payload);
+  return response.data;
+};
+
 export const deleteClassroom = async (id) => {
   const response = await api.delete(`/classrooms/${id}`);
   return response.data;

@@ -3,6 +3,10 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../../middleware/auth.middleware");
+const {
+  cacheMiddleware,
+  invalidateOnSuccess,
+} = require("../../middleware/cache.middleware");
 
 const {
   createSession,
@@ -13,16 +17,27 @@ const {
   endSession,
 } = require("./session.controller");
 
-router.post("/", auth, createSession);
+const sessionInvalidation = invalidateOnSuccess([
+  "dashboard",
+  "analytics",
+  "sessions",
+]);
 
-router.get("/classroom/:classroomId", auth, getSessionsByClassroom);
+router.post("/", auth, sessionInvalidation, createSession);
+
+router.get(
+  "/classroom/:classroomId",
+  auth,
+  cacheMiddleware({ ttl: 15, prefix: "sessions" }),
+  getSessionsByClassroom,
+);
 
 router.get("/:id", auth, getSessionById);
 
-router.patch("/:id/start", auth, startSession);
+router.patch("/:id/start", auth, sessionInvalidation, startSession);
 
-router.patch("/:id/end", auth, endSession);
+router.patch("/:id/end", auth, sessionInvalidation, endSession);
 
-router.delete("/:id", auth, deleteSession);
+router.delete("/:id", auth, sessionInvalidation, deleteSession);
 
 module.exports = router;

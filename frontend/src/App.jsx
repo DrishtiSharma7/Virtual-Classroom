@@ -1,18 +1,15 @@
-import { lazy, Suspense } from "react";
+import { Toaster } from "react-hot-toast";
 import AppRouter from "./routes/AppRouter";
-
-const Toaster = lazy(() =>
-  import("react-hot-toast").then((mod) => ({ default: mod.Toaster }))
-);
+import GlobalTooltip from "./components/GlobalTooltip/GlobalTooltip";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   return (
-    <>
-      <Suspense fallback={null}>
-        <Toaster position="top-right" />
-      </Suspense>
+    <ErrorBoundary>
+      <Toaster position="top-right" />
+      <GlobalTooltip />
       <AppRouter />
-    </>
+    </ErrorBoundary>
   );
 }
 

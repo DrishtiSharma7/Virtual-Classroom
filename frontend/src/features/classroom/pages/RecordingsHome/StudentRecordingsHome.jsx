@@ -11,11 +11,18 @@ import {
 } from "../../api/recording.api";
 
 export default function StudentRecordingsHome() {
-  const [classrooms, setClassrooms] = useState([]);
-  const [classroomId, setClassroomId] = useState("");
+  const [classrooms, setClassrooms] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_classrooms");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [classroomId, setClassroomId] = useState(() => classrooms[0]?._id || "");
   const [recordings, setRecordings] = useState([]);
 
-  const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+  const [loadingClassrooms, setLoadingClassrooms] = useState(classrooms.length === 0);
   const [loadingRecordings, setLoadingRecordings] = useState(false);
   const [watching, setWatching] = useState(null);
 
@@ -23,10 +30,15 @@ export default function StudentRecordingsHome() {
     (async () => {
       try {
         const data = await getMyClassrooms();
-        setClassrooms(data);
-        if (data.length > 0) setClassroomId(data[0]._id);
+        if (Array.isArray(data)) {
+          setClassrooms(data);
+          localStorage.setItem("cached_classrooms", JSON.stringify(data));
+          if (!classroomId && data.length > 0) setClassroomId(data[0]._id);
+        }
       } catch {
-        toast.error("Could not load your classrooms.");
+        if (classrooms.length === 0) {
+          toast.error("Could not load your classrooms.");
+        }
       } finally {
         setLoadingClassrooms(false);
       }
@@ -54,7 +66,7 @@ export default function StudentRecordingsHome() {
       <div className="recordings-container">
         <div className="recordings-header">
           <div>
-            <h1 className="recordings-title">
+            <h1 className="recordings-title hidden lg:flex">
               <Video className="text-indigo-600" size={26} />
               Recordings
             </h1>
@@ -65,7 +77,10 @@ export default function StudentRecordingsHome() {
         </div>
 
         {loadingClassrooms ? (
-          <p className="loading-text">Loading classrooms...</p>
+          <div className="animate-pulse space-y-3 p-4">
+            <div className="h-10 w-64 bg-gray-200 rounded-xl" />
+            <div className="h-28 w-full bg-gray-100 rounded-2xl" />
+          </div>
         ) : classrooms.length === 0 ? (
           <div className="no-data">
             You haven't joined a classroom yet. Join one to see its
@@ -104,7 +119,11 @@ export default function StudentRecordingsHome() {
             </div>
 
             {loadingRecordings ? (
-              <p className="loading-text">Loading recordings...</p>
+              <div className="animate-pulse space-y-3 p-6 bg-white rounded-2xl border border-gray-100">
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+                <div className="h-8 w-full bg-gray-100 rounded-lg" />
+              </div>
             ) : recordings.length === 0 ? (
               <div className="no-data">
                 No recordings uploaded for this classroom yet.
@@ -162,6 +181,8 @@ export default function StudentRecordingsHome() {
                 <h2 className="modal-title">{watching.title}</h2>
                 <button
                   onClick={() => setWatching(null)}
+                  data-tooltip="Close Player"
+                  title="Close"
                   aria-label="Close"
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -173,6 +194,10 @@ export default function StudentRecordingsHome() {
                 src={getRecordingUrl(watching.fileUrl)}
                 controls
                 autoPlay
+                playsInline
+                disablePictureInPicture
+                disableRemotePlayback
+                controlsList="nodownload nofullscreen noremoteplayback"
                 className="w-full rounded-xl bg-black"
               />
             </div>

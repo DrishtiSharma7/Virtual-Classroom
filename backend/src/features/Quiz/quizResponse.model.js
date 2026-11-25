@@ -33,6 +33,10 @@ const quizResponseSchema = new mongoose.Schema(
   },
 );
 
+quizResponseSchema.index({ quiz: 1, student: 1, source: 1 });
+quizResponseSchema.index({ quiz: 1 });
+quizResponseSchema.index({ student: 1 });
+
 module.exports = mongoose.model(
   "QuizResponse",
 

@@ -35,29 +35,31 @@ exports.getClassroomQuizzes = async (req, res) => {
   try {
     const quizzes = await Quiz.find({ classroom: req.params.classroomId })
       .populate("session", "title startTime status")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     if (req.user.role === "teacher") {
       const own = quizzes.filter((q) => q.createdBy.toString() === req.user.id);
+      const ownQuizIds = own.map((q) => q._id);
 
-      const withCounts = await Promise.all(
-        own.map(async (q) => {
-          const responseCount = await QuizResponse.countDocuments({
-            quiz: q._id,
-          });
+      const countAgg = ownQuizIds.length > 0
+        ? await QuizResponse.aggregate([
+            { $match: { quiz: { $in: ownQuizIds } } },
+            { $group: { _id: "$quiz", count: { $sum: 1 } } },
+          ])
+        : [];
+      const countMap = new Map(countAgg.map((c) => [c._id.toString(), c.count]));
 
-          return {
-            _id: q._id,
-            title: q.title,
-            session: q.session,
-            questionCount: q.questions.length,
-            responseCount,
-            launched: q.launched,
-            openForRetake: q.openForRetake,
-            createdAt: q.createdAt,
-          };
-        }),
-      );
+      const withCounts = own.map((q) => ({
+        _id: q._id,
+        title: q.title,
+        session: q.session,
+        questionCount: q.questions ? q.questions.length : 0,
+        responseCount: countMap.get(q._id.toString()) || 0,
+        launched: q.launched,
+        openForRetake: q.openForRetake,
+        createdAt: q.createdAt,
+      }));
 
       return res.json(withCounts);
     }
@@ -67,7 +69,9 @@ exports.getClassroomQuizzes = async (req, res) => {
     const myResponses = await QuizResponse.find({
       quiz: { $in: visibleQuizzes.map((q) => q._id) },
       student: req.user.id,
-    }).sort({ createdAt: 1 });
+    })
+      .sort({ createdAt: 1 })
+      .lean();
 
     const responsesByQuiz = new Map();
     myResponses.forEach((r) => {
@@ -102,10 +106,9 @@ exports.getClassroomQuizzes = async (req, res) => {
 
 exports.getQuizDetail = async (req, res) => {
   try {
-    const quiz = await Quiz.findById(req.params.id).populate(
-      "session",
-      "title startTime status",
-    );
+    const quiz = await Quiz.findById(req.params.id)
+      .populate("session", "title startTime status")
+      .lean();
 
     if (!quiz) {
       return res.status(404).json({
@@ -145,7 +148,9 @@ exports.getQuizDetail = async (req, res) => {
     const responses = await QuizResponse.find({
       quiz: quiz._id,
       student: req.user.id,
-    }).sort({ createdAt: 1 });
+    })
+      .sort({ createdAt: 1 })
+      .lean();
 
     const attempts = responses.map((r) => ({
       source: r.source,
@@ -277,7 +282,7 @@ exports.submitQuiz = async (req, res) => {
 
 exports.getResults = async (req, res) => {
   try {
-    const quiz = await Quiz.findById(req.params.id);
+    const quiz = await Quiz.findById(req.params.id).lean();
 
     if (!quiz) {
       return res.status(404).json({
@@ -288,8 +293,8 @@ exports.getResults = async (req, res) => {
     const responses = await QuizResponse.find({
       quiz: req.params.id,
     })
-
-      .populate("student", "name email");
+      .populate("student", "name email")
+      .lean();
 
     const questionStats = quiz.questions.map((q, index) => ({
       questionId: q._id,

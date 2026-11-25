@@ -14,6 +14,8 @@ const Pagination = ({ page, limit, total, onPageChange }) => {
           className="analytics-pagination-btn"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
+          data-tooltip="Previous"
+          title="Previous"
         >
           Previous
         </button>
@@ -22,6 +24,8 @@ const Pagination = ({ page, limit, total, onPageChange }) => {
           className="analytics-pagination-btn"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
+          data-tooltip="Next"
+          title="Next"
         >
           Next
         </button>

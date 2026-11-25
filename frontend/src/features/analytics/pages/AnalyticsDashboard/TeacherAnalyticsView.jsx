@@ -128,7 +128,7 @@ const TeacherAnalyticsView = () => {
       <div className="analytics-container">
         <header className="analytics-header">
           <div>
-            <h1 className="analytics-title">
+            <h1 className="analytics-title hidden lg:flex">
               <ChartColumn className="analytics-title-icon" size={26} />
               Analytics
             </h1>
@@ -157,7 +157,13 @@ const TeacherAnalyticsView = () => {
         {error && (
           <div className="analytics-error" role="alert">
             {error}
-            <button type="button" onClick={handleRefresh} className="analytics-error-retry">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              data-tooltip="Retry"
+              title="Retry"
+              className="analytics-error-retry"
+            >
               Retry
             </button>
           </div>
@@ -171,7 +177,7 @@ const TeacherAnalyticsView = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-8">
             <KpiGrid kpis={overview?.kpis} loading={loadingOverview} />
 
             <InsightsPanel insights={overview?.insights || []} loading={loadingOverview} />

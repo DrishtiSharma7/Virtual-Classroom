@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import { useParams, useNavigate, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
-import jsPDF from "jspdf";
 import {
   GraduationCap,
   Circle,
@@ -35,8 +34,6 @@ import {
   Smile,
   Paperclip,
   Send,
-  Wifi,
-  WifiOff,
   RefreshCcw,
   Highlighter,
   ZoomIn,
@@ -59,6 +56,11 @@ import {
   ClipboardCheck,
   ChartColumn,
   LogOut,
+  UserX,
+  CameraOff,
+  Volume2,
+  VolumeOff,
+  AlertTriangle,
 } from "lucide-react";
 
 import { getSession, endSession } from "../../../auth/api/session.api";
@@ -69,6 +71,7 @@ import LiveAttendancePanel from "../../../classroom/components/AttendancePanel/L
 import { getWhiteboard } from "../../../classroom/api/whiteboard.api";
 import usePageMeta from "../../../../hooks/usePageMeta";
 import useAuth from "../../../auth/hooks/useAuth";
+import UserAvatar from "../../../../components/UserAvatar/UserAvatar";
 
 const drawElement = (ctx, el) => {
   if (!el) return;
@@ -140,8 +143,6 @@ const drawElement = (ctx, el) => {
   }
   ctx.globalAlpha = 1;
 };
-const avatarFor = (name = "?") =>
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
 
 const formatClock = (seconds) => {
   const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
@@ -155,6 +156,16 @@ const rtcConfig = {
     {
       urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"],
     },
+
+    ...(import.meta.env.VITE_TURN_URL
+      ? [
+          {
+            urls: import.meta.env.VITE_TURN_URL,
+            username: import.meta.env.VITE_TURN_USERNAME,
+            credential: import.meta.env.VITE_TURN_CREDENTIAL,
+          },
+        ]
+      : []),
   ],
 };
 
@@ -168,8 +179,6 @@ const REACTIONS = [
   { id: "slow-down", Icon: Turtle, label: "Slow down" },
 ];
 
-// Same destinations as the main app's Sidebar (dashboard/components/Sidebar),
-// icon-only since the in-session rail has no room for labels.
 const NAV_RAIL_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Classrooms", path: "/classrooms" },
@@ -192,6 +201,7 @@ const NavRailIcon = ({ Icon, active, onClick, label }) => (
     type="button"
     onClick={onClick}
     aria-label={label}
+    data-tooltip={label}
     title={label}
     className={navRailIconClass(active)}
   >
@@ -211,6 +221,7 @@ const ToolbarButton = ({
   <button
     onClick={onClick}
     disabled={disabled}
+    data-tooltip={title}
     title={title}
     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
       active ? "bg-indigo-600 text-white" : "text-slate-500 hover:bg-slate-100"
@@ -227,25 +238,38 @@ const ToolbarButton = ({
   </button>
 );
 
-const BottomControl = ({ Icon, label, active, danger, onClick }) => (
+const BottomControl = ({
+  Icon,
+  label,
+  active,
+  danger,
+  disabled,
+  onClick,
+}) => (
   <button
-    onClick={onClick}
+    onClick={disabled ? undefined : onClick}
+    disabled={disabled}
+    data-tooltip={label}
     title={label}
     className={`flex h-14 w-0 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-1.5 text-sm font-medium transition-colors ${
-      danger
-        ? "text-red-500"
-        : active
-          ? "bg-indigo-50 text-indigo-600"
-          : "text-slate-600 hover:bg-slate-100"
+      disabled
+        ? "cursor-not-allowed opacity-60 text-slate-400"
+        : danger
+          ? "text-red-500"
+          : active
+            ? "bg-indigo-50 text-indigo-600"
+            : "text-slate-600 hover:bg-slate-100"
     }`}
   >
     <span
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-        danger
-          ? "bg-red-100 text-red-500"
-          : active
-            ? "bg-indigo-100 text-indigo-600"
-            : "bg-slate-100 text-slate-600"
+        disabled
+          ? "bg-slate-100 text-slate-400"
+          : danger
+            ? "bg-red-100 text-red-500"
+            : active
+              ? "bg-indigo-100 text-indigo-600"
+              : "bg-slate-100 text-slate-600"
       }`}
     >
       <Icon size={19} />
@@ -254,7 +278,7 @@ const BottomControl = ({ Icon, label, active, danger, onClick }) => (
   </button>
 );
 
-const ParticipantThumb = ({ stream, active, name }) => {
+const ParticipantThumb = ({ stream, active, name, id }) => {
   const videoRef = useRef(null);
   const showVideo = active && !!stream && stream.getVideoTracks().length > 0;
 
@@ -272,34 +296,64 @@ const ParticipantThumb = ({ stream, active, name }) => {
           autoPlay
           playsInline
           muted
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
           className={`h-full w-full object-cover ${showVideo ? "" : "opacity-0"}`}
         />
       )}
       {!showVideo && (
-        <img
-          src={avatarFor(name)}
-          alt={name}
-          className="absolute inset-0 h-full w-full object-cover"
+        <UserAvatar
+          id={id}
+          name={name}
+          size="sm"
+          className="absolute inset-0 !h-full !w-full !rounded-full"
         />
       )}
     </div>
   );
 };
 
-const AudioRelay = ({ stream }) => {
-  const videoRef = useRef(null);
+// FIX: dedicated <audio> element fed by a dedicated audio-only MediaStream.
+const AudioRelay = ({ stream, onAutoplayBlocked }) => {
+  const audioRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
+    const el = audioRef.current;
+    if (!el || !stream) return;
+    el.srcObject = stream;
+    el.muted = false;
+    el.volume = 1;
+
+    const tryPlay = () => {
+      const p = el.play();
+      if (p?.catch) p.catch(() => onAutoplayBlocked?.(el));
+    };
+    tryPlay();
+
+    // track late unmute / add hone par dobara play try karo
+    const track = stream.getAudioTracks()[0];
+    track?.addEventListener("unmute", tryPlay);
+    stream.addEventListener("addtrack", tryPlay);
+    return () => {
+      track?.removeEventListener("unmute", tryPlay);
+      stream.removeEventListener("addtrack", tryPlay);
+    };
+  }, [stream, onAutoplayBlocked]);
 
   if (!stream) return null;
-  return <video ref={videoRef} autoPlay playsInline className="hidden" />;
+  return (
+    <audio
+      ref={audioRef}
+      autoPlay
+      playsInline
+      controls={false}
+      disableRemotePlayback
+    />
+  );
 };
 
-const TeacherCameraTile = ({ stream, active, name }) => {
+const TeacherCameraTile = ({ stream, active, name, id }) => {
   const videoRef = useRef(null);
   const showVideo = active && !!stream && stream.getVideoTracks().length > 0;
 
@@ -310,12 +364,16 @@ const TeacherCameraTile = ({ stream, active, name }) => {
   }, [stream]);
 
   return (
-    <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black shadow-sm">
+    <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black">
       {stream && (
         <video
           ref={videoRef}
           autoPlay
           playsInline
+          muted
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
           className={`h-full w-full object-cover ${
             showVideo ? "" : "opacity-0"
           }`}
@@ -323,10 +381,11 @@ const TeacherCameraTile = ({ stream, active, name }) => {
       )}
       {!showVideo && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-          <img
-            src={avatarFor(name)}
-            alt={name}
-            className="h-16 w-16 rounded-full object-cover"
+          <UserAvatar
+            id={id}
+            name={name}
+            size="lg"
+            className="!h-16 !w-16 !text-lg"
           />
         </div>
       )}
@@ -351,8 +410,86 @@ const ScreenShareStage = ({ stream }) => {
       ref={videoRef}
       autoPlay
       playsInline
+      controls={false}
+      disablePictureInPicture
+      disableRemotePlayback
       className="h-full w-full object-contain"
     />
+  );
+};
+
+const StudentZoomModal = ({ participant, hostScreenStreamId, onClose }) => {
+  const videoRef = useRef(null);
+  const stream = participant
+    ? Object.values(participant.videoStreams || {}).find(
+        (s) => s.id !== hostScreenStreamId
+      ) || null
+    : null;
+  const showVideo =
+    !!participant?.cameraEnabled &&
+    !!stream &&
+    stream.getVideoTracks().length > 0;
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  if (!participant) return null;
+
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-slate-900 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-white">
+              {participant.user?.name || "Student"}
+            </p>
+            <p className="text-xs text-slate-400">Zoomed camera view</p>
+          </div>
+          <button
+            onClick={onClose}
+            data-tooltip="Close View"
+            title="Close"
+            className="rounded-md p-1.5 text-slate-300 hover:bg-white/10 hover:text-white"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="relative aspect-video w-full bg-black">
+          {showVideo && (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              controls={false}
+              disablePictureInPicture
+              disableRemotePlayback
+              className="h-full w-full object-contain"
+            />
+          )}
+          {!showVideo && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-800">
+              <UserAvatar
+                id={participant.user?._id || participant.user?.id}
+                name={participant.user?.name}
+                size="xl"
+                className="!h-20 !w-20 !text-2xl"
+              />
+              <p className="text-xs text-slate-400">Camera is off</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -370,6 +507,7 @@ export default function LiveClassroom() {
 
   const localVideoRef = useRef(null);
   const socketRef = useRef(null);
+  const [socketInstance, setSocketInstance] = useState(null);
   const peerConnections = useRef({});
   const pendingCandidates = useRef({});
   const localStream = useRef(null);
@@ -378,6 +516,10 @@ export default function LiveClassroom() {
   const togglingMicRef = useRef(false);
   const cameraSenders = useRef({});
   const screenSenders = useRef({});
+  const politeRef = useRef({});
+  const makingOfferRef = useRef({});
+  const blockedAudioElsRef = useRef(new Set());
+  const [needsAudioUnlock, setNeedsAudioUnlock] = useState(false);
 
   const [session, setSession] = useState(null);
   usePageMeta(session?.title || "Live Class");
@@ -385,6 +527,8 @@ export default function LiveClassroom() {
   const [sessionError, setSessionError] = useState("");
 
   const [participants, setParticipants] = useState([]);
+  // FIX: remote audio streams, keyed by peer socketId
+  const [remoteAudio, setRemoteAudio] = useState({});
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [peerTyping, setPeerTyping] = useState(false);
@@ -418,6 +562,8 @@ export default function LiveClassroom() {
   const activePageIdRef = useRef(null);
   const hasRedoRef = useRef({});
   const drawStateRef = useRef({ isDrawing: false, current: null });
+  const previewThrottleRef = useRef(0);
+  const rafRedrawRef = useRef(null);
   const remoteLiveRef = useRef({});
   const [showDrawTools, setShowDrawTools] = useState(true);
   const [tool, setTool] = useState("pen");
@@ -452,6 +598,9 @@ export default function LiveClassroom() {
   const [removedNotice, setRemovedNotice] = useState("");
   const [forceMuted, setForceMuted] = useState(false);
   const [mutedParticipants, setMutedParticipants] = useState(() => new Set());
+
+  const [zoomedStudentId, setZoomedStudentId] = useState(null);
+  const lastTapRef = useRef({ socketId: null, time: 0 });
 
   const isHost =
     !!session &&
@@ -513,31 +662,51 @@ export default function LiveClassroom() {
   }, [session?.startTime]);
 
   useEffect(() => {
-    if (sessionLoading)
-      return;
+    if (sessionLoading) return;
+
     let cancelled = false;
 
     const initMedia = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
+          video: true,
         });
 
         if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
+          stream.getTracks().forEach((track) => track.stop());
           return;
         }
 
+        const videoTrack = stream.getVideoTracks()[0];
+        const audioTrack = stream.getAudioTracks()[0];
+
+        if (videoTrack) videoTrack.enabled = false;
+        if (audioTrack) audioTrack.enabled = false;
+
         localStream.current = stream;
+
         setCameraEnabled(false);
-        setMicEnabled(true);
+        setMicEnabled(false);
+        setMediaError("");
+
+        setActiveCameraId(videoTrack?.getSettings().deviceId || null);
+
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
       } catch (err) {
-        console.log(err);
+        console.error("[Media] Initial media error:", err);
+
         if (!cancelled) {
-          setMediaError("Microphone unavailable.");
+          setCameraEnabled(false);
+          setMicEnabled(false);
+          setMediaError("Camera or microphone unavailable.");
         }
       } finally {
-        if (!cancelled) setMediaReady(true);
+        if (!cancelled) {
+          setMediaReady(true);
+        }
       }
     };
 
@@ -546,7 +715,7 @@ export default function LiveClassroom() {
     return () => {
       cancelled = true;
     };
-  }, [sessionLoading, isHost]);
+  }, [sessionLoading]);
 
   useEffect(() => {
     if (!mediaReady || !navigator.mediaDevices?.enumerateDevices) {
@@ -563,30 +732,54 @@ export default function LiveClassroom() {
 
   const createPeerConnection = useCallback(
     (targetId) => {
-      peerConnections.current[targetId]?.close();
+      if (peerConnections.current[targetId]) {
+        try {
+          peerConnections.current[targetId].close();
+        } catch (err) {
+          console.error("[WebRTC] Error closing old PC:", err);
+        }
+      }
 
       const pc = new RTCPeerConnection(rtcConfig);
+
       peerConnections.current[targetId] = pc;
 
-      localStream.current?.getAudioTracks().forEach((track) => {
-        pc.addTrack(track, localStream.current);
-      });
+      politeRef.current[targetId] = (socketRef.current?.id || "") < targetId;
 
-      const camTrack = localStream.current?.getVideoTracks()[0];
-      if (camTrack) {
-        cameraSenders.current[targetId] = pc.addTrack(
-          camTrack,
-          localStream.current
-        );
+      makingOfferRef.current[targetId] = false;
+
+      if (localStream.current) {
+        localStream.current.getTracks().forEach((track) => {
+          try {
+            const sender = pc.addTrack(track, localStream.current);
+
+            if (track.kind === "video") {
+              cameraSenders.current[targetId] = sender;
+            }
+          } catch (err) {
+            console.error(
+              `[WebRTC][${targetId}] Failed to add ${track.kind} track:`,
+              err
+            );
+          }
+        });
       }
 
       if (isHostRef.current) {
-        const scrTrack = screenStream.current?.getVideoTracks()[0];
-        if (scrTrack) {
-          screenSenders.current[targetId] = pc.addTrack(
-            scrTrack,
-            screenStream.current
-          );
+        const screenTrack = screenStream.current?.getVideoTracks()[0];
+
+        if (screenTrack) {
+          try {
+            screenSenders.current[targetId] = pc.addTrack(
+              screenTrack,
+              screenStream.current
+            );
+          } catch (err) {
+            console.error(
+              `[WebRTC][${targetId}] Failed to add screen track:`,
+              err
+            );
+          }
         }
       }
 
@@ -601,38 +794,114 @@ export default function LiveClassroom() {
       };
 
       pc.ontrack = (event) => {
-        const stream = event.streams[0];
-        if (!stream) return;
+        console.log(`[WebRTC][${targetId}] Remote track received:`, {
+          kind: event.track.kind,
+          id: event.track.id,
+          enabled: event.track.enabled,
+          readyState: event.track.readyState,
+          streams: event.streams?.length,
+        });
+
+        // FIX: audio ko alag stream mein rakho aur <audio> se play karo.
+        // participants list pe depend nahi karta, isliye audio kabhi lost nahi hoti.
+        if (event.track.kind === "audio") {
+          const audioStream = new MediaStream([event.track]);
+          setRemoteAudio((prev) => ({ ...prev, [targetId]: audioStream }));
+        }
+
+        const stream = event.streams?.[0] || new MediaStream([event.track]);
 
         setParticipants((prev) =>
-          prev.map((p) => {
-            if (p.socketId !== targetId) return p;
-            if (p.videoStreams?.[stream.id] === stream) return p;
+          prev.map((participant) => {
+            if (participant.socketId !== targetId) {
+              return participant;
+            }
+
             return {
-              ...p,
-              videoStreams: { ...(p.videoStreams || {}), [stream.id]: stream },
+              ...participant,
+              videoStreams: {
+                ...(participant.videoStreams || {}),
+                [stream.id]: stream,
+              },
             };
           })
         );
       };
 
-      let makingOffer = false;
       pc.onnegotiationneeded = async () => {
         try {
-          if (makingOffer) return;
-          makingOffer = true;
+          if (pc.signalingState !== "stable") {
+            return;
+          }
+
+          if (makingOfferRef.current[targetId]) {
+            return;
+          }
+
+          makingOfferRef.current[targetId] = true;
+
           const offer = await pc.createOffer();
+
+          if (pc.signalingState !== "stable") {
+            return;
+          }
+
           await pc.setLocalDescription(offer);
+
           socketRef.current?.emit("offer", {
             roomId: sessionId,
             target: targetId,
-            offer,
+            offer: pc.localDescription,
           });
         } catch (err) {
-          console.log(err);
+          console.error(`[WebRTC][${targetId}] Negotiation error:`, err);
         } finally {
-          makingOffer = false;
+          makingOfferRef.current[targetId] = false;
         }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log(`[WebRTC][${targetId}] ICE state:`, pc.iceConnectionState);
+
+        if (pc.iceConnectionState === "failed") {
+          console.warn(`[WebRTC][${targetId}] ICE failed - restarting ICE`);
+
+          pc.restartIce?.();
+        }
+      };
+
+      pc.onicegatheringstatechange = () => {
+        console.log(
+          `[WebRTC][${targetId}] ICE gathering:`,
+          pc.iceGatheringState
+        );
+      };
+
+      pc.onconnectionstatechange = () => {
+        console.log(
+          `[WebRTC][${targetId}] Connection state:`,
+          pc.connectionState
+        );
+
+        if (pc.connectionState === "connected") {
+          console.log(`[WebRTC][${targetId}] Senders:`, pc.getSenders());
+          console.log(`[WebRTC][${targetId}] Receivers:`, pc.getReceivers());
+          console.log(
+            `[WebRTC][${targetId}] Transceivers:`,
+            pc.getTransceivers()
+          );
+        }
+
+        if (pc.connectionState === "failed") {
+          pc.restartIce?.();
+        }
+      };
+
+      pc.onsignalingstatechange = () => {
+        console.log(
+          `[WebRTC][${targetId}] Signaling state:`,
+          pc.signalingState
+        );
       };
 
       return pc;
@@ -658,8 +927,7 @@ export default function LiveClassroom() {
   const redrawCanvas = useCallback(() => {
     const ctx = ctxRef.current;
     const canvas = canvasRef.current;
-    if (!ctx || !canvas)
-      return;
+    if (!ctx || !canvas) return;
 
     ctx.clearRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
     const elements = boardsRef.current[activePageIdRef.current] || [];
@@ -723,7 +991,10 @@ export default function LiveClassroom() {
       wrap.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
 
-    const scale = Math.min(availWidth / BOARD_WIDTH, availHeight / BOARD_HEIGHT);
+    const scale = Math.min(
+      availWidth / BOARD_WIDTH,
+      availHeight / BOARD_HEIGHT
+    );
     const cssWidth = BOARD_WIDTH * scale;
     const cssHeight = BOARD_HEIGHT * scale;
 
@@ -748,8 +1019,7 @@ export default function LiveClassroom() {
     getWhiteboard(sessionId)
       .then(({ pages: loadedPages, activePageId: loadedActivePageId }) => {
         applyBoardPages(loadedPages, loadedActivePageId);
-        if (ctxRef.current)
-          redrawCanvas();
+        if (ctxRef.current) redrawCanvas();
         bumpHistory();
       })
       .catch((err) => console.log("Whiteboard history error:", err));
@@ -768,11 +1038,12 @@ export default function LiveClassroom() {
 
   const commitElement = useCallback(
     (el) => {
-      if (!canDraw || !activePageId)
-        return;
+      if (!canDraw || !activePageId) return;
 
       try {
-        const pageElements = boardsRef.current[activePageId] || (boardsRef.current[activePageId] = []);
+        const pageElements =
+          boardsRef.current[activePageId] ||
+          (boardsRef.current[activePageId] = []);
         pageElements.push(el);
         hasRedoRef.current[activePageId] = false;
         redrawCanvas();
@@ -853,41 +1124,52 @@ export default function LiveClassroom() {
       current.y2 = y;
     }
 
-    redrawCanvas();
-    if (ctxRef.current)
-      drawElement(ctxRef.current, current);
+    if (!rafRedrawRef.current) {
+      rafRedrawRef.current = requestAnimationFrame(() => {
+        redrawCanvas();
+        if (ctxRef.current && drawStateRef.current.current) {
+          drawElement(ctxRef.current, drawStateRef.current.current);
+        }
+        rafRedrawRef.current = null;
+      });
+    }
 
-    socketRef.current?.emit("draw-preview", {
-      roomId: sessionId,
-      pageId: activePageId,
-      element: current,
-    });
+    const now = performance.now();
+    if (now - previewThrottleRef.current > 33) {
+      previewThrottleRef.current = now;
+      socketRef.current?.emit("draw-preview", {
+        roomId: sessionId,
+        pageId: activePageId,
+        element: current,
+      });
+    }
   };
 
   const handlePointerUp = () => {
     if (!canDraw) return;
+    if (rafRedrawRef.current) {
+      cancelAnimationFrame(rafRedrawRef.current);
+      rafRedrawRef.current = null;
+    }
     const current = drawStateRef.current.current;
     drawStateRef.current.isDrawing = false;
     drawStateRef.current.current = null;
 
-    if (!current)
+    if (!current) return;
+    redrawCanvas();
+    if (current.type === "path" && current.points.length < 2) {
       return;
-
-    socketRef.current?.emit("draw-preview-end", {
-      roomId: sessionId,
-      pageId: activePageId,
-      id: current.id,
-    });
-
-    if (current.type === "path" && current.points.length < 2) return;
-
+    }
     commitElement(current);
   };
 
   const handleUndo = () => {
     if (!canDraw || !canUndo || !activePageId) return;
     try {
-      socketRef.current?.emit("undo", { roomId: sessionId, pageId: activePageId });
+      socketRef.current?.emit("undo", {
+        roomId: sessionId,
+        pageId: activePageId,
+      });
     } catch (err) {
       console.error("Whiteboard undo error:", err);
     }
@@ -896,7 +1178,10 @@ export default function LiveClassroom() {
   const handleRedo = () => {
     if (!canDraw || !activePageId) return;
     try {
-      socketRef.current?.emit("redo", { roomId: sessionId, pageId: activePageId });
+      socketRef.current?.emit("redo", {
+        roomId: sessionId,
+        pageId: activePageId,
+      });
     } catch (err) {
       console.error("Whiteboard redo error:", err);
     }
@@ -942,7 +1227,12 @@ export default function LiveClassroom() {
       const height = BOARD_HEIGHT;
       const orientation = width >= height ? "landscape" : "portrait";
 
-      const doc = new jsPDF({ orientation, unit: "px", format: [width, height] });
+      const { default: jsPDF } = await import("jspdf");
+      const doc = new jsPDF({
+        orientation,
+        unit: "px",
+        format: [width, height],
+      });
 
       pages.forEach((page, index) => {
         if (index > 0) doc.addPage([width, height], orientation);
@@ -972,7 +1262,7 @@ export default function LiveClassroom() {
       });
 
       const stamp = new Date().toISOString().slice(0, 10);
-      doc.save(`${classroomName || "whiteboard"}-${stamp}.pdf`);
+      doc.save(`${session?.classroom?.name || session?.title || "whiteboard"}-${stamp}.pdf`);
     } catch (err) {
       console.error("PDF export error:", err);
       setWbError("Couldn't generate the PDF. Please try again.");
@@ -1080,6 +1370,7 @@ export default function LiveClassroom() {
     });
 
     socketRef.current = socket;
+    setSocketInstance(socket);
 
     socket.on("connect", () => {
       setConnected(true);
@@ -1095,7 +1386,13 @@ export default function LiveClassroom() {
 
     const reconcileParticipant = (
       prev,
-      { socketId, user, cameraEnabled: theirCameraEnabled }
+      {
+        socketId,
+        user,
+        cameraEnabled: theirCameraEnabled,
+        micEnabled: theirMicEnabled,
+        forceMuted: theirForceMuted,
+      }
     ) => {
       const staleIdx = prev.findIndex(
         (p) => p.user?.id === user?.id && p.socketId !== socketId
@@ -1107,12 +1404,23 @@ export default function LiveClassroom() {
         delete pendingCandidates.current[stale.socketId];
         delete cameraSenders.current[stale.socketId];
         delete screenSenders.current[stale.socketId];
+        delete politeRef.current[stale.socketId];
+        delete makingOfferRef.current[stale.socketId];
+        // FIX: stale peer ki audio bhi hatao
+        setRemoteAudio((audioPrev) => {
+          if (!audioPrev[stale.socketId]) return audioPrev;
+          const nextAudio = { ...audioPrev };
+          delete nextAudio[stale.socketId];
+          return nextAudio;
+        });
         const next = [...prev];
         next[staleIdx] = {
           socketId,
           user,
           videoStreams: {},
           cameraEnabled: !!theirCameraEnabled,
+          micEnabled: !!theirMicEnabled,
+          forceMuted: !!theirForceMuted,
         };
         return next;
       }
@@ -1124,6 +1432,8 @@ export default function LiveClassroom() {
           user,
           videoStreams: {},
           cameraEnabled: !!theirCameraEnabled,
+          micEnabled: !!theirMicEnabled,
+          forceMuted: !!theirForceMuted,
         },
       ];
     };
@@ -1133,45 +1443,115 @@ export default function LiveClassroom() {
         existing.reduce((acc, p) => reconcileParticipant(acc, p), prev)
       );
 
+      const forceMutedIds = existing
+        .filter((p) => p.forceMuted)
+        .map((p) => p.socketId);
+      if (forceMutedIds.length > 0) {
+        setMutedParticipants((prev) => {
+          const next = new Set(prev);
+          forceMutedIds.forEach((id) => next.add(id));
+          return next;
+        });
+      }
+
       existing.forEach(({ socketId }) => createPeerConnection(socketId));
     });
 
-    socket.on("user-joined", ({ socketId, user }) => {
-      setParticipants((prev) => reconcileParticipant(prev, { socketId, user }));
-    });
+    socket.on(
+      "user-joined",
+      ({ socketId, user, cameraEnabled, micEnabled, forceMuted }) => {
+        setParticipants((prev) =>
+          reconcileParticipant(prev, {
+            socketId,
+            user,
+            cameraEnabled,
+            micEnabled,
+            forceMuted,
+          })
+        );
+      }
+    );
 
     socket.on("offer", async ({ sender, offer }) => {
-      const pc = peerConnections.current[sender] || createPeerConnection(sender);
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      await flushQueuedCandidates(sender, pc);
+      const pc =
+        peerConnections.current[sender] || createPeerConnection(sender);
 
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit("answer", { roomId: sessionId, target: sender, answer });
+      if (!pc) return;
+
+      const polite = politeRef.current[sender];
+
+      const offerCollision =
+        offer.type === "offer" &&
+        (makingOfferRef.current[sender] || pc.signalingState !== "stable");
+
+      if (!polite && offerCollision) {
+        console.log(`[WebRTC][${sender}] Ignoring offer collision`);
+        return;
+      }
+
+      try {
+        if (offerCollision) {
+          await pc.setLocalDescription({ type: "rollback" });
+        }
+
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+        await flushQueuedCandidates(sender, pc);
+
+        const answer = await pc.createAnswer();
+
+        await pc.setLocalDescription(answer);
+
+        socketRef.current?.emit("answer", {
+          roomId: sessionId,
+          target: sender,
+          answer: pc.localDescription,
+        });
+      } catch (err) {
+        console.error(`[WebRTC][${sender}] Offer handling failed:`, err);
+      }
     });
 
     socket.on("answer", async ({ sender, answer }) => {
       const pc = peerConnections.current[sender];
+
       if (!pc) return;
 
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      await flushQueuedCandidates(sender, pc);
+      if (pc.signalingState !== "have-local-offer") {
+        console.warn(
+          `[WebRTC][${sender}] Ignoring answer in state:`,
+          pc.signalingState
+        );
+        return;
+      }
+
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+
+        await flushQueuedCandidates(sender, pc);
+      } catch (err) {
+        console.error(`[WebRTC][${sender}] Answer handling failed:`, err);
+      }
     });
 
     socket.on("ice-candidate", async ({ sender, candidate }) => {
       const pc = peerConnections.current[sender];
 
-      if (!pc || !pc.remoteDescription) {
+      if (!pc || !candidate) return;
+
+      if (!pc.remoteDescription) {
         pendingCandidates.current[sender] =
           pendingCandidates.current[sender] || [];
+
         pendingCandidates.current[sender].push(candidate);
+
         return;
       }
 
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
-        console.log(err);
+        console.error(`[WebRTC][${sender}] ICE candidate failed:`, err);
       }
     });
 
@@ -1181,7 +1561,22 @@ export default function LiveClassroom() {
       delete pendingCandidates.current[socketId];
       delete cameraSenders.current[socketId];
       delete screenSenders.current[socketId];
+      delete politeRef.current[socketId];
+      delete makingOfferRef.current[socketId];
       setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
+      // FIX: cleanup remote audio
+      setRemoteAudio((prev) => {
+        if (!prev[socketId]) return prev;
+        const next = { ...prev };
+        delete next[socketId];
+        return next;
+      });
+      setMutedParticipants((prev) => {
+        if (!prev.has(socketId)) return prev;
+        const next = new Set(prev);
+        next.delete(socketId);
+        return next;
+      });
     });
 
     socket.on("receive-message", (msg) => {
@@ -1202,9 +1597,16 @@ export default function LiveClassroom() {
 
     socket.on("draw", ({ pageId, element }) => {
       if (!element || !pageId) return;
+      if (
+        element.id &&
+        socketRef.current &&
+        element.id.startsWith(`${socketRef.current.id}-`)
+      ) {
+        return;
+      }
+
       try {
-        if (element.id)
-          delete remoteLiveRef.current[element.id];
+        if (element.id) delete remoteLiveRef.current[element.id];
         const pageElements =
           boardsRef.current[pageId] || (boardsRef.current[pageId] = []);
         pageElements.push(element);
@@ -1220,13 +1622,12 @@ export default function LiveClassroom() {
 
     socket.on("draw-preview", ({ pageId, element }) => {
       if (!element?.id || pageId !== activePageIdRef.current) return;
+      if (
+        socketRef.current &&
+        element.id.startsWith(`${socketRef.current.id}-`)
+      )
+        return;
       remoteLiveRef.current[element.id] = element;
-      redrawCanvas();
-    });
-
-    socket.on("draw-preview-end", ({ pageId, id }) => {
-      if (pageId !== activePageIdRef.current) return;
-      if (id) delete remoteLiveRef.current[id];
       redrawCanvas();
     });
 
@@ -1271,21 +1672,27 @@ export default function LiveClassroom() {
         const byId = new Map(prev.map((p) => [p.pageId, p]));
         const next = pageIds.map((id) => byId.get(id)).filter(Boolean);
         prev.forEach((p) => {
-          if (!next.includes(p))
-            next.push(p);
+          if (!next.includes(p)) next.push(p);
         });
         return next;
       });
     });
 
-    socket.on("board-sync", ({ pages: syncedPages, activePageId: syncedActivePageId, allowStudentDraw: allow }) => {
-      applyBoardPages(syncedPages, syncedActivePageId);
-      remoteLiveRef.current = {};
-      if (typeof allow === "boolean") setAllowStudentDraw(allow);
-      redrawCanvas();
-      bumpHistory();
-      setWbError("");
-    });
+    socket.on(
+      "board-sync",
+      ({
+        pages: syncedPages,
+        activePageId: syncedActivePageId,
+        allowStudentDraw: allow,
+      }) => {
+        applyBoardPages(syncedPages, syncedActivePageId);
+        remoteLiveRef.current = {};
+        if (typeof allow === "boolean") setAllowStudentDraw(allow);
+        redrawCanvas();
+        bumpHistory();
+        setWbError("");
+      }
+    );
 
     socket.on("draw-permission-changed", ({ allowStudentDraw: allow }) => {
       setAllowStudentDraw(!!allow);
@@ -1304,6 +1711,14 @@ export default function LiveClassroom() {
       );
     });
 
+    socket.on("mic-status", ({ sender, enabled }) => {
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.socketId === sender ? { ...p, micEnabled: !!enabled } : p
+        )
+      );
+    });
+
     socket.on("force-camera-off", () => {
       const track = localStream.current?.getVideoTracks()[0];
       if (track) track.enabled = false;
@@ -1317,8 +1732,72 @@ export default function LiveClassroom() {
       setForceMuted(true);
     });
 
+    socket.on("force-unmute", async () => {
+      setForceMuted(false);
+      const track = localStream.current?.getAudioTracks()[0];
+      if (track) {
+        track.enabled = true;
+        setMicEnabled(true);
+        socketRef.current?.emit("mic-status", {
+          roomId: sessionId,
+          enabled: true,
+        });
+      } else {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          const audioTrack = stream.getAudioTracks()[0];
+          if (audioTrack) {
+            if (!localStream.current) {
+              localStream.current = new MediaStream();
+            }
+            localStream.current.addTrack(audioTrack);
+            Object.values(peerConnections.current).forEach((pc) => {
+              const alreadyExists = pc
+                .getSenders()
+                .some((sender) => sender.track && sender.track.kind === "audio");
+              if (!alreadyExists) {
+                pc.addTrack(audioTrack, localStream.current);
+              }
+            });
+            audioTrack.enabled = true;
+            setMicEnabled(true);
+            socketRef.current?.emit("mic-status", {
+              roomId: sessionId,
+              enabled: true,
+            });
+          }
+        } catch (err) {
+          console.warn("[Microphone] Could not auto-acquire on unmute:", err);
+        }
+      }
+    });
+
     socket.on("student-muted", ({ socketId }) => {
       setMutedParticipants((prev) => new Set(prev).add(socketId));
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.socketId === socketId
+            ? { ...p, micEnabled: false, forceMuted: true }
+            : p
+        )
+      );
+    });
+
+    socket.on("student-unmuted", ({ socketId }) => {
+      setMutedParticipants((prev) => {
+        const next = new Set(prev);
+        next.delete(socketId);
+        return next;
+      });
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.socketId === socketId
+            ? { ...p, micEnabled: true, forceMuted: false }
+            : p
+        )
+      );
     });
 
     socket.on("removed-from-session", ({ message }) => {
@@ -1346,6 +1825,8 @@ export default function LiveClassroom() {
       socket.emit("leave-call", { roomId: sessionId });
       socket.emit("leave-room", { roomId: sessionId });
       socket.disconnect();
+      socketRef.current = null;
+      setSocketInstance(null);
     };
   }, [
     sessionId,
@@ -1396,124 +1877,77 @@ export default function LiveClassroom() {
     return () => clearTimeout(timer);
   }, [removedNotice, navigate, session]);
 
-  const toggleCamera = async () => {
-    const existingTrack = localStream.current?.getVideoTracks()[0];
-    if (existingTrack) {
-      existingTrack.enabled = !existingTrack.enabled;
-      setCameraEnabled(existingTrack.enabled);
-      socketRef.current?.emit("camera-status", {
-        roomId: sessionId,
-        enabled: existingTrack.enabled,
+  const handleAutoplayBlocked = useCallback((el) => {
+    blockedAudioElsRef.current.add(el);
+    setNeedsAudioUnlock(true);
+  }, []);
+
+  useEffect(() => {
+    if (!needsAudioUnlock) return;
+
+    const unlock = () => {
+      blockedAudioElsRef.current.forEach((el) => {
+        el.play().catch(() => {});
       });
-      return;
-    }
+      blockedAudioElsRef.current.clear();
+      setNeedsAudioUnlock(false);
+    };
 
-    if (togglingCameraRef.current) return;
-    togglingCameraRef.current = true;
-
-    try {
-      const videoStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-      const videoTrack = videoStream.getVideoTracks()[0];
-      if (!videoTrack)
-        return;
-
-      if (localStream.current) {
-        localStream.current.addTrack(videoTrack);
-      } else {
-        localStream.current = videoStream;
-      }
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = localStream.current;
-      }
-
-      setActiveCameraId(videoTrack.getSettings().deviceId || null);
-
-      pushCameraTrack(videoTrack);
-
-      setCameraEnabled(true);
-      socketRef.current?.emit("camera-status", {
-        roomId: sessionId,
-        enabled: true,
-      });
-    } catch (err) {
-      console.log(err);
-      setMediaError("Camera unavailable.");
-    } finally {
-      togglingCameraRef.current = false;
-    }
-  };
-
-  const toggleMic = async () => {
-    const existingTrack = localStream.current?.getAudioTracks()[0];
-    if (existingTrack) {
-      existingTrack.enabled = !existingTrack.enabled;
-      setMicEnabled(existingTrack.enabled);
-      if (existingTrack.enabled) setForceMuted(false);
-      return;
-    }
-
-    if (togglingMicRef.current)
-      return;
-    togglingMicRef.current = true;
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-      const track = stream.getAudioTracks()[0];
-      if (!track) return;
-
-      if (localStream.current) {
-        localStream.current.addTrack(track);
-      } else {
-        localStream.current = stream;
-      }
-
-      Object.values(peerConnections.current).forEach((pc) => {
-        pc.addTrack(track, localStream.current);
-      });
-
-      setMicEnabled(true);
-      setForceMuted(false);
-      setMediaError("");
-    } catch (err) {
-      console.log(err);
-      setMediaError("Microphone unavailable.");
-    } finally {
-      togglingMicRef.current = false;
-    }
-  };
+    document.addEventListener("click", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      document.removeEventListener("click", unlock);
+      document.removeEventListener("keydown", unlock);
+    };
+  }, [needsAudioUnlock]);
 
   const pushCameraTrack = (track) => {
-    if (!localStream.current)
-      return;
+    if (!track) return;
 
     Object.entries(peerConnections.current).forEach(([targetId, pc]) => {
       const sender = cameraSenders.current[targetId];
+
       if (sender) {
-        sender.replaceTrack(track);
-      } else if (track) {
-        cameraSenders.current[targetId] = pc.addTrack(
-          track,
-          localStream.current
-        );
+        sender.replaceTrack(track).catch((err) => {
+          console.error(
+            `[WebRTC][${targetId}] Camera replaceTrack failed:`,
+            err
+          );
+        });
+      } else {
+        try {
+          const newSender = pc.addTrack(track, localStream.current);
+
+          cameraSenders.current[targetId] = newSender;
+        } catch (err) {
+          console.error(`[WebRTC][${targetId}] Camera addTrack failed:`, err);
+        }
       }
     });
   };
 
   const pushScreenTrack = (track) => {
+    if (!track) return;
+
     Object.entries(peerConnections.current).forEach(([targetId, pc]) => {
       const sender = screenSenders.current[targetId];
+
       if (sender) {
-        sender.replaceTrack(track);
-      } else if (track) {
-        screenSenders.current[targetId] = pc.addTrack(
-          track,
-          screenStream.current
-        );
+        sender.replaceTrack(track).catch((err) => {
+          console.error(
+            `[WebRTC][${targetId}] Screen replaceTrack failed:`,
+            err
+          );
+        });
+      } else {
+        try {
+          screenSenders.current[targetId] = pc.addTrack(
+            track,
+            screenStream.current
+          );
+        } catch (err) {
+          console.error(`[WebRTC][${targetId}] Screen addTrack failed:`, err);
+        }
       }
     });
   };
@@ -1531,23 +1965,169 @@ export default function LiveClassroom() {
     });
   };
 
+  const toggleCamera = async () => {
+    const existingTrack = localStream.current?.getVideoTracks()[0];
+
+    if (existingTrack) {
+      existingTrack.enabled = !existingTrack.enabled;
+
+      setCameraEnabled(existingTrack.enabled);
+
+      socketRef.current?.emit("camera-status", {
+        roomId: sessionId,
+        enabled: existingTrack.enabled,
+      });
+
+      return;
+    }
+
+    if (togglingCameraRef.current) {
+      return;
+    }
+
+    togglingCameraRef.current = true;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+
+      const videoTrack = stream.getVideoTracks()[0];
+
+      if (!videoTrack) {
+        throw new Error("No video track returned");
+      }
+
+      if (!localStream.current) {
+        localStream.current = new MediaStream();
+      }
+
+      localStream.current.addTrack(videoTrack);
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream.current;
+      }
+
+      setActiveCameraId(videoTrack.getSettings().deviceId || null);
+
+      pushCameraTrack(videoTrack);
+
+      videoTrack.enabled = true;
+
+      setCameraEnabled(true);
+      setMediaError("");
+
+      socketRef.current?.emit("camera-status", {
+        roomId: sessionId,
+        enabled: true,
+      });
+    } catch (err) {
+      console.error("[Camera] Error:", err);
+
+      setCameraEnabled(false);
+      setMediaError("Camera unavailable.");
+    } finally {
+      togglingCameraRef.current = false;
+    }
+  };
+
+  const toggleMic = async () => {
+    if (!isHost && forceMuted && !micEnabled) {
+      setMediaError("You have been muted by the host and cannot unmute yourself.");
+      return;
+    }
+
+    const existingTrack = localStream.current?.getAudioTracks()[0];
+
+    if (existingTrack) {
+      existingTrack.enabled = !existingTrack.enabled;
+
+      setMicEnabled(existingTrack.enabled);
+
+      socketRef.current?.emit("mic-status", {
+        roomId: sessionId,
+        enabled: existingTrack.enabled,
+      });
+
+      return;
+    }
+
+    if (togglingMicRef.current) {
+      return;
+    }
+
+    togglingMicRef.current = true;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+      const audioTrack = stream.getAudioTracks()[0];
+
+      if (!audioTrack) {
+        throw new Error("No audio track returned");
+      }
+
+      if (!localStream.current) {
+        localStream.current = new MediaStream();
+      }
+
+      localStream.current.addTrack(audioTrack);
+
+      Object.values(peerConnections.current).forEach((pc) => {
+        const alreadyExists = pc
+          .getSenders()
+          .some((sender) => sender.track && sender.track.kind === "audio");
+
+        if (!alreadyExists) {
+          pc.addTrack(audioTrack, localStream.current);
+        }
+      });
+
+      audioTrack.enabled = true;
+
+      setMicEnabled(true);
+      setMediaError("");
+
+      socketRef.current?.emit("mic-status", {
+        roomId: sessionId,
+        enabled: true,
+      });
+    } catch (err) {
+      console.error("[Microphone] Error:", err);
+
+      setMicEnabled(false);
+      setMediaError("Microphone unavailable.");
+    } finally {
+      togglingMicRef.current = false;
+    }
+  };
+
   const switchCamera = async (deviceId) => {
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { deviceId: { exact: deviceId } },
       });
+
       const newTrack = newStream.getVideoTracks()[0];
 
+      if (!newTrack) {
+        throw new Error("No camera track found");
+      }
+
       const oldTrack = localStream.current?.getVideoTracks()[0];
+
       if (oldTrack) {
         localStream.current.removeTrack(oldTrack);
         oldTrack.stop();
       }
-      if (localStream.current) {
-        localStream.current.addTrack(newTrack);
-      } else {
-        localStream.current = newStream;
+
+      if (!localStream.current) {
+        localStream.current = new MediaStream();
       }
+
+      localStream.current.addTrack(newTrack);
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = localStream.current;
@@ -1555,11 +2135,16 @@ export default function LiveClassroom() {
 
       pushCameraTrack(newTrack);
 
+      newTrack.enabled = true;
+
       setActiveCameraId(newTrack.getSettings().deviceId || deviceId);
+
       setCameraEnabled(true);
       setShowCameraMenu(false);
+      setMediaError("");
     } catch (err) {
-      console.log(err);
+      console.error("[Camera Switch] Error:", err);
+      setMediaError("Unable to switch camera.");
     }
   };
 
@@ -1567,14 +2152,54 @@ export default function LiveClassroom() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
+        video: true,
       });
 
       localStream.current = stream;
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      const videoTrack = stream.getVideoTracks()[0];
+      const audioTrack = stream.getAudioTracks()[0];
+
+      setCameraEnabled(!!videoTrack);
+      setMicEnabled(!!audioTrack);
+
+      setActiveCameraId(videoTrack?.getSettings().deviceId || null);
+
       setMediaError("");
-      setMicEnabled(true);
+
+      Object.entries(peerConnections.current).forEach(([targetId, pc]) => {
+        if (videoTrack) {
+          const videoSender = cameraSenders.current[targetId];
+
+          if (videoSender) {
+            videoSender.replaceTrack(videoTrack);
+          } else {
+            cameraSenders.current[targetId] = pc.addTrack(
+              videoTrack,
+              localStream.current
+            );
+          }
+        }
+
+        if (audioTrack) {
+          const audioSender = pc
+            .getSenders()
+            .find((sender) => sender.track?.kind === "audio");
+
+          if (audioSender) {
+            audioSender.replaceTrack(audioTrack);
+          } else {
+            pc.addTrack(audioTrack, localStream.current);
+          }
+        }
+      });
     } catch (err) {
-      console.log(err);
-      setMediaError("Microphone unavailable.");
+      console.error("[Retry Camera] Error:", err);
+      setMediaError("Camera unavailable.");
     }
   };
 
@@ -1593,8 +2218,7 @@ export default function LiveClassroom() {
   }, [sessionId]);
 
   const startScreenShare = async () => {
-    if (!isHost)
-      return;
+    if (!isHost) return;
 
     if (sharingScreen) {
       stopScreenShare();
@@ -1649,8 +2273,16 @@ export default function LiveClassroom() {
   };
 
   const handleMuteStudent = (targetSocketId) => {
-    if (!isHost || mutedParticipants.has(targetSocketId)) return;
+    if (!isHost) return;
     socketRef.current?.emit("mute-student", {
+      roomId: sessionId,
+      targetSocketId,
+    });
+  };
+
+  const handleUnmuteStudent = (targetSocketId) => {
+    if (!isHost) return;
+    socketRef.current?.emit("unmute-student", {
       roomId: sessionId,
       targetSocketId,
     });
@@ -1662,6 +2294,28 @@ export default function LiveClassroom() {
       roomId: sessionId,
       targetSocketId,
     });
+  };
+
+  const handleOpenStudentZoom = (targetSocketId) => {
+    if (!isHost) return;
+    setZoomedStudentId(targetSocketId);
+  };
+
+  const handleRowDoubleClick = (p) => () => {
+    if (!isHost || p.user?.role === "teacher") return;
+    handleOpenStudentZoom(p.socketId);
+  };
+
+  const handleRowTouchEnd = (p) => () => {
+    if (!isHost || p.user?.role === "teacher") return;
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last.socketId === p.socketId && now - last.time < 300) {
+      lastTapRef.current = { socketId: null, time: 0 };
+      handleOpenStudentZoom(p.socketId);
+    } else {
+      lastTapRef.current = { socketId: p.socketId, time: now };
+    }
   };
 
   const handleKickStudent = (targetSocketId) => {
@@ -1677,21 +2331,69 @@ export default function LiveClassroom() {
     delete peerConnections.current[targetSocketId];
     delete cameraSenders.current[targetSocketId];
     delete screenSenders.current[targetSocketId];
+    delete politeRef.current[targetSocketId];
+    delete makingOfferRef.current[targetSocketId];
     setParticipants((prev) =>
       prev.filter((p) => p.socketId !== targetSocketId)
     );
+    // FIX: cleanup remote audio
+    setRemoteAudio((prev) => {
+      if (!prev[targetSocketId]) return prev;
+      const next = { ...prev };
+      delete next[targetSocketId];
+      return next;
+    });
   };
 
-  const handleEndOrLeave = async () => {
+  const [showHostExitModal, setShowHostExitModal] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (session?.status === "live") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [session?.status]);
+
+  const handleEndOrLeave = () => {
+    if (isHost) {
+      setShowHostExitModal(true);
+    } else {
+      handleLeaveTemporarily();
+    }
+  };
+
+  const handleLeaveTemporarily = () => {
+    try {
+      socketRef.current?.emit("leave-call", { roomId: sessionId });
+      socketRef.current?.emit("leave-room", { roomId: sessionId });
+      // FIX: pehle localStreamRef / screenStreamRef undefined the (crash)
+      localStream.current?.getTracks().forEach((track) => track.stop());
+      screenStream.current?.getTracks().forEach((track) => track.stop());
+    } catch (err) {
+      console.error("Error leaving room:", err);
+    } finally {
+      setShowHostExitModal(false);
+      navigate(
+        session?.classroom?._id
+          ? `/classrooms/${session.classroom._id}`
+          : "/classrooms"
+      );
+    }
+  };
+
+  const handleEndSessionForAll = async () => {
     try {
       setEnding(true);
-      if (isHost) {
-        await endSession(sessionId);
-      }
+      await endSession(sessionId);
     } catch (err) {
-      console.log(err);
+      console.error("Failed to end session:", err);
     } finally {
       setEnding(false);
+      setShowHostExitModal(false);
       navigate(
         session?.classroom?._id
           ? `/classrooms/${session.classroom._id}`
@@ -1714,6 +2416,8 @@ export default function LiveClassroom() {
         <p>{sessionError || "Session not found."}</p>
         <button
           onClick={() => navigate("/classrooms")}
+          data-tooltip="Classrooms"
+          title="Back to Classrooms"
           className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
         >
           Back to Classrooms
@@ -1723,8 +2427,6 @@ export default function LiveClassroom() {
   }
 
   const classroomName = session.classroom?.name || session.title;
-  const classroomSubject = session.classroom?.subject;
-  const classroomCode = session.classroom?.code;
 
   const teacherParticipant = participants.find(
     (p) => p.user?.role === "teacher"
@@ -1738,6 +2440,10 @@ export default function LiveClassroom() {
     : null;
   const teacherCameraStream =
     teacherVideoStreams.find((s) => s.id !== hostScreenStreamId) || null;
+
+  const zoomedParticipant = zoomedStudentId
+    ? participants.find((p) => p.socketId === zoomedStudentId) || null
+    : null;
 
   const isSharingScreenForMe = isHost ? sharingScreen : hostSharingScreen;
   const screenPreviewStream = isHost ? localScreenPreview : teacherScreenStream;
@@ -1756,6 +2462,11 @@ export default function LiveClassroom() {
 
   return (
     <div className="relative flex h-screen w-full flex-col bg-slate-100 font-sans text-slate-800">
+      {needsAudioUnlock && (
+        <div className="absolute inset-x-0 top-0 z-50 flex items-center justify-center bg-amber-500 py-1.5 text-xs font-medium text-white">
+          Your browser blocked audio playback. Click anywhere to enable sound.
+        </div>
+      )}
       {removedNotice && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/70">
           <div className="max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
@@ -1767,6 +2478,14 @@ export default function LiveClassroom() {
             </p>
           </div>
         </div>
+      )}
+
+      {isHost && zoomedParticipant && (
+        <StudentZoomModal
+          participant={zoomedParticipant}
+          hostScreenStreamId={hostScreenStreamId}
+          onClose={() => setZoomedStudentId(null)}
+        />
       )}
 
       <header className="border-b border-slate-200 bg-white px-6 py-3">
@@ -1789,10 +2508,10 @@ export default function LiveClassroom() {
               <span className="text-sm font-medium text-slate-700">
                 {currentUser?.name || "Guest"}
               </span>
-              <img
-                src={avatarFor(currentUser?.name)}
-                alt={currentUser?.name}
-                className="h-9 w-9 rounded-full object-cover"
+              <UserAvatar
+                id={currentUser?._id || currentUser?.id}
+                name={currentUser?.name}
+                size="md"
               />
             </div>
           </div>
@@ -1826,10 +2545,11 @@ export default function LiveClassroom() {
             )}
           </div>
 
-
           <button
             onClick={handleEndOrLeave}
             disabled={ending}
+            data-tooltip={isHost ? "End Session" : "Leave Session"}
+            title={isHost ? "End Session" : "Leave Session"}
             className="flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <X size={14} />
@@ -1838,15 +2558,14 @@ export default function LiveClassroom() {
         </div>
       </header>
 
-
       <div className="flex flex-1 overflow-hidden">
-
         <nav className="flex w-[72px] flex-col items-center gap-4 bg-slate-900 py-5">
           {NAV_RAIL_ITEMS.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               aria-label={item.label}
+              data-tooltip={item.label}
               title={item.label}
               className={({ isActive }) => navRailIconClass(isActive)}
             >
@@ -1865,21 +2584,16 @@ export default function LiveClassroom() {
           </div>
         </nav>
 
-
         <main className="flex flex-1 gap-4 overflow-hidden p-4">
-
           <div className="flex flex-1 flex-col gap-2 overflow-hidden">
-
             <section
               ref={whiteboardSectionRef}
               className={`relative flex flex-1 flex-col overflow-hidden bg-white shadow-sm ${
                 wbFullscreen ? "" : "rounded-2xl"
               }`}
             >
-
               {canDraw && showDrawTools && (
                 <div className="relative flex flex-wrap items-center justify-between gap-y-1.5 border-b border-slate-100 px-3 py-1.5">
-
                   {openPanel && (
                     <div
                       className="fixed inset-0 z-40"
@@ -1888,13 +2602,15 @@ export default function LiveClassroom() {
                   )}
 
                   <div className="flex flex-wrap items-center gap-0.5">
-
                     {isHost && pages.length > 0 && (
                       <div className="relative mr-1 border-r border-slate-200 pr-1">
                         <button
                           onClick={() =>
-                            setOpenPanel((p) => (p === "pages" ? null : "pages"))
+                            setOpenPanel((p) =>
+                              p === "pages" ? null : "pages"
+                            )
                           }
+                          data-tooltip="Manage Pages"
                           title="Pages"
                           className={`flex h-8 items-center gap-1 rounded-md px-1.5 text-xs font-medium transition-colors ${
                             openPanel === "pages"
@@ -1904,8 +2620,8 @@ export default function LiveClassroom() {
                         >
                           <Layers size={15} />
                           <span className="max-w-[72px] truncate">
-                            {pages.find((p) => p.pageId === activePageId)?.name ||
-                              "Pages"}
+                            {pages.find((p) => p.pageId === activePageId)
+                              ?.name || "Pages"}
                           </span>
                           <ChevronDown size={12} className="text-slate-400" />
                         </button>
@@ -1936,6 +2652,8 @@ export default function LiveClassroom() {
                                       switchPage(p.pageId);
                                       setOpenPanel(null);
                                     }}
+                                    data-tooltip={p.name}
+                                    title={p.name}
                                     className={`flex-1 truncate rounded-md px-1.5 py-1 text-left text-xs font-medium transition-colors ${
                                       p.pageId === activePageId
                                         ? "bg-indigo-600 text-white"
@@ -1947,6 +2665,7 @@ export default function LiveClassroom() {
                                   {pages.length > 1 && (
                                     <button
                                       onClick={() => handleDeletePage(p.pageId)}
+                                      data-tooltip="Delete Page"
                                       title="Delete page"
                                       className="hidden h-5 w-5 shrink-0 items-center justify-center rounded text-slate-400 group-hover:flex hover:bg-red-50 hover:text-red-500"
                                     >
@@ -1958,6 +2677,8 @@ export default function LiveClassroom() {
                             </div>
                             <button
                               onClick={handleAddPage}
+                              data-tooltip="Add Page"
+                              title="Add page"
                               className="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-slate-200 py-1 text-xs text-slate-500 hover:bg-slate-50"
                             >
                               + Add page
@@ -2010,12 +2731,12 @@ export default function LiveClassroom() {
                       title="Text"
                     />
 
-
                     <div className="relative ml-1 border-l border-slate-200 pl-1">
                       <button
                         onClick={() =>
                           setOpenPanel((p) => (p === "color" ? null : "color"))
                         }
+                        data-tooltip="Stroke Color"
                         title="Color"
                         className="flex h-8 items-center gap-1 rounded-md px-1.5 hover:bg-slate-100"
                       >
@@ -2063,7 +2784,6 @@ export default function LiveClassroom() {
                       )}
                     </div>
 
-
                     <div className="relative border-l border-slate-200 pl-1">
                       <ToolbarButton
                         Icon={SlidersHorizontal}
@@ -2085,6 +2805,7 @@ export default function LiveClassroom() {
                                 <button
                                   key={s}
                                   onClick={() => setPenSize(s)}
+                                  data-tooltip={`${s}px`}
                                   title={`${s}px`}
                                   className={`flex h-6 flex-1 items-center justify-center rounded text-[10px] font-medium transition-colors ${
                                     penSize === s
@@ -2101,7 +2822,9 @@ export default function LiveClassroom() {
                               min={1}
                               max={30}
                               value={penSize}
-                              onChange={(e) => setPenSize(Number(e.target.value))}
+                              onChange={(e) =>
+                                setPenSize(Number(e.target.value))
+                              }
                               className="h-1 w-full accent-indigo-600"
                             />
                           </div>
@@ -2116,7 +2839,9 @@ export default function LiveClassroom() {
                               max={1}
                               step={0.05}
                               value={opacity}
-                              onChange={(e) => setOpacity(Number(e.target.value))}
+                              onChange={(e) =>
+                                setOpacity(Number(e.target.value))
+                              }
                               className="h-1 w-full accent-indigo-600"
                             />
                           </div>
@@ -2148,10 +2873,10 @@ export default function LiveClassroom() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5">
-
                     {isHost && (
                       <button
                         onClick={toggleStudentDraw}
+                        data-tooltip={allowStudentDraw ? "Disable Draw" : "Enable Draw"}
                         title="Allow Students to Draw"
                         className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                           allowStudentDraw
@@ -2176,6 +2901,7 @@ export default function LiveClassroom() {
                       />
                       <button
                         onClick={resetZoom}
+                        data-tooltip="Reset Zoom"
                         title="Reset zoom"
                         className="w-9 rounded-md py-1 text-[11px] font-medium text-slate-500 hover:bg-slate-100"
                       >
@@ -2187,7 +2913,6 @@ export default function LiveClassroom() {
                         title="Zoom in"
                       />
                     </div>
-
 
                     <div className="border-l border-slate-200 pl-1.5">
                       <ToolbarButton
@@ -2201,7 +2926,6 @@ export default function LiveClassroom() {
                   </div>
                 </div>
               )}
-
 
               {(!connected || wbError) && (
                 <div className="flex items-center gap-1.5 border-b border-amber-100 bg-amber-50 px-4 py-1.5 text-xs text-amber-600">
@@ -2240,7 +2964,7 @@ export default function LiveClassroom() {
                 {isHost && showQuizPanel && (
                   <div className="absolute left-[68%] top-[8%]">
                     <TeacherQuizPanel
-                      socket={socketRef.current}
+                      socket={socketInstance}
                       sessionId={sessionId}
                       classroomId={
                         session?.classroom?._id || session?.classroom
@@ -2259,17 +2983,15 @@ export default function LiveClassroom() {
                   </div>
                 )}
 
-
                 {!isHost && (
                   <div className="absolute left-[68%] top-[8%]">
                     <StudentQuizPanel
-                      socket={socketRef.current}
+                      socket={socketInstance}
                       sessionId={sessionId}
                       studentId={currentUser?.id}
                     />
                   </div>
                 )}
-
 
                 {isSharingScreenForMe && screenPreviewStream && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900">
@@ -2282,7 +3004,6 @@ export default function LiveClassroom() {
                     </span>
                   </div>
                 )}
-
 
                 {isHost && reactionToasts.length > 0 && (
                   <div className="pointer-events-none absolute bottom-3 right-3 z-30 flex flex-col-reverse gap-2">
@@ -2311,13 +3032,17 @@ export default function LiveClassroom() {
                   </div>
                 )}
 
-
                 <button
                   onClick={toggleFullscreen}
+                  data-tooltip={wbFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   title={wbFullscreen ? "Exit fullscreen" : "Fullscreen"}
                   className="absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-500 shadow-sm ring-1 ring-slate-200 backdrop-blur transition-colors hover:bg-white hover:text-slate-700"
                 >
-                  {wbFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                  {wbFullscreen ? (
+                    <Minimize size={16} />
+                  ) : (
+                    <Maximize size={16} />
+                  )}
                 </button>
               </div>
             </section>
@@ -2325,8 +3050,14 @@ export default function LiveClassroom() {
             <div className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5">
               <BottomControl
                 Icon={micEnabled ? Mic : MicOff}
-                label={forceMuted && !micEnabled ? "Muted by host" : "Mic"}
+                label={
+                  !isHost && forceMuted && !micEnabled
+                    ? "Muted by host"
+                    : "Mic"
+                }
                 active={micEnabled}
+                danger={!isHost && forceMuted && !micEnabled}
+                disabled={!isHost && forceMuted && !micEnabled}
                 onClick={toggleMic}
               />
 
@@ -2357,9 +3088,7 @@ export default function LiveClassroom() {
                 label="Materials"
                 active={showMaterials}
                 onClick={() => {
-                  setMaterialsPageId(
-                    activePageId || pages[0]?.pageId || null
-                  );
+                  setMaterialsPageId(activePageId || pages[0]?.pageId || null);
                   setShowMaterials(true);
                 }}
               />
@@ -2401,6 +3130,8 @@ export default function LiveClassroom() {
                         <button
                           key={r.id}
                           onClick={() => handleSendReaction(r.id)}
+                          data-tooltip={r.label}
+                          title={r.label}
                           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 hover:bg-slate-100"
                         >
                           <r.Icon size={16} className="shrink-0" />
@@ -2417,6 +3148,7 @@ export default function LiveClassroom() {
           <aside className="flex w-[340px] flex-shrink-0 flex-col gap-4 overflow-hidden">
 
             {participants
+              .filter((p) => isHost || p.user?.role !== "teacher")
               .map((p) => (
                 <AudioRelay
                   key={p.socketId}
@@ -2432,6 +3164,8 @@ export default function LiveClassroom() {
               <div className="flex border-b border-slate-100">
                 <button
                   onClick={() => setRightTab("participants")}
+                  data-tooltip="Participants"
+                  title="Participants"
                   className={`flex-1 py-3 text-sm font-semibold ${
                     rightTab === "participants"
                       ? "border-b-2 border-indigo-600 text-indigo-600"
@@ -2442,6 +3176,8 @@ export default function LiveClassroom() {
                 </button>
                 <button
                   onClick={() => setRightTab("chat")}
+                  data-tooltip="Chat"
+                  title="Chat"
                   className={`flex-1 py-3 text-sm font-semibold ${
                     rightTab === "chat"
                       ? "border-b-2 border-indigo-600 text-indigo-600"
@@ -2458,13 +3194,13 @@ export default function LiveClassroom() {
                     Participants
                   </h4>
                   <div className="space-y-3">
-
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={avatarFor(currentUser?.name)}
-                          alt={currentUser?.name}
-                          className="h-10 w-10 rounded-full object-cover"
+                        <UserAvatar
+                          id={currentUser?._id || currentUser?.id}
+                          name={currentUser?.name}
+                          size="md"
+                          className="!h-10 !w-10"
                         />
                         <div>
                           <p className="text-sm font-medium text-slate-700">
@@ -2529,10 +3265,24 @@ export default function LiveClassroom() {
 
                     {participants.map((p) => {
                       const isRowHost = p.user?.role === "teacher";
+                      const zoomable = isHost && !isRowHost;
                       return (
                         <div
                           key={p.socketId}
-                          className="flex items-center justify-between"
+                          onDoubleClick={
+                            zoomable ? handleRowDoubleClick(p) : undefined
+                          }
+                          onTouchEnd={
+                            zoomable ? handleRowTouchEnd(p) : undefined
+                          }
+                          title={
+                            zoomable
+                              ? "Double-click (or double-tap) to zoom in on camera"
+                              : undefined
+                          }
+                          className={`flex items-center justify-between ${
+                            zoomable ? "cursor-pointer" : ""
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <ParticipantThumb
@@ -2543,6 +3293,7 @@ export default function LiveClassroom() {
                               }
                               active={p.cameraEnabled}
                               name={p.user?.name}
+                              id={p.user?._id || p.user?.id}
                             />
                             <div>
                               <p className="text-sm font-medium text-slate-700">
@@ -2566,22 +3317,46 @@ export default function LiveClassroom() {
                           <div className="flex items-center gap-2">
                             {isHost && !isRowHost && (
                               <>
-
                                 <button
-                                  onClick={() => handleMuteStudent(p.socketId)}
-                                  disabled={mutedParticipants.has(p.socketId)}
-                                  className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                  onClick={() =>
+                                    p.micEnabled
+                                      ? handleMuteStudent(p.socketId)
+                                      : handleUnmuteStudent(p.socketId)
+                                  }
+                                  data-tooltip={
+                                    p.micEnabled
+                                      ? "Mute student microphone"
+                                      : mutedParticipants.has(p.socketId)
+                                        ? "Muted by host (Click to unmute)"
+                                        : "Unmute student microphone"
+                                  }
+                                  title={
+                                    p.micEnabled
+                                      ? "Mute student"
+                                      : mutedParticipants.has(p.socketId)
+                                        ? "Muted by host (Click to unmute)"
+                                        : "Unmute student"
+                                  }
+                                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    p.micEnabled
+                                      ? "bg-red-100 text-red-500 hover:bg-red-200"
+                                      : "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
+                                  }`}
                                 >
-                                  {mutedParticipants.has(p.socketId)
-                                    ? "Muted"
-                                    : "Mute"}
+                                  {p.micEnabled ? (
+                                    <VolumeOff size={16} />
+                                  ) : (
+                                    <Volume2 size={16} />
+                                  )}
                                 </button>
 
                                 <button
                                   onClick={() => handleKickStudent(p.socketId)}
+                                  data-tooltip="Remove Student"
+                                  title="Remove student"
                                   className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-200"
                                 >
-                                  Remove
+                                  <UserX size={16} />
                                 </button>
 
                                 {p.cameraEnabled && (
@@ -2589,26 +3364,28 @@ export default function LiveClassroom() {
                                     onClick={() =>
                                       handleForceCameraOff(p.socketId)
                                     }
+                                    data-tooltip="Camera Off"
+                                    title="Turn off camera"
                                     className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-medium text-red-500"
                                   >
-                                    Cam Off
+                                    <CameraOff size={16} />
                                   </button>
                                 )}
                               </>
                             )}
-                            {mutedParticipants.has(p.socketId) ? (
-                              <MicOff
-                                size={16}
-                                className="text-red-400"
-                                role="img"
-                                aria-label="Microphone off"
-                              />
-                            ) : (
+                            {p.micEnabled ? (
                               <Mic
                                 size={16}
                                 className="text-slate-400"
                                 role="img"
                                 aria-label="Microphone on"
+                              />
+                            ) : (
+                              <MicOff
+                                size={16}
+                                className="text-red-400"
+                                role="img"
+                                aria-label="Microphone off"
                               />
                             )}
                             {p.cameraEnabled ? (
@@ -2647,9 +3424,17 @@ export default function LiveClassroom() {
                           className={`flex flex-col ${mine ? "items-end" : "items-start"}`}
                         >
                           {!mine && (
-                            <span className="mb-0.5 text-[10px] font-medium text-slate-400">
-                              {m.sender?.name || "Participant"}
-                            </span>
+                            <div className="mb-1 flex items-center gap-1.5">
+                              <UserAvatar
+                                id={m.sender?._id || m.sender}
+                                name={m.sender?.name || "Participant"}
+                                size="xs"
+                                className="!h-4 !w-4 !text-[9px]"
+                              />
+                              <span className="text-[11px] font-medium text-slate-500">
+                                {m.sender?.name || "Participant"}
+                              </span>
+                            </div>
                           )}
                           <div
                             className={`max-w-[75%] rounded-xl px-3 py-2 text-sm ${
@@ -2696,6 +3481,8 @@ export default function LiveClassroom() {
                     <Paperclip size={18} className="text-slate-400" />
                     <button
                       onClick={handleSendMessage}
+                      data-tooltip="Send Message"
+                      title="Send message"
                       aria-label="Send message"
                       className="rounded-lg bg-indigo-600 px-3 py-2 text-white hover:bg-indigo-700"
                     >
@@ -2706,20 +3493,22 @@ export default function LiveClassroom() {
               )}
             </div>
 
-
-            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-3 shadow-sm">
+            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white p-3">
               <h4 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-slate-800">
                 <Camera size={16} />
                 {isHost ? "Camera" : "Teacher"}
               </h4>
               <div className="flex-1 overflow-hidden">
                 {isHost ? (
-                  <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black shadow-sm">
+                  <div className="relative h-full min-h-[9rem] overflow-hidden rounded-xl bg-black">
                     <video
                       ref={localVideoRef}
                       autoPlay
                       playsInline
                       muted
+                      controls={false}
+                      disablePictureInPicture
+                      disableRemotePlayback
                       className={`h-full w-full origin-center object-cover [transform:scaleX(-1)] ${
                         cameraEnabled ? "" : "opacity-0"
                       }`}
@@ -2727,10 +3516,11 @@ export default function LiveClassroom() {
 
                     {!cameraEnabled && (
                       <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                        <img
-                          src={avatarFor(currentUser?.name)}
-                          alt={currentUser?.name}
-                          className="h-16 w-16 rounded-full object-cover"
+                        <UserAvatar
+                          id={currentUser?._id || currentUser?.id}
+                          name={currentUser?.name}
+                          size="lg"
+                          className="!h-16 !w-16 !text-lg"
                         />
                       </div>
                     )}
@@ -2742,6 +3532,8 @@ export default function LiveClassroom() {
                             ? toggleCamera
                             : retryCamera
                         }
+                        data-tooltip="Retry Camera"
+                        title="Retry"
                         className="absolute right-1 top-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600 hover:bg-white"
                       >
                         Retry
@@ -2755,6 +3547,7 @@ export default function LiveClassroom() {
                       {cameraDevices.length > 1 && (
                         <button
                           onClick={() => setShowCameraMenu((v) => !v)}
+                          data-tooltip="Switch Camera"
                           title="Switch camera"
                           className="ml-1 shrink-0 rounded p-0.5 hover:bg-white/20"
                         >
@@ -2769,6 +3562,8 @@ export default function LiveClassroom() {
                           <button
                             key={d.deviceId}
                             onClick={() => switchCamera(d.deviceId)}
+                            data-tooltip={d.label || `Camera ${i + 1}`}
+                            title={d.label || `Camera ${i + 1}`}
                             className={`block w-full truncate rounded px-2 py-1 text-left hover:bg-slate-100 ${
                               activeCameraId === d.deviceId
                                 ? "bg-indigo-50 text-indigo-600"
@@ -2786,6 +3581,7 @@ export default function LiveClassroom() {
                     stream={teacherCameraStream}
                     active={teacherParticipant.cameraEnabled}
                     name={teacherParticipant.user?.name}
+                    id={teacherParticipant.user?._id || teacherParticipant.user?.id}
                   />
                 ) : (
                   <div className="flex h-full min-h-[9rem] items-center justify-center rounded-xl bg-slate-800 text-xs text-slate-400">
@@ -2797,7 +3593,6 @@ export default function LiveClassroom() {
           </aside>
         </main>
       </div>
-
 
       {showMaterials && (
         <div
@@ -2814,14 +3609,14 @@ export default function LiveClassroom() {
               </h4>
               <div className="space-y-1">
                 {pages.length === 0 && (
-                  <p className="text-xs text-slate-400">
-                    No pages yet.
-                  </p>
+                  <p className="text-xs text-slate-400">No pages yet.</p>
                 )}
                 {pages.map((p) => (
                   <button
                     key={p.pageId}
                     onClick={() => setMaterialsPageId(p.pageId)}
+                    data-tooltip={p.name}
+                    title={p.name}
                     className={`block w-full truncate rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors ${
                       materialsPageId === p.pageId
                         ? "bg-indigo-600 text-white"
@@ -2841,6 +3636,7 @@ export default function LiveClassroom() {
                 </span>
                 <button
                   onClick={() => setShowMaterials(false)}
+                  data-tooltip="Close Materials"
                   title="Close"
                   className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                 >
@@ -2848,7 +3644,6 @@ export default function LiveClassroom() {
                 </button>
               </div>
               <div className="flex-1 overflow-hidden bg-slate-50 p-3">
-
                 <div
                   ref={materialsCanvasWrapRef}
                   className="flex h-full w-full items-center justify-center"
@@ -2859,6 +3654,67 @@ export default function LiveClassroom() {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHostExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center gap-3 text-amber-600 mb-3">
+              <div className="rounded-full bg-amber-100 p-2 text-amber-600">
+                <AlertTriangle size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-800">
+                  Leave or End Session?
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {participants.length > 1
+                    ? `${participants.length - 1} student(s) currently in this session`
+                    : "You are the host of this live session"}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-5 leading-relaxed">
+              If you leave temporarily, students remain in the room and you can rejoin at any time. If you end the session, it will close for everyone.
+            </p>
+
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={handleLeaveTemporarily}
+                data-tooltip="Leave Room"
+                title="Leave Temporarily"
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+              >
+                <LogOut size={16} />
+                Leave Temporarily (Rejoin Later)
+              </button>
+
+              <button
+                type="button"
+                onClick={handleEndSessionForAll}
+                disabled={ending}
+                data-tooltip="End Session"
+                title="End Session for Everyone"
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition"
+              >
+                <X size={16} />
+                {ending ? "Ending Session..." : "End Session for Everyone"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowHostExitModal(false)}
+                data-tooltip="Cancel"
+                title="Cancel"
+                className="w-full rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition"
+              >
+                Cancel (Stay in Session)
+              </button>
             </div>
           </div>
         </div>

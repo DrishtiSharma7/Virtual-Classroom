@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { getMyClassrooms, deleteClassroom } from "../../api/classroom.api";
 import {
   LayoutDashboard,
@@ -14,29 +15,42 @@ import usePageMeta from "../../../../hooks/usePageMeta";
 
 function ClassroomHome() {
   usePageMeta("My Classrooms");
-  const [classrooms, setClassrooms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [classrooms, setClassrooms] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_classrooms");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(classrooms.length === 0);
   const [error, setError] = useState("");
 
-  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = storedUser?.role || "student";
+  const authUser = useSelector((state) => state.auth?.user);
+  const authRole = useSelector((state) => state.auth?.role);
+  const role = authRole || authUser?.role || "student";
   const isTeacher = role === "teacher";
-
-  useEffect(() => {
-    fetchClassrooms();
-  }, []);
 
   const fetchClassrooms = async () => {
     try {
       const data = await getMyClassrooms();
-      setClassrooms(data);
+      if (Array.isArray(data)) {
+        setClassrooms(data);
+        localStorage.setItem("cached_classrooms", JSON.stringify(data));
+      }
     } catch (err) {
       console.error(err);
-      setError("Failed to load classrooms");
+      if (classrooms.length === 0) {
+        setError("Failed to load classrooms");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchClassrooms();
+  }, []);
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
@@ -46,18 +60,50 @@ function ClassroomHome() {
 
     try {
       await deleteClassroom(id);
-      setClassrooms((prev) => prev.filter((room) => room._id !== id));
+      const updated = classrooms.filter((room) => room._id !== id);
+      setClassrooms(updated);
+      localStorage.setItem("cached_classrooms", JSON.stringify(updated));
       alert("Classroom deleted successfully");
     } catch (error) {
       console.error(error);
     }
   };
 
-  if (loading) {
-    return <div className="classroom-loading">Loading...</div>;
+  if (loading && classrooms.length === 0) {
+    return (
+      <div className="classroom-page">
+        <div className="classroom-container">
+          <div className="classroom-header">
+            <div>
+              <h1 className="classroom-title hidden lg:flex">
+                <Users className="text-indigo-600" size={26} />
+                My Classrooms
+              </h1>
+              <p className="classroom-subtitle">
+                {isTeacher
+                  ? "Manage all your classrooms from one place."
+                  : "Access all your enrolled classes."}
+              </p>
+            </div>
+          </div>
+          <div className="classroom-grid">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="animate-pulse bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4"
+              >
+                <div className="h-6 w-3/4 rounded bg-gray-200" />
+                <div className="h-4 w-1/2 rounded bg-gray-100" />
+                <div className="h-10 w-full rounded-xl bg-gray-100" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (error) {
+  if (error && classrooms.length === 0) {
     return <div className="classroom-error">{error}</div>;
   }
 
@@ -67,8 +113,9 @@ function ClassroomHome() {
 
         <div className="classroom-header">
           <div>
-            <h1 className="classroom-title">
-              {isTeacher ? "My Classrooms" : "My Classrooms"}
+            <h1 className="classroom-title hidden lg:flex">
+              <Users className="text-indigo-600" size={26} />
+              My Classrooms
             </h1>
             <p className="classroom-subtitle">
               {isTeacher
@@ -79,7 +126,12 @@ function ClassroomHome() {
 
 
           {isTeacher && (
-            <Link to="/classrooms/create" className="create-classroom-btn">
+            <Link
+              to="/classrooms/create"
+              className="create-classroom-btn"
+              data-tooltip="Create new"
+              title="Create Classroom"
+            >
               <Plus size={20} />
               Create Classroom
             </Link>
@@ -87,7 +139,12 @@ function ClassroomHome() {
 
 
           {!isTeacher && (
-            <Link to="/classrooms/join" className="create-classroom-btn">
+            <Link
+              to="/classrooms/join"
+              className="create-classroom-btn"
+              data-tooltip="Enter invite"
+              title="Join Classroom"
+            >
               <KeyRound size={20} />
               Join Classroom
             </Link>
@@ -127,12 +184,10 @@ function ClassroomHome() {
                 <div className="classroom-detail-row">
                   <span className="classroom-detail-label">
                     <Users size={18} />
-                    {isTeacher ? "Students" : "Classmates"}
+                    Students
                   </span>
                   <span className="classroom-detail-value">
-                    {isTeacher
-                      ? room.students?.length ?? 0
-                      : Math.max((room.students?.length ?? 1) - 1, 0)}
+                    {room.students?.length ?? 0}
                   </span>
                 </div>
               </div>
@@ -141,6 +196,8 @@ function ClassroomHome() {
                 <Link
                   to={`/classrooms/${room._id}`}
                   className="enter-classroom-btn"
+                  data-tooltip="Open classroom"
+                  title="Enter Classroom"
                 >
                   Enter Classroom
                   <ArrowRight size={18} />
@@ -150,6 +207,7 @@ function ClassroomHome() {
                   <button
                     onClick={() => handleDelete(room._id)}
                     className="delete-btn"
+                    data-tooltip="Delete Classroom"
                     title="Delete Classroom"
                     aria-label={`Delete ${room.name}`}
                   >

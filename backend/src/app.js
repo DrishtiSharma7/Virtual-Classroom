@@ -15,11 +15,33 @@ const dashboardRoutes = require("./features/dashboard/dashboard.routes");
 const settingsRoutes = require("./features/settings/settings.routes");
 const whiteboardRoutes = require("./features/whiteboard/whiteboard.routes");
 const analyticsRoutes = require("./features/analytics/analytics.routes");
+const announcementRoutes = require("./features/announcement/announcement.routes");
+const noteRoutes = require("./features/note/note.routes");
+const path = require("path");
+const { parseCookies } = require("./utils/cookie");
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, origin || true),
+    credentials: true,
+    exposedHeaders: ["X-Cache"],
+  }),
+);
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+
+// Parse incoming cookies
+app.use((req, res, next) => {
+  req.cookies = parseCookies(req.headers.cookie);
+  next();
+});
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"), {
+    maxAge: "7d",
+    etag: true,
+  }),
+);
 
 app.use("/api/auth", authRoutes);
 
@@ -56,5 +78,14 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/notes", noteRoutes);
+
+app.use((err, req, res, next) => {
+  console.error("Server error:", err.message);
+  res.status(err.status || 400).json({
+    message: err.message || "An unexpected error occurred.",
+  });
+});
 
 module.exports = app;

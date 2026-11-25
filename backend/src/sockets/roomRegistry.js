@@ -5,6 +5,7 @@ const redoStacks = new Map();
 const activePages = new Map();
 const screenSharing = new Map();
 const screenStreamIds = new Map();
+const kickedParticipants = new Map();
 
 function getRoom(roomId) {
   if (!rooms.has(roomId)) {
@@ -15,13 +16,35 @@ function getRoom(roomId) {
 
 function addParticipant(roomId, socketId, user, isHost = false) {
   const room = getRoom(roomId);
-  room.set(socketId, { socketId, user, isHost, cameraEnabled: false });
+  room.set(socketId, {
+    socketId,
+    user,
+    isHost,
+    cameraEnabled: false,
+    micEnabled: false,
+    forceMuted: false,
+  });
   return room;
 }
 
 function setParticipantCameraEnabled(roomId, socketId, enabled) {
   const participant = rooms.get(roomId)?.get(socketId);
   if (participant) participant.cameraEnabled = !!enabled;
+}
+
+function setParticipantMicEnabled(roomId, socketId, enabled) {
+  const participant = rooms.get(roomId)?.get(socketId);
+  if (participant) participant.micEnabled = !!enabled;
+}
+
+function setParticipantForceMuted(roomId, socketId, forceMuted) {
+  const participant = rooms.get(roomId)?.get(socketId);
+  if (participant) participant.forceMuted = !!forceMuted;
+}
+
+function isForceMuted(roomId, socketId) {
+  const participant = rooms.get(roomId)?.get(socketId);
+  return participant?.forceMuted === true;
 }
 
 function removeParticipant(roomId, socketId) {
@@ -179,6 +202,19 @@ function clearRedo(roomId, pageId) {
   redoStacks.delete(redoKey(roomId, pageId));
 }
 
+function kickParticipant(roomId, userId) {
+  if (!roomId || !userId) return;
+  if (!kickedParticipants.has(roomId)) {
+    kickedParticipants.set(roomId, new Set());
+  }
+  kickedParticipants.get(roomId).add(userId.toString());
+}
+
+function isKicked(roomId, userId) {
+  if (!roomId || !userId) return false;
+  return kickedParticipants.get(roomId)?.has(userId.toString()) === true;
+}
+
 module.exports = {
   addParticipant,
   removeParticipant,
@@ -201,6 +237,11 @@ module.exports = {
   getScreenStreamId,
   setScreenStreamId,
   setParticipantCameraEnabled,
+  setParticipantMicEnabled,
+  setParticipantForceMuted,
+  isForceMuted,
+  kickParticipant,
+  isKicked,
   getRedoStack,
   pushRedo,
   popRedo,

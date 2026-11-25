@@ -9,16 +9,6 @@ const User = require("../auth/auth.model");
 const DEFAULT_RANGE_DAYS = 30;
 const MOST_ACTIVE_LIMIT = 5;
 
-// ---------------------------------------------------------------------------
-// Shared formula/threshold constants (surfaced to the frontend via tooltips)
-// ---------------------------------------------------------------------------
-// Attendance % (per scope)      = present attendance docs (isPresent) / total attendance docs x 100
-// Quiz score %  (per response)  = response.score / quiz.questions.length x 100
-// Quiz participation %          = distinct students with >=1 response / enrolled students x 100
-// Avg session duration          = avg(endTime - startTime) over status:"ended" sessions in range
-// Engagement score              = 0.6 x avgAttendance% + 0.4 x quizParticipation%
-//   (chat is intentionally excluded: Chat docs are deleted when a session ends,
-//   so there is no reliable historical chat signal to compute from)
 const ATTENDANCE_BANDS = [
   { min: 90, status: "Excellent" },
   { min: 75, status: "Good" },
@@ -82,8 +72,6 @@ function resolveDateRange(fromQuery, toQuery) {
   return { from, to };
 }
 
-// The equal-length window immediately preceding [from, to), used for every
-// KPI's trend % and for "changed by X%" insights.
 function getPreviousPeriod(from, to) {
   const spanMs = to.getTime() - from.getTime();
   const prevTo = new Date(from.getTime() - 1);
@@ -91,8 +79,6 @@ function getPreviousPeriod(from, to) {
   return { from: prevFrom, to: prevTo };
 }
 
-// Returns null (never a fake 0%/Infinity) when there isn't enough data on
-// both sides to say something meaningful.
 function pctChange(current, previous) {
   if (previous === null || previous === undefined) return null;
   if (previous === 0) return current === 0 ? 0 : null;
@@ -122,11 +108,11 @@ async function resolveClassroomScope(teacherId, classroomId) {
 }
 
 async function getEnrolledStudentIds(classroomIds) {
-  const classrooms = await Classroom.find({ _id: { $in: classroomIds } }).select(
-    "students",
-  );
+  const classrooms = await Classroom.find({ _id: { $in: classroomIds } })
+    .select("students")
+    .lean();
   const set = new Set();
-  classrooms.forEach((c) => c.students.forEach((s) => set.add(s.toString())));
+  classrooms.forEach((c) => (c.students || []).forEach((s) => set.add(s.toString())));
   return Array.from(set);
 }
 
@@ -135,52 +121,53 @@ async function getEndedSessions(classroomIds, from, to) {
     classroom: { $in: classroomIds },
     status: "ended",
     startTime: { $gte: from, $lte: to },
-  }).sort({ startTime: 1 });
+  })
+    .sort({ startTime: 1 })
+    .lean();
 }
 
-// ---------------------------------------------------------------------------
-// Core per-scope metric bundle, reused by overview + trend/previous-period math
-// ---------------------------------------------------------------------------
 async function computeScopeMetrics(classroomIds, from, to) {
-  const classrooms = await Classroom.find({ _id: { $in: classroomIds } }).select(
-    "students",
-  );
+  const [classrooms, sessions] = await Promise.all([
+    Classroom.find({ _id: { $in: classroomIds } })
+      .select("students")
+      .lean(),
+    getEndedSessions(classroomIds, from, to),
+  ]);
+
   const studentIds = Array.from(
-    new Set(classrooms.flatMap((c) => c.students.map((s) => s.toString()))),
+    new Set(classrooms.flatMap((c) => (c.students || []).map((s) => s.toString()))),
   );
-  const sessions = await getEndedSessions(classroomIds, from, to);
   const sessionIds = sessions.map((s) => s._id);
 
-  // A student's "eligible sessions" is scoped to the classroom(s) they're
-  // actually enrolled in, not the combined session count across every
-  // classroom in view — otherwise "All Classes" would apply one classroom's
-  // session count to students who were never enrolled in it.
   const sessionCountByClassroom = new Map();
   sessions.forEach((s) => {
-    const key = s.classroom.toString();
+    const key = s.classroom ? s.classroom.toString() : "";
     sessionCountByClassroom.set(key, (sessionCountByClassroom.get(key) || 0) + 1);
   });
   const eligibleSessionsByStudent = new Map();
   classrooms.forEach((c) => {
     const count = sessionCountByClassroom.get(c._id.toString()) || 0;
-    c.students.forEach((studentId) => {
+    (c.students || []).forEach((studentId) => {
       const key = studentId.toString();
       eligibleSessionsByStudent.set(key, (eligibleSessionsByStudent.get(key) || 0) + count);
     });
   });
 
-  const attendanceDocs = sessionIds.length
-    ? await Attendance.find({ session: { $in: sessionIds } })
-    : [];
-
-  const quizzes = await Quiz.find({
-    classroom: { $in: classroomIds },
-    session: { $in: sessionIds },
-  }).select("questions session createdAt title");
+  const [attendanceDocs, quizzes] = await Promise.all([
+    sessionIds.length
+      ? Attendance.find({ session: { $in: sessionIds } }).lean()
+      : Promise.resolve([]),
+    Quiz.find({
+      classroom: { $in: classroomIds },
+      session: { $in: sessionIds },
+    })
+      .select("questions session createdAt title")
+      .lean(),
+  ]);
 
   const quizIds = quizzes.map((q) => q._id);
   const responses = quizIds.length
-    ? await QuizResponse.find({ quiz: { $in: quizIds } })
+    ? await QuizResponse.find({ quiz: { $in: quizIds } }).lean()
     : [];
 
   const totalStudents = studentIds.length;
@@ -314,7 +301,9 @@ function buildPerformanceTrends(metrics, from, to) {
 
 async function buildEngagementOverview(classroomIds, metrics) {
   const students = metrics.studentIds.length
-    ? await User.find({ _id: { $in: metrics.studentIds } }).select("name email")
+    ? await User.find({ _id: { $in: metrics.studentIds } })
+        .select("name email")
+        .lean()
     : [];
   const studentById = new Map(students.map((s) => [s._id.toString(), s]));
 
@@ -451,20 +440,15 @@ function buildInsights(current, previous) {
   return insights;
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/overview
-// ---------------------------------------------------------------------------
 async function getOverview({ teacherId, classroomId, from, to }) {
   const classroomIds = await resolveClassroomScope(teacherId, classroomId);
   const range = resolveDateRange(from, to);
   const previousRange = getPreviousPeriod(range.from, range.to);
 
-  const metrics = await computeScopeMetrics(classroomIds, range.from, range.to);
-  const previousMetrics = await computeScopeMetrics(
-    classroomIds,
-    previousRange.from,
-    previousRange.to,
-  );
+  const [metrics, previousMetrics] = await Promise.all([
+    computeScopeMetrics(classroomIds, range.from, range.to),
+    computeScopeMetrics(classroomIds, previousRange.from, previousRange.to),
+  ]);
 
   const engagement = await buildEngagementOverview(classroomIds, metrics);
   const performanceTrends = buildPerformanceTrends(metrics, range.from, range.to);
@@ -569,9 +553,6 @@ async function getOverview({ teacherId, classroomId, from, to }) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/attendance
-// ---------------------------------------------------------------------------
 async function getAttendanceAnalytics({
   teacherId,
   classroomId,
@@ -589,7 +570,9 @@ async function getAttendanceAnalytics({
   const metrics = await computeScopeMetrics(classroomIds, range.from, range.to);
 
   const students = metrics.studentIds.length
-    ? await User.find({ _id: { $in: metrics.studentIds } }).select("name email")
+    ? await User.find({ _id: { $in: metrics.studentIds } })
+        .select("name email")
+        .lean()
     : [];
   const studentById = new Map(students.map((s) => [s._id.toString(), s]));
 
@@ -685,9 +668,6 @@ async function getAttendanceAnalytics({
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/sessions
-// ---------------------------------------------------------------------------
 async function getSessionAnalytics({
   teacherId,
   classroomId,
@@ -805,9 +785,6 @@ async function getSessionAnalytics({
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/quizzes
-// ---------------------------------------------------------------------------
 async function getQuizAnalytics({
   teacherId,
   classroomId,
@@ -863,10 +840,6 @@ async function getQuizAnalytics({
   const lowest = scorePcts.length ? Math.min(...scorePcts) : 0;
 
   const enrolledStudentIds = await getEnrolledStudentIds(classroomIds);
-  // Participation is scoped to the roster of the classroom each quiz
-  // actually belongs to — not the combined roster of every classroom in
-  // view, which would dilute a single-classroom quiz's participation rate
-  // with students who were never eligible to take it.
   const classroomsForRoster = await Classroom.find({
     _id: { $in: classroomIds },
   }).select("students");
@@ -892,7 +865,6 @@ async function getQuizAnalytics({
     ? completionRates.reduce((a, b) => a + b, 0) / completionRates.length
     : 0;
 
-  // Quiz comparison: per-quiz avg score / participation / accuracy
   const comparison = quizzes.map((q) => {
     const qResponses = responsesByQuiz.get(q._id.toString()) || [];
     const total = q.questions.length || 0;
@@ -928,7 +900,6 @@ async function getQuizAnalytics({
     .filter((p) => p.value !== null)
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 
-  // Question difficulty (optionally scoped to one quiz)
   const scopedQuizzes = quizId ? quizzes.filter((q) => q._id.toString() === quizId) : quizzes;
   const questionDifficultyRows = [];
   scopedQuizzes.forEach((q) => {
@@ -955,9 +926,10 @@ async function getQuizAnalytics({
     });
   });
 
-  // Student ranking
   const students = enrolledStudentIds.length
-    ? await User.find({ _id: { $in: enrolledStudentIds } }).select("name email")
+    ? await User.find({ _id: { $in: enrolledStudentIds } })
+        .select("name email")
+        .lean()
     : [];
   const studentById = new Map(students.map((s) => [s._id.toString(), s]));
   const perStudent = new Map();
@@ -1035,12 +1007,11 @@ async function getQuizAnalytics({
   };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/classes
-// ---------------------------------------------------------------------------
 async function getClassComparison({ teacherId, from, to }) {
   const range = resolveDateRange(from, to);
-  const classrooms = await Classroom.find({ teacher: teacherId });
+  const classrooms = await Classroom.find({ teacher: teacherId })
+    .select("_id name subject")
+    .lean();
 
   const rows = await Promise.all(
     classrooms.map(async (classroom) => {
@@ -1067,18 +1038,17 @@ async function getClassComparison({ teacherId, from, to }) {
   return { classes: rows };
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/analytics/students/:studentId  (teacher) and /me (student)
-// ---------------------------------------------------------------------------
 async function buildStudentDetail({ studentId, classroomIds, from, to }) {
   const range = resolveDateRange(from, to);
-  const student = await User.findById(studentId).select("name email");
+  const student = await User.findById(studentId).select("name email").lean();
   if (!student) throw new AnalyticsAccessError("Student not found", 404);
 
   const classrooms = await Classroom.find({
     _id: { $in: classroomIds },
     students: studentId,
-  }).select("name subject");
+  })
+    .select("name subject")
+    .lean();
   if (!classrooms.length) {
     throw new AnalyticsAccessError("Student not found in your classrooms", 404);
   }
@@ -1087,7 +1057,7 @@ async function buildStudentDetail({ studentId, classroomIds, from, to }) {
   const sessions = await getEndedSessions(studentClassroomIds, range.from, range.to);
   const sessionIds = sessions.map((s) => s._id);
   const attendanceDocs = sessionIds.length
-    ? await Attendance.find({ session: { $in: sessionIds }, student: studentId })
+    ? await Attendance.find({ session: { $in: sessionIds }, student: studentId }).lean()
     : [];
 
   const sessionsAttended = attendanceDocs.filter((a) => a.isPresent).length;

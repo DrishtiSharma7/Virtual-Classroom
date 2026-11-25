@@ -36,16 +36,29 @@ function AttendanceHome() {
   usePageMeta("Attendance");
   const { role, user } = useSelector((state) => state.auth);
   const isStudent = role === "student";
-  const [attendance, setAttendance] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { id: classroomId } = useParams();
+  const cacheKey = `cached_attendance_${isStudent ? "student" : "teacher"}_${classroomId || "all"}`;
+  const [attendance, setAttendance] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(attendance.length === 0);
   const [error, setError] = useState("");
   const [classroomLabel, setClassroomLabel] = useState("");
-  const { id: classroomId } = useParams();
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const rowsPerPage = 5;
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const rowsPerPage = 10;
 
   const filteredData = useMemo(() => {
     const q = search.toLowerCase();
@@ -71,28 +84,37 @@ function AttendanceHome() {
     currentPage * rowsPerPage
   );
 
-  const totalStudents = attendance.length;
+  const {
+    totalStudents,
+    presentCount,
+    absentCount,
+    presentSessions,
+    absentSessions,
+    attendancePercentage,
+  } = useMemo(() => {
+    const total = attendance.length;
+    let present = 0;
+    let pSessions = 0;
+    let aSessions = 0;
+    let sumPercentage = 0;
 
-  const presentCount = attendance.filter((a) => a.isPresent).length;
-  const absentCount = totalStudents - presentCount;
+    for (let i = 0; i < total; i++) {
+      const item = attendance[i];
+      if (item.isPresent) present++;
+      if (item.presentSessions) pSessions += item.presentSessions;
+      if (item.absentSessions) aSessions += item.absentSessions;
+      if (item.attendancePercentage) sumPercentage += item.attendancePercentage;
+    }
 
-  const presentSessions = attendance.reduce(
-    (sum, s) => sum + (s.presentSessions || 0),
-    0
-  );
-
-  const absentSessions = attendance.reduce(
-    (sum, s) => sum + (s.absentSessions || 0),
-    0
-  );
-
-  const attendancePercentage =
-    totalStudents === 0
-      ? "0.0"
-      : (
-          attendance.reduce((sum, s) => sum + (s.attendancePercentage || 0), 0) /
-          totalStudents
-        ).toFixed(1);
+    return {
+      totalStudents: total,
+      presentCount: present,
+      absentCount: total - present,
+      presentSessions: pSessions,
+      absentSessions: aSessions,
+      attendancePercentage: total === 0 ? "0.0" : (sumPercentage / total).toFixed(1),
+    };
+  }, [attendance]);
 
   const handleDelete = (key) => {
     if (!window.confirm("Delete attendance record?")) return;
@@ -139,16 +161,23 @@ function AttendanceHome() {
         }));
 
         setAttendance(normalized);
+        sessionStorage.setItem(cacheKey, JSON.stringify(normalized));
         return;
       }
 
-      const data = classroomId
-        ? await getClassroomAttendance(classroomId)
-        : await getAttendanceDashboard();
+      let data;
+      let classroomName = null;
 
-      const classroomName = classroomId
-        ? (await getClassroomById(classroomId)).name
-        : null;
+      if (classroomId) {
+        const [attData, classData] = await Promise.all([
+          getClassroomAttendance(classroomId),
+          getClassroomById(classroomId).catch(() => null),
+        ]);
+        data = attData;
+        classroomName = classData?.name || null;
+      } else {
+        data = await getAttendanceDashboard();
+      }
 
       setClassroomLabel(classroomName || "all-classrooms");
 
@@ -159,9 +188,12 @@ function AttendanceHome() {
       }));
 
       setAttendance(normalized);
+      sessionStorage.setItem(cacheKey, JSON.stringify(normalized));
     } catch (err) {
       console.error(err);
-      setError("Failed to load attendance. Please try again.");
+      if (attendance.length === 0) {
+        setError("Failed to load attendance. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -171,17 +203,27 @@ function AttendanceHome() {
     fetchAttendance();
   }, [classroomId, isStudent]);
 
-  if (loading) {
+  if (loading && attendance.length === 0) {
     return (
       <div className="attendance-page">
-        <div className="attendance-container">
-          <p role="status">Loading attendance…</p>
+        <div className="attendance-container animate-pulse">
+          <div className="h-10 w-64 bg-gray-200 rounded-xl mb-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="h-24 bg-white rounded-2xl shadow-sm border border-gray-100" />
+            <div className="h-24 bg-white rounded-2xl shadow-sm border border-gray-100" />
+            <div className="h-24 bg-white rounded-2xl shadow-sm border border-gray-100" />
+          </div>
+          <div className="h-64 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+            <div className="h-8 bg-gray-100 rounded-lg w-full" />
+            <div className="h-8 bg-gray-100 rounded-lg w-full" />
+            <div className="h-8 bg-gray-100 rounded-lg w-full" />
+          </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && attendance.length === 0) {
     return (
       <div className="attendance-page">
         <div className="attendance-container">
@@ -199,7 +241,7 @@ function AttendanceHome() {
         <div className="attendance-container">
           <div className="attendance-header">
             <div>
-              <h1 className="attendance-title">
+              <h1 className="attendance-title hidden lg:flex">
                 <CalendarCheck className="text-indigo-600" size={26} />
                 My Attendance
               </h1>
@@ -213,6 +255,7 @@ function AttendanceHome() {
                 onClick={exportExcel}
                 className="export-btn"
                 disabled={filteredData.length === 0}
+                data-tooltip="Export Excel"
                 title={
                   filteredData.length === 0
                     ? "No attendance to export yet"
@@ -252,19 +295,19 @@ function AttendanceHome() {
             />
           </div>
 
-          <div className="filter-card">
-            <div className="filter-grid">
-              <div className="search-wrapper">
-                <Search size={16} className="search-icon" />
+          <div className="filter-card w-full block">
+            <div className="filter-grid w-full block">
+              <div className="search-wrapper relative w-full block">
+                <Search
+                  size={18}
+                  className="search-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
                 <input
-                  className="search-input"
+                  className="search-input w-full block"
                   type="text"
                   placeholder="Search by Class or Session..."
                   value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={handleSearchChange}
                 />
               </div>
             </div>
@@ -294,8 +337,8 @@ function AttendanceHome() {
                   paginatedData.map((row) => (
                     <tr key={row.key} className="table-row">
                       <td className="table-cell">
-                        <p className="student-name">{row.classroomName}</p>
-                        <p>{row.sessionTitle}</p>
+                        <p className="student-name leading-tight">{row.classroomName}</p>
+                        <p className="text-xs text-slate-500 leading-tight">{row.sessionTitle}</p>
                       </td>
                       <td className="table-cell">
                         {row.sessionDate
@@ -332,6 +375,8 @@ function AttendanceHome() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
+                data-tooltip="Previous"
+                title="Previous"
                 className={`pagination-btn ${
                   currentPage === 1
                     ? "pagination-btn-disabled"
@@ -346,6 +391,8 @@ function AttendanceHome() {
                   <button
                     key={index}
                     onClick={() => setCurrentPage(index + 1)}
+                    data-tooltip={`Page ${index + 1}`}
+                    title={`Page ${index + 1}`}
                     className={`page-btn ${
                       currentPage === index + 1
                         ? "page-btn-active"
@@ -362,6 +409,8 @@ function AttendanceHome() {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
+                data-tooltip="Next"
+                title="Next"
                 className={`pagination-btn ${
                   currentPage === totalPages
                     ? "pagination-btn-disabled"
@@ -384,7 +433,7 @@ function AttendanceHome() {
 
         <div className="attendance-header">
           <div>
-            <h1 className="attendance-title">
+            <h1 className="attendance-title hidden lg:flex">
               <CalendarCheck className="text-indigo-600" size={26} />
               Attendance Dashboard
             </h1>
@@ -399,6 +448,7 @@ function AttendanceHome() {
               onClick={exportExcel}
               className="export-btn"
               disabled={filteredData.length === 0}
+              data-tooltip="Export Excel"
               title={
                 filteredData.length === 0
                   ? "No attendance to export yet"
@@ -442,20 +492,20 @@ function AttendanceHome() {
 
 
 
-        <div className="filter-card">
-          <div className="filter-grid">
-            <div className="search-wrapper">
-              <Search size={16} className="search-icon" />
+        <div className="filter-card w-full block">
+          <div className="filter-grid w-full block">
+            <div className="search-wrapper relative w-full block">
+              <Search
+                size={18}
+                className="search-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
 
               <input
-                className="search-input"
+                className="search-input w-full block"
                 type="text"
                 placeholder="Search by Name or Email..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={handleSearchChange}
               />
             </div>
           </div>
@@ -489,7 +539,7 @@ function AttendanceHome() {
                   <tr key={student.key} className="table-row">
                     <td className="table-cell">
                       <div>
-                        <p className="student-name">{student.name}</p>
+                        <p className="student-name leading-tight">{student.name}</p>
                       </div>
                     </td>
                     <td className="table-cell">{student.email}</td>
@@ -507,9 +557,11 @@ function AttendanceHome() {
                         <button
                           onClick={() => handleDelete(student.key)}
                           className="delete-btn"
+                          data-tooltip="Delete Record"
+                          title="Delete record"
                           aria-label={`Delete ${student.name}'s attendance record`}
                         >
-                          <Trash2 size={18} className="delete-icon" />
+                          <Trash2 size={16} className="delete-icon" />
                         </button>
                       </div>
                     </td>
@@ -526,6 +578,8 @@ function AttendanceHome() {
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
+              data-tooltip="Previous"
+              title="Previous"
               className={`pagination-btn ${
                 currentPage === 1
                   ? "pagination-btn-disabled"
@@ -540,6 +594,8 @@ function AttendanceHome() {
                 <button
                   key={index}
                   onClick={() => setCurrentPage(index + 1)}
+                  data-tooltip={`Page ${index + 1}`}
+                  title={`Page ${index + 1}`}
                   className={`page-btn ${
                     currentPage === index + 1
                       ? "page-btn-active"
@@ -556,6 +612,8 @@ function AttendanceHome() {
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
+              data-tooltip="Next"
+              title="Next"
               className={`pagination-btn ${
                 currentPage === totalPages
                   ? "pagination-btn-disabled"
