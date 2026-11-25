@@ -11,7 +11,7 @@
 }
 
 .classroom-title {
-  @apply hidden lg:block text-2xl font-bold text-slate-800;
+  @apply hidden lg:flex items-center gap-2 text-2xl font-bold text-slate-800;
 }
 
 .classroom-subtitle {

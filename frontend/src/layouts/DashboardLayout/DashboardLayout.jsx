@@ -1,11 +1,20 @@
 import { Outlet, useLocation } from "react-router-dom";
 import "./DashboardLayout.css";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Sidebar from "../../features/dashboard/components/Sidebar/Sidebar";
 import TopNavbar from "../../features/dashboard/components/TopNavbar/TopNavbar";
 
+const SIDEBAR_COLLAPSED_KEY = "sidebarCollapsed";
+
 const DashboardLayout = ({ showNavbar }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
   const location = useLocation();
   const [prevPath, setPrevPath] = useState(location.pathname);
 
@@ -13,6 +22,14 @@ const DashboardLayout = ({ showNavbar }) => {
     setPrevPath(location.pathname);
     setSidebarOpen(false);
   }
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
+    } catch {
+      // Ignore storage write failures
+    }
+  }, [sidebarCollapsed]);
 
   const path = location.pathname;
   const isDesktopNavRoute =
@@ -23,7 +40,7 @@ const DashboardLayout = ({ showNavbar }) => {
   const showNav = showNavbar !== undefined ? showNavbar : isDesktopNavRoute;
 
   return (
-    <div className="dashboard-layout">
+    <div className={`dashboard-layout ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       {sidebarOpen && (
         <div
           className="sidebar-overlay cursor-pointer"
@@ -32,7 +49,12 @@ const DashboardLayout = ({ showNavbar }) => {
         />
       )}
 
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+      />
 
       <div className="dashboard-main">
         {showNav ? (

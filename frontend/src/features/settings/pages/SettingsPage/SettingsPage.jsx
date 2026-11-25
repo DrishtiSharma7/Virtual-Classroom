@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { Loader2, Save, KeyRound } from "lucide-react";
+import { Loader2, Save, KeyRound, Settings } from "lucide-react";
 
 import SettingsSection, { SettingsRow } from "../../components/SettingsSection";
 import ToggleSwitch from "../../components/ToggleSwitch";
@@ -151,14 +151,18 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-0 sm:px-2 py-0 lg:pt-3 lg:pb-4">
-      <div className="mb-2.5 sm:mb-3">
-        <h1 className="hidden lg:block text-2xl font-bold text-slate-800">Settings</h1>
-        <p className="text-sm sm:text-base text-slate-500 lg:mt-0.5">
-          Manage your account and{" "}
-          {role === "teacher" ? "classroom" : "learning"} preferences.
-        </p>
-      </div>
+    <div className="min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-3 lg:pb-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-2.5 sm:mb-3">
+          <h1 className="hidden lg:flex items-center gap-2 text-2xl font-bold text-slate-800">
+            <Settings className="text-indigo-600" size={26} />
+            Settings
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 lg:mt-0.5">
+            Manage your account and{" "}
+            {role === "teacher" ? "classroom" : "learning"} preferences.
+          </p>
+        </div>
 
 
       <SettingsSection
@@ -458,9 +462,10 @@ const SettingsPage = () => {
         </SettingsSection>
       )}
 
-      <footer className="mt-6 border-t border-slate-200 pt-6 pb-6 text-center text-xs sm:text-sm text-slate-500">
-        © 2026 Virtual Classroom · Developed by Drishti Sharma
-      </footer>
+        <footer className="mt-6 border-t border-slate-200 pt-6 pb-6 text-center text-xs sm:text-sm text-slate-500">
+          © 2026 Virtual Classroom · Developed by Drishti Sharma
+        </footer>
+      </div>
     </div>
   );
 };

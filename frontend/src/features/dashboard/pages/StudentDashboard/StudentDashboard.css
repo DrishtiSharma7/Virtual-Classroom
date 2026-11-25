@@ -1,5 +1,9 @@
+.student-dashboard-page {
+  @apply w-full min-h-full bg-[#f4f3f3] p-0 lg:px-8 lg:pt-0 lg:pb-3;
+}
+
 .student-dashboard-viewport {
-  @apply w-full flex-1 px-0 py-0 pb-0 lg:pb-3 lg:px-8 lg:pt-0 space-y-3 sm:space-y-4 max-w-7xl mx-auto;
+  @apply w-full max-w-7xl mx-auto space-y-3 sm:space-y-4;
 }
 
 .student-stats-grid {

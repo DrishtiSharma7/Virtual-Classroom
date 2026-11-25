@@ -49,41 +49,41 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="student-dashboard-viewport">
-      <h1 className="sr-only">Student Dashboard</h1>
-      <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
+    <div className="student-dashboard-page">
+      <div className="student-dashboard-viewport">
+        <h1 className="sr-only">Student Dashboard</h1>
+        <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
+        <div className="student-stats-grid">
+          <StatCard
+            icon={<Layers />}
+            label="Enrolled Classes"
+            value={dashboard?.stats?.enrolledClasses || 0}
+            colorClass="bg-blue-soft"
+          />
 
-      <div className="student-stats-grid">
-        <StatCard
-          icon={<Layers />}
-          label="Enrolled Classes"
-          value={dashboard?.stats?.enrolledClasses || 0}
-          colorClass="bg-blue-soft"
-        />
+          <StatCard
+            icon={<Goal />}
+            label="Upcoming Quizzes"
+            value={dashboard?.stats?.upcomingClasses || 0}
+            colorClass="bg-purple-soft"
+          />
 
-        <StatCard
-          icon={<Goal />}
-          label="Upcoming Quizzes"
-          value={dashboard?.stats?.upcomingClasses || 0}
-          colorClass="bg-purple-soft"
-        />
+          <StatCard
+            icon={<CheckSquare />}
+            label="Attendance"
+            value={`${dashboard?.stats?.attendance ?? 0}%`}
+            colorClass="bg-green-soft"
+          />
+        </div>
 
-        <StatCard
-          icon={<CheckSquare />}
-          label="Attendance"
-          value={`${dashboard?.stats?.attendance ?? 0}%`}
-          colorClass="bg-green-soft"
-        />
+        <QuickActions />
+
+        <div className="dashboard-split-section">
+          <RecentClasses classes={dashboard?.myClasses || []} />
+          <QuickNotes />
+        </div>
       </div>
-
-      <QuickActions />
-
-      <div className="dashboard-split-section">
-        <RecentClasses classes={dashboard?.myClasses || []} />
-        <QuickNotes />
-      </div>
-
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -62,7 +62,12 @@ const MENU_ITEMS = [
   },
 ];
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const Sidebar = ({
+  sidebarOpen,
+  setSidebarOpen,
+  sidebarCollapsed = false,
+  setSidebarCollapsed,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
@@ -92,16 +97,35 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     setSidebarOpen(false);
   };
 
+  const handleBrandClick = () => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches &&
+      setSidebarCollapsed
+    ) {
+      setSidebarCollapsed((prev) => !prev);
+      return;
+    }
+    setSidebarOpen(false);
+    navigate("/dashboard");
+  };
+
   const menuItems = MENU_ITEMS;
 
   return (
-    <aside className={`sidebar-container ${sidebarOpen ? "open" : ""}`}>
+    <aside
+      className={`sidebar-container ${sidebarOpen ? "open" : ""} ${
+        sidebarCollapsed ? "collapsed" : ""
+      }`}
+    >
       <header className="sidebar-header">
-        <Link
-          to="/dashboard"
-          onClick={handleNavClick}
-          className="flex flex-col items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105"
-          aria-label="Virtual Classroom"
+        <button
+          type="button"
+          onClick={handleBrandClick}
+          className="sidebar-brand-btn flex flex-col items-center justify-center cursor-pointer transition-transform duration-150 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-xl"
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!sidebarCollapsed}
+          data-tooltip={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
           <img
             src={logoImg}
@@ -109,7 +133,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             className="sidebar-logo-icon shrink-0 object-contain"
           />
           <h2 className="sidebar-logo-title">Virtual Classroom</h2>
-        </Link>
+        </button>
         <button
           type="button"
           onClick={() => setSidebarOpen(false)}
@@ -127,6 +151,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             onClick={handleNavClick}
             onPointerEnter={prefetchRoutes}
             onTouchStart={prefetchRoutes}
+            aria-label={item.label}
+            data-tooltip={sidebarCollapsed ? item.label : undefined}
             className={({ isActive }) =>
               `sidebar-link cursor-pointer ${isActive ? "active" : ""}`
             }
@@ -136,10 +162,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </NavLink>
         ))}
       </nav>
-      <div className="border-t border-gray-100 py-1 pl-3">
+      <div className="sidebar-footer border-t border-gray-100 py-1 pl-3">
         <button
           type="button"
           onClick={handleLogout}
+          aria-label="Logout"
+          data-tooltip={sidebarCollapsed ? "Logout" : undefined}
           className="sidebar-link w-full text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
         >
           <span className="sidebar-icon pointer-events-none">

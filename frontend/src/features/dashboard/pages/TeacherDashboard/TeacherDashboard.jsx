@@ -87,47 +87,48 @@ const TeacherDashboard = () => {
   };
 
   return (
-    <div className="teacher-dashboard-viewport">
-      <h1 className="sr-only">Teacher Dashboard</h1>
-      <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
+    <div className="teacher-dashboard-page">
+      <div className="teacher-dashboard-viewport">
+        <h1 className="sr-only">Teacher Dashboard</h1>
+        <WelcomeBanner name={dashboard?.welcomeName} role={dashboard?.role} />
 
-      <div className="teacher-stats-grid">
-        <StatCard
-          icon={<LayoutDashboard />}
-          label="Total Classrooms"
-          value={dashboard?.stats?.totalClasses || 0}
-          colorClass="bg-blue-soft"
-        />
+        <div className="teacher-stats-grid">
+          <StatCard
+            icon={<LayoutDashboard />}
+            label="Total Classrooms"
+            value={dashboard?.stats?.totalClasses || 0}
+            colorClass="bg-blue-soft"
+          />
 
-        <StatCard
-          icon={<Users />}
-          label="Total Students"
-          value={dashboard?.stats?.totalStudents || 0}
-          colorClass="bg-orange-soft"
-        />
+          <StatCard
+            icon={<Users />}
+            label="Total Students"
+            value={dashboard?.stats?.totalStudents || 0}
+            colorClass="bg-orange-soft"
+          />
 
-        <StatCard
-          icon={<Video />}
-          label="Live Sessions"
-          value={dashboard?.stats?.liveSessions || 0}
-          colorClass="bg-purple-soft"
-        />
+          <StatCard
+            icon={<Video />}
+            label="Live Sessions"
+            value={dashboard?.stats?.liveSessions || 0}
+            colorClass="bg-purple-soft"
+          />
 
-        <StatCard
-          icon={<CircleCheckBig />}
-          label="Attendance"
-          value={`${dashboard?.stats?.attendance ?? 0}%`}
-          colorClass="bg-green-soft"
-        />
+          <StatCard
+            icon={<CircleCheckBig />}
+            label="Attendance"
+            value={`${dashboard?.stats?.attendance ?? 0}%`}
+            colorClass="bg-green-soft"
+          />
+        </div>
+
+        <QuickActions handleStartSession={handleStartSession} />
+
+        <div className="dashboard-split-section">
+          <RecentClasses classes={dashboard?.recentClasses || []} />
+          <QuickNotes />
+        </div>
       </div>
-
-      <QuickActions handleStartSession={handleStartSession} />
-
-      <div className="dashboard-split-section">
-        <RecentClasses classes={dashboard?.recentClasses || []} />
-        <QuickNotes />
-      </div>
-
     </div>
   );
 };

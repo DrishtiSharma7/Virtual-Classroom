@@ -75,7 +75,10 @@ function ClassroomHome() {
         <div className="classroom-container">
           <div className="classroom-header">
             <div>
-              <h1 className="classroom-title hidden lg:block">My Classrooms</h1>
+              <h1 className="classroom-title hidden lg:flex">
+                <Users className="text-indigo-600" size={26} />
+                My Classrooms
+              </h1>
               <p className="classroom-subtitle">
                 {isTeacher
                   ? "Manage all your classrooms from one place."
@@ -110,8 +113,9 @@ function ClassroomHome() {
 
         <div className="classroom-header">
           <div>
-            <h1 className="classroom-title hidden lg:block">
-              {isTeacher ? "My Classrooms" : "My Classrooms"}
+            <h1 className="classroom-title hidden lg:flex">
+              <Users className="text-indigo-600" size={26} />
+              My Classrooms
             </h1>
             <p className="classroom-subtitle">
               {isTeacher

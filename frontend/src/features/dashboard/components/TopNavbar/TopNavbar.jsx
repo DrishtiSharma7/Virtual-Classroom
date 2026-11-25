@@ -24,27 +24,29 @@ const TopNavbar = ({ setSidebarOpen }) => {
 
   return (
     <header className="navbar-container">
-      <div className="navbar-left">
-        <button
-          type="button"
-          className="navbar-menu-btn cursor-pointer"
-          onClick={() => setSidebarOpen((prev) => !prev)}
-          aria-label="Toggle navigation menu"
-        >
-          <Menu size={24} />
-        </button>
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between">
+        <div className="navbar-left">
+          <button
+            type="button"
+            className="navbar-menu-btn cursor-pointer"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            aria-label="Toggle navigation menu"
+          >
+            <Menu size={24} />
+          </button>
 
-        <p className="navbar-title">{getPageTitle()}</p>
-      </div>
+          <p className="navbar-title">{getPageTitle()}</p>
+        </div>
 
-      <div className="navbar-profile-section">
-        <div className="navbar-user-card">
-          <UserAvatar
-            id={user?._id || user?.id}
-            name={user?.name || "User"}
-            size="sm"
-          />
-          <span className="navbar-username">{user?.name || "User"}</span>
+        <div className="navbar-profile-section">
+          <div className="navbar-user-card">
+            <UserAvatar
+              id={user?._id || user?.id}
+              name={user?.name || "User"}
+              size="sm"
+            />
+            <span className="navbar-username">{user?.name || "User"}</span>
+          </div>
         </div>
       </div>
     </header>
